@@ -1,227 +1,265 @@
 // components/RiskGame/QuestionModal.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
-export default function QuestionModal({ question, onAnswer, onClose }) {
-  const [selectedDifficulty, setSelectedDifficulty] = useState(null);
+export default function QuestionModal({ 
+  question, 
+  onAnswer, 
+  onClose, 
+  actionType, 
+  selectedCountry, 
+  targetCountry 
+}) {
+  const [userAnswer, setUserAnswer] = useState('');
   const [showAnswer, setShowAnswer] = useState(false);
-  const [timer, setTimer] = useState(30);
-  const [timerActive, setTimerActive] = useState(true);
 
-  // العد التنازلي
-  useEffect(() => {
-    if (timerActive && timer > 0) {
-      const interval = setInterval(() => {
-        setTimer(prev => prev - 1);
-      }, 1000);
-      return () => clearInterval(interval);
-    } else if (timer === 0 && timerActive) {
-      // انتهى الوقت
-      setTimerActive(false);
-      handleAnswer(false, 'easy');
-    }
-  }, [timer, timerActive]);
-
-  const handleDifficultySelect = (difficulty) => {
-    setSelectedDifficulty(difficulty);
-    setTimerActive(false);
-  };
-
-  const handleAnswer = (isCorrect, difficulty) => {
-    onAnswer(isCorrect, difficulty || selectedDifficulty);
-  };
-
-  const showAnswerAndContinue = () => {
-    setShowAnswer(true);
-    setTimerActive(false);
-  };
-
-  const getActionText = () => {
-    switch (question.actionType) {
-      case 'occupy': return 'احتلال دولة جديدة';
-      case 'attack': return 'مهاجمة دولة مجاورة';
-      case 'reinforce': return 'تقوية دولة مملوكة';
-      default: return 'سؤال';
+  // الحصول على عنوان العملية
+  const getActionTitle = () => {
+    switch (actionType) {
+      case 'occupy':
+        return `🏴 احتلال ${selectedCountry}`;
+      case 'attack':
+        return `⚔️ مهاجمة ${targetCountry}`;
+      case 'reinforce':
+        return `🛡️ تقوية ${selectedCountry}`;
+      default:
+        return 'سؤال المعرفة';
     }
   };
 
-  const getTroopsText = (difficulty) => {
-    const troops = {
-      easy: 5,
-      medium: 10, 
-      hard: 20
+  // الحصول على وصف المكافآت/العواقب
+  const getRewardsDescription = () => {
+    const difficultyRewards = {
+      easy: '5 جنود',
+      medium: '10 جنود', 
+      hard: '20 جندي'
     };
-    const bonus = question.actionType === 'attack' ? ' + 15 هدية' : '';
-    return `${troops[difficulty]} جندي${bonus}`;
+
+    const reward = difficultyRewards[question.difficulty] || '5 جنود';
+
+    switch (actionType) {
+      case 'occupy':
+        return (
+          <div className="bg-blue-900/30 rounded-lg p-3 mb-4">
+            <div className="text-blue-300 font-bold mb-2">مكافآت الاحتلال:</div>
+            <div className="text-sm text-blue-200">
+              ✅ إجابة صحيحة: احتلال الدولة بـ {reward}<br/>
+              ❌ إجابة خاطئة: فشل الاحتلال
+            </div>
+          </div>
+        );
+      case 'attack':
+        return (
+          <div className="bg-red-900/30 rounded-lg p-3 mb-4">
+            <div className="text-red-300 font-bold mb-2">نتائج الهجوم:</div>
+            <div className="text-sm text-red-200">
+              ✅ إجابة صحيحة: احتلال {targetCountry} + 15 جندي<br/>
+              ❌ إجابة خاطئة: خسارة نصف جيش {selectedCountry}
+            </div>
+          </div>
+        );
+      case 'reinforce':
+        return (
+          <div className="bg-green-900/30 rounded-lg p-3 mb-4">
+            <div className="text-green-300 font-bold mb-2">نتائج التقوية:</div>
+            <div className="text-sm text-green-200">
+              ✅ إجابة صحيحة: إضافة {reward} لـ {selectedCountry}<br/>
+              ❌ إجابة خاطئة: خسارة 25% من جيش {selectedCountry}
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
   };
 
-  if (!question) return null;
+  // الحصول على لون الصعوبة
+  const getDifficultyColor = () => {
+    switch (question.difficulty) {
+      case 'easy': return 'text-green-400';
+      case 'medium': return 'text-yellow-400';
+      case 'hard': return 'text-red-400';
+      default: return 'text-gray-400';
+    }
+  };
+
+  // الحصول على نص الصعوبة
+  const getDifficultyText = () => {
+    switch (question.difficulty) {
+      case 'easy': return 'سهل';
+      case 'medium': return 'متوسط';
+      case 'hard': return 'صعب';
+      default: return 'غير محدد';
+    }
+  };
+
+  const handleSubmitAnswer = () => {
+    if (!userAnswer.trim()) {
+      alert('يرجى كتابة إجابة!');
+      return;
+    }
+    
+    setShowAnswer(true);
+  };
+
+  const handleFinalAnswer = (isCorrect) => {
+    onAnswer(isCorrect);
+  };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-600 rounded-3xl p-6 max-w-2xl w-full mx-4 shadow-2xl">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-slate-800/95 backdrop-blur-lg rounded-2xl p-6 md:p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-slate-600 shadow-2xl">
         
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-white">{getActionText()}</h2>
-            
-            {/* Timer */}
-            {timerActive && (
-              <div className={`px-4 py-2 rounded-full font-bold ${
-                timer > 10 ? 'bg-green-500' : timer > 5 ? 'bg-yellow-500' : 'bg-red-500'
-              }`}>
-                <span className="text-white text-xl">{timer}s</span>
-              </div>
-            )}
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
+            {getActionTitle()}
+          </h2>
+          <div className="flex justify-center items-center gap-2">
+            <span className="text-gray-300">صعوبة السؤال:</span>
+            <span className={`font-bold ${getDifficultyColor()}`}>
+              {getDifficultyText()}
+            </span>
+            <span className="text-gray-300">
+              ({question.points} نقطة)
+            </span>
           </div>
-          
-          <div className="text-gray-300">اختر مستوى الصعوبة أولاً</div>
         </div>
 
-        {/* اختيار الصعوبة */}
-        {!selectedDifficulty && (
-          <div className="grid grid-cols-3 gap-4 mb-8">
-            <button
-              onClick={() => handleDifficultySelect('easy')}
-              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white p-6 rounded-xl font-bold transition-all duration-300 shadow-lg hover:scale-105"
-            >
-              <div className="text-xl mb-2">سهل</div>
-              <div className="text-sm opacity-90">{getTroopsText('easy')}</div>
-            </button>
-            
-            <button
-              onClick={() => handleDifficultySelect('medium')}
-              className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white p-6 rounded-xl font-bold transition-all duration-300 shadow-lg hover:scale-105"
-            >
-              <div className="text-xl mb-2">متوسط</div>
-              <div className="text-sm opacity-90">{getTroopsText('medium')}</div>
-            </button>
-            
-            <button
-              onClick={() => handleDifficultySelect('hard')}
-              className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white p-6 rounded-xl font-bold transition-all duration-300 shadow-lg hover:scale-105"
-            >
-              <div className="text-xl mb-2">صعب</div>
-              <div className="text-sm opacity-90">{getTroopsText('hard')}</div>
-            </button>
+        {/* Rewards/Consequences */}
+        {getRewardsDescription()}
+
+        {/* Question Content */}
+        <div className="bg-slate-700/50 rounded-lg p-6 mb-6">
+          <h3 className="text-xl md:text-2xl font-bold text-center mb-6 text-slate-100">
+            {question.question}
+          </h3>
+
+          {/* Media Content */}
+          {question.hasImage && (
+            <div className="text-center mb-4">
+              <img 
+                src={question.imageUrl} 
+                alt="صورة السؤال"
+                className="max-w-full max-h-64 mx-auto rounded-lg shadow-lg"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+
+          {question.hasAudio && (
+            <div className="text-center mb-4">
+              <audio 
+                controls 
+                className="mx-auto"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              >
+                <source src={question.audioUrl} type="audio/mpeg" />
+                متصفحك لا يدعم تشغيل الصوت
+              </audio>
+            </div>
+          )}
+
+          {question.hasVideo && (
+            <div className="text-center mb-4">
+              <video 
+                controls 
+                className="max-w-full max-h-64 mx-auto rounded-lg"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              >
+                <source src={question.videoUrl} type="video/mp4" />
+                متصفحك لا يدعم تشغيل الفيديو
+              </video>
+            </div>
+          )}
+        </div>
+
+        {!showAnswer ? (
+          /* Answer Input */
+          <div className="space-y-4">
+            <div>
+              <label className="block text-white font-bold mb-2">
+                إجابتك:
+              </label>
+              <input
+                type="text"
+                value={userAnswer}
+                onChange={(e) => setUserAnswer(e.target.value)}
+                placeholder="اكتب إجابتك هنا..."
+                className="w-full p-3 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-gray-400 focus:border-blue-400 focus:outline-none"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSubmitAnswer();
+                  }
+                }}
+                autoFocus
+              />
+            </div>
+
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={handleSubmitAnswer}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-bold transition-all shadow-lg"
+              >
+                إرسال الإجابة
+              </button>
+              <button
+                onClick={onClose}
+                className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-bold transition-all"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* Show Answer and Decision */
+          <div className="space-y-6">
+            <div className="bg-slate-700/50 rounded-lg p-4">
+              <div className="text-center mb-4">
+                <div className="text-gray-300 mb-2">إجابتك:</div>
+                <div className="text-xl font-bold text-blue-400 mb-4">
+                  {userAnswer}
+                </div>
+                <div className="text-gray-300 mb-2">الإجابة الصحيحة:</div>
+                <div className="text-xl font-bold text-green-400">
+                  {question.answer}
+                </div>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <div className="text-white font-bold mb-4">
+                هل إجابتك صحيحة؟
+              </div>
+              <div className="flex gap-4 justify-center">
+                <button
+                  onClick={() => handleFinalAnswer(true)}
+                  className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg font-bold transition-all shadow-lg"
+                >
+                  ✅ صحيحة
+                </button>
+                <button
+                  onClick={() => handleFinalAnswer(false)}
+                  className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg font-bold transition-all shadow-lg"
+                >
+                  ❌ خاطئة
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* السؤال */}
-        {selectedDifficulty && (
-          <>
-            <div className="bg-slate-700/50 rounded-2xl p-6 mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <span className={`px-4 py-2 rounded-full text-white font-bold ${
-                  selectedDifficulty === 'easy' ? 'bg-green-500' :
-                  selectedDifficulty === 'medium' ? 'bg-yellow-500' : 'bg-red-500'
-                }`}>
-                  {getTroopsText(selectedDifficulty)}
-                </span>
-              </div>
-              
-              <h3 className="text-xl font-bold text-white mb-4">{question.question}</h3>
-              
-              {/* عرض الوسائط */}
-              {question.hasImage && (
-                <div className="flex justify-center mb-4">
-                  <img 
-                    src={question.imageUrl} 
-                    alt="صورة السؤال" 
-                    className="max-w-full max-h-64 object-contain rounded-lg"
-                  />
-                </div>
-              )}
-              
-              {question.hasVideo && (
-                <div className="flex justify-center mb-4">
-                  <video 
-                    src={question.videoUrl} 
-                    controls
-                    className="max-w-full max-h-64 rounded-lg"
-                  />
-                </div>
-              )}
-              
-              {question.hasAudio && (
-                <div className="flex justify-center mb-4">
-                  <audio 
-                    controls
-                    src={question.audioUrl}
-                    className="w-full max-w-md"
-                  />
-                </div>
-              )}
-              
-              {question.hasQR && (
-                <div className="flex justify-center mb-4">
-                  <img 
-                    src={question.qrImageUrl} 
-                    alt="QR Code" 
-                    className="max-h-48 object-contain"
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* أزرار الجواب */}
-            {!showAnswer ? (
-              <div className="flex gap-4 justify-center">
-                <button
-                  onClick={() => handleAnswer(true, selectedDifficulty)}
-                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-lg"
-                >
-                  ✅ إجابة صحيحة
-                </button>
-                
-                <button
-                  onClick={showAnswerAndContinue}
-                  className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-lg"
-                >
-                  👁️ إظهار الجواب
-                </button>
-                
-                <button
-                  onClick={() => handleAnswer(false, selectedDifficulty)}
-                  className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-lg"
-                >
-                  ❌ إجابة خاطئة
-                </button>
-              </div>
-            ) : (
-              <div className="text-center">
-                <div className="bg-blue-500/20 rounded-xl p-6 mb-6">
-                  <h4 className="text-lg font-bold text-blue-400 mb-2">الجواب الصحيح:</h4>
-                  <p className="text-white text-xl">{question.answer}</p>
-                </div>
-                
-                <div className="flex gap-4 justify-center">
-                  <button
-                    onClick={() => handleAnswer(true, selectedDifficulty)}
-                    className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-lg"
-                  >
-                    ✅ أجاب صحيح
-                  </button>
-                  
-                  <button
-                    onClick={() => handleAnswer(false, selectedDifficulty)}
-                    className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-lg"
-                  >
-                    ❌ أجاب خطأ
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* زر الإغلاق */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl"
-        >
-          ✕
-        </button>
+        {/* Tips */}
+        <div className="mt-6 pt-4 border-t border-slate-600">
+          <div className="text-xs text-gray-400 text-center">
+            💡 نصيحة: فكر جيداً قبل الإجابة - النتيجة ستؤثر على إمبراطوريتك!
+          </div>
+        </div>
       </div>
     </div>
   );

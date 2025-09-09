@@ -2,36 +2,42 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { sampleTopics } from '../../app/data/gameData';
+import { getRandomRiskQuestion } from '../../app/data/riskGameData';
 
 // Import components
 import PlayerSetup from './PlayerSetup';
 import SpinWheel from './SpinWheel';
-import WorldMap from './WorldMap';
+import WorldMapD3 from './WorldMapD3';
 import GameUI from './GameUI';
 import QuestionModal from './QuestionModal';
 
 export default function RiskGame() {
   // حالة اللعبة الأساسية
-  const [gamePhase, setGamePhase] = useState('setup'); // 'setup', 'spin', 'playing', 'finished'
+  const [gamePhase, setGamePhase] = useState('setup');
   const [players, setPlayers] = useState([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [turnOrder, setTurnOrder] = useState([]);
+  const [round, setRound] = useState(1);
   
   // حالة الخريطة والدول
   const [countries, setCountries] = useState({});
-  const [selectedCountry, setSelectedCountry] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   
-  // حالة القتال والهجوم
-  const [attackMode, setAttackMode] = useState(false);
-  const [attackFrom, setAttackFrom] = useState(null);
-  const [attackTo, setAttackTo] = useState(null);
+  // حالة العمليات
+  const [actionType, setActionType] = useState(null);
+  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [targetCountry, setTargetCountry] = useState(null);
 
-  // ألوان اللاعبين
+  // ألوان اللاعبين (ثابتة ومتطابقة مع WorldMapD3)
   const playerColors = [
-    '#ff4444', '#4444ff', '#44ff44', '#ffff44',
-    '#ff44ff', '#44ffff', '#ff8844', '#8844ff'
+    '#ff4444', // أحمر - لاعب 0
+    '#4444ff', // أزرق - لاعب 1  
+    '#44ff44', // أخضر - لاعب 2
+    '#ffff44', // أصفر - لاعب 3
+    '#ff44ff', // بنفسجي - لاعب 4
+    '#44ffff', // سماوي - لاعب 5
+    '#ff8844', // برتقالي - لاعب 6
+    '#8844ff'  // بنفسجي غامق - لاعب 7
   ];
 
   // إعداد اللاعبين
@@ -42,7 +48,8 @@ export default function RiskGame() {
       color: playerColors[i],
       countries: [],
       totalTroops: 0,
-      eliminated: false
+      eliminated: false,
+      isActive: true
     }));
     setPlayers(newPlayers);
     setGamePhase('spin');
@@ -51,9 +58,13 @@ export default function RiskGame() {
   // عجلة الحظ لتحديد ترتيب اللعب
   const spinForTurnOrder = (result) => {
     const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
-    setTurnOrder(shuffledPlayers.map(p => p.id));
-    setCurrentPlayerIndex(0);
+    const newTurnOrder = shuffledPlayers.map(p => p.id);
+    setTurnOrder(newTurnOrder);
+    setCurrentPlayerIndex(0); // البداية من الفهرس 0
     setGamePhase('playing');
+    
+    console.log('ترتيب اللعب:', newTurnOrder);
+    console.log('اللاعب الحالي:', newTurnOrder[0]);
     
     // تهيئة الدول
     initializeCountries();
@@ -62,161 +73,294 @@ export default function RiskGame() {
   // تهيئة الدول
   const initializeCountries = () => {
     const initialCountries = {
-      egypt: { owner: null, troops: 0, name: 'مصر', region: 'arab_world' },
-      libya: { owner: null, troops: 0, name: 'ليبيا', region: 'arab_world' },
-      france: { owner: null, troops: 0, name: 'فرنسا', region: 'world_tour' },
-      germany: { owner: null, troops: 0, name: 'ألمانيا', region: 'world_tour' },
-      brazil: { owner: null, troops: 0, name: 'البرازيل', region: 'world_tour' },
-      usa: { owner: null, troops: 0, name: 'أمريكا', region: 'world_tour' },
-      china: { owner: null, troops: 0, name: 'الصين', region: 'world_tour' },
-      russia: { owner: null, troops: 0, name: 'روسيا', region: 'world_tour' },
-      australia: { owner: null, troops: 0, name: 'أستراليا', region: 'world_tour' },
-      india: { owner: null, troops: 0, name: 'الهند', region: 'world_tour' }
+      egypt: { owner: null, troops: 0, name: 'مصر' },
+      libya: { owner: null, troops: 0, name: 'ليبيا' },
+      algeria: { owner: null, troops: 0, name: 'الجزائر' },
+      france: { owner: null, troops: 0, name: 'فرنسا' },
+      germany: { owner: null, troops: 0, name: 'ألمانيا' },
+      brazil: { owner: null, troops: 0, name: 'البرازيل' },
+      usa: { owner: null, troops: 0, name: 'أمريكا' },
+      china: { owner: null, troops: 0, name: 'الصين' },
+      russia: { owner: null, troops: 0, name: 'روسيا' },
+      australia: { owner: null, troops: 0, name: 'أستراليا' },
+      india: { owner: null, troops: 0, name: 'الهند' },
+      united_kingdom: { owner: null, troops: 0, name: 'المملكة المتحدة' },
+      spain: { owner: null, troops: 0, name: 'إسبانيا' },
+      italy: { owner: null, troops: 0, name: 'إيطاليا' },
+      canada: { owner: null, troops: 0, name: 'كندا' },
+      mexico: { owner: null, troops: 0, name: 'المكسيك' },
+      argentina: { owner: null, troops: 0, name: 'الأرجنتين' },
+      south_africa: { owner: null, troops: 0, name: 'جنوب أفريقيا' },
+      nigeria: { owner: null, troops: 0, name: 'نيجيريا' },
+      japan: { owner: null, troops: 0, name: 'اليابان' },
+      south_korea: { owner: null, troops: 0, name: 'كوريا الجنوبية' },
+      indonesia: { owner: null, troops: 0, name: 'إندونيسيا' },
+      turkey: { owner: null, troops: 0, name: 'تركيا' },
+      iran: { owner: null, troops: 0, name: 'إيران' },
+      saudi_arabia: { owner: null, troops: 0, name: 'السعودية' },
+      pakistan: { owner: null, troops: 0, name: 'باكستان' },
+      poland: { owner: null, troops: 0, name: 'بولندا' },
+      ukraine: { owner: null, troops: 0, name: 'أوكرانيا' },
+      kazakhstan: { owner: null, troops: 0, name: 'كازاخستان' },
+      mongolia: { owner: null, troops: 0, name: 'منغوليا' },
+      thailand: { owner: null, troops: 0, name: 'تايلاند' },
+      vietnam: { owner: null, troops: 0, name: 'فيتنام' }
     };
     setCountries(initialCountries);
   };
 
+  // الدول المجاورة
+  const adjacentCountries = {
+    egypt: ['libya', 'sudan', 'israel'],
+    libya: ['egypt', 'algeria', 'tunisia', 'chad'],
+    algeria: ['libya', 'morocco', 'tunisia', 'mali'],
+    france: ['spain', 'italy', 'germany', 'united_kingdom'],
+    germany: ['france', 'poland', 'austria', 'netherlands'],
+    usa: ['canada', 'mexico'],
+    canada: ['usa', 'greenland'],
+    mexico: ['usa', 'guatemala'],
+    brazil: ['argentina', 'colombia', 'peru'],
+    china: ['russia', 'mongolia', 'india', 'kazakhstan'],
+    russia: ['china', 'mongolia', 'kazakhstan', 'ukraine'],
+    india: ['china', 'pakistan', 'myanmar'],
+    turkey: ['iran', 'iraq', 'syria'],
+    iran: ['turkey', 'iraq', 'afghanistan'],
+    saudi_arabia: ['iraq', 'jordan', 'yemen'],
+  };
+
+  // الحصول على اللاعب الحالي
+  const getCurrentPlayer = () => {
+    if (turnOrder.length === 0 || currentPlayerIndex >= turnOrder.length) {
+      return null;
+    }
+    const playerId = turnOrder[currentPlayerIndex];
+    return players.find(p => p.id === playerId);
+  };
+
+  const currentPlayer = getCurrentPlayer();
+
   // اختيار دولة
   const selectCountry = (countryId) => {
     const country = countries[countryId];
-    const currentPlayer = players[turnOrder[currentPlayerIndex]];
+    if (!country) {
+      console.log('دولة غير معروفة:', countryId);
+      return;
+    }
+
+    if (!currentPlayer) {
+      console.log('لا يوجد لاعب حالي');
+      return;
+    }
+
+    console.log(`اللاعب الحالي: ${currentPlayer.name} (ID: ${currentPlayer.id})`);
+    console.log(`دولة مختارة: ${country.name} (مالك: ${country.owner})`);
     
-    if (!country.owner) {
-      // احتلال دولة جديدة
-      setSelectedCountry(countryId);
-      showQuestion(countryId, 'occupy');
+    if (country.owner === null) {
+      // دولة فارغة - احتلال
+      occupyCountry(countryId, currentPlayer);
     } else if (country.owner === currentPlayer.id) {
-      // تقوية دولة مملوكة
-      setSelectedCountry(countryId);
-      showQuestion(countryId, 'reinforce');
-    } else if (isAdjacent(countryId, currentPlayer.countries)) {
-      // مهاجمة دولة مجاورة
-      setAttackMode(true);
-      setAttackTo(countryId);
-      showQuestion(countryId, 'attack');
+      // دولة مملوكة - تقوية
+      reinforceCountry(countryId);
+    } else {
+      // دولة للعدو - هجوم (فقط إذا كانت مجاورة)
+      const playerCountries = Object.keys(countries).filter(id => 
+        countries[id].owner === currentPlayer.id
+      );
+      
+      const canAttack = playerCountries.some(playerCountryId => 
+        adjacentCountries[playerCountryId]?.includes(countryId)
+      );
+      
+      if (canAttack) {
+        attackCountry(countryId);
+      } else {
+        alert('يمكنك فقط مهاجمة الدول المجاورة لدولك!');
+      }
     }
   };
 
-  // عرض السؤال
-  const showQuestion = (countryId, actionType) => {
-    const countryData = countries[countryId];
-    const randomQuestion = getRandomQuestion(countryData.region);
-    setCurrentQuestion({
-      ...randomQuestion,
-      countryId,
-      actionType
+  // احتلال دولة فارغة
+  const occupyCountry = (countryId, player) => {
+    setActionType('occupy');
+    setSelectedCountry(countryId);
+    
+    console.log(`${player.name} يحاول احتلال ${countries[countryId].name}`);
+    
+    // اختيار سؤال عشوائي من أسئلة Risk
+    showRiskQuestion((difficulty) => {
+      const troopsGained = getTroopsForDifficulty(difficulty);
+      
+      // تحديث الدول مع التأكد من عدم إزالة ملكية الدول الأخرى
+      setCountries(prevCountries => {
+        const newCountries = { ...prevCountries };
+        newCountries[countryId] = {
+          ...newCountries[countryId],
+          owner: player.id,
+          troops: troopsGained
+        };
+        console.log(`تم احتلال ${countryId} بواسطة اللاعب ${player.id}`);
+        return newCountries;
+      });
+      
+      // تحديث قائمة دول اللاعب
+      setPlayers(prevPlayers => {
+        const newPlayers = [...prevPlayers];
+        const playerIndex = newPlayers.findIndex(p => p.id === player.id);
+        if (playerIndex !== -1) {
+          newPlayers[playerIndex].countries.push(countryId);
+          newPlayers[playerIndex].totalTroops += troopsGained;
+        }
+        return newPlayers;
+      });
+      
+      alert(`تم احتلال ${countries[countryId].name} بـ ${troopsGained} جندي!`);
+      nextTurn();
+    }, () => {
+      alert('فشل في احتلال الدولة!');
+      nextTurn();
     });
   };
 
-  // الحصول على سؤال عشوائي
-  const getRandomQuestion = (region) => {
-    const regionData = sampleTopics.find(topic => topic.id === region);
-    if (regionData && regionData.questions) {
-      const questions = regionData.questions;
-      return questions[Math.floor(Math.random() * questions.length)];
+  // مهاجمة دولة
+  const attackCountry = (targetCountryId) => {
+    // العثور على الدولة المهاجمة
+    const attackingCountryId = Object.keys(countries).find(id => 
+      countries[id].owner === currentPlayer.id && 
+      adjacentCountries[id]?.includes(targetCountryId)
+    );
+    
+    if (!attackingCountryId) {
+      alert('لا يوجد دولة مجاورة للهجوم منها!');
+      return;
     }
-    // fallback إذا لم توجد أسئلة
-    return {
-      question: 'ما هي عاصمة هذه الدولة؟',
-      answer: 'السؤال التجريبي',
-      difficulty: 'easy',
-      points: 200
-    };
-  };
-
-  // الإجابة على السؤال
-  const answerQuestion = (isCorrect, difficulty) => {
-    const countryId = currentQuestion.countryId;
-    const actionType = currentQuestion.actionType;
-    const currentPlayer = players[turnOrder[currentPlayerIndex]];
-
-    if (actionType === 'occupy') {
-      if (isCorrect) {
-        const troops = getTroopsForDifficulty(difficulty);
-        occupyCountry(countryId, currentPlayer.id, troops);
-      }
-    } else if (actionType === 'attack') {
-      if (isCorrect) {
-        const troops = getTroopsForDifficulty(difficulty) + 15; // هدية الاحتلال
-        occupyCountry(countryId, currentPlayer.id, troops);
-      } else {
-        // فقدان نصف الجيش
-        reducePlayerTroops(currentPlayer.id, 0.5);
-      }
-    } else if (actionType === 'reinforce') {
-      if (isCorrect) {
-        const troops = getTroopsForDifficulty(difficulty);
-        reinforceCountry(countryId, troops);
-      } else {
-        // فقدان 25% من الجيش
-        reduceCountryTroops(countryId, 0.25);
-      }
-    }
-
-    setCurrentQuestion(null);
-    nextTurn();
-  };
-
-  // احتلال دولة
-  const occupyCountry = (countryId, playerId, troops) => {
-    setCountries(prev => ({
-      ...prev,
-      [countryId]: {
-        ...prev[countryId],
-        owner: playerId,
-        troops: troops
-      }
-    }));
-
-    setPlayers(prev => prev.map(player => {
-      if (player.id === playerId) {
-        return {
-          ...player,
-          countries: [...player.countries, countryId],
-          totalTroops: player.totalTroops + troops
+    
+    setActionType('attack');
+    setSelectedCountry(attackingCountryId);
+    setTargetCountry(targetCountryId);
+    
+    console.log(`${currentPlayer.name} يهاجم ${countries[targetCountryId].name} من ${countries[attackingCountryId].name}`);
+    
+    showRiskQuestion(() => {
+      // نجح الهجوم
+      setCountries(prevCountries => {
+        const newCountries = { ...prevCountries };
+        
+        // إضافة الدولة للاعب الحالي مع 15 جندي إضافي
+        newCountries[targetCountryId] = {
+          ...newCountries[targetCountryId],
+          owner: currentPlayer.id,
+          troops: 15
         };
-      }
-      return player;
-    }));
+        
+        console.log(`تم احتلال ${targetCountryId} بواسطة اللاعب ${currentPlayer.id}`);
+        return newCountries;
+      });
+      
+      setPlayers(prevPlayers => {
+        const newPlayers = [...prevPlayers];
+        
+        // إزالة الدولة من اللاعب السابق
+        const previousOwner = countries[targetCountryId].owner;
+        if (previousOwner !== null) {
+          const prevOwnerIndex = newPlayers.findIndex(p => p.id === previousOwner);
+          if (prevOwnerIndex !== -1) {
+            newPlayers[prevOwnerIndex].countries = newPlayers[prevOwnerIndex].countries.filter(c => c !== targetCountryId);
+            newPlayers[prevOwnerIndex].totalTroops -= countries[targetCountryId].troops;
+          }
+        }
+        
+        // إضافة الدولة للاعب الحالي
+        const currentPlayerIndex = newPlayers.findIndex(p => p.id === currentPlayer.id);
+        if (currentPlayerIndex !== -1) {
+          newPlayers[currentPlayerIndex].countries.push(targetCountryId);
+          newPlayers[currentPlayerIndex].totalTroops += 15;
+        }
+        
+        return newPlayers;
+      });
+      
+      alert(`تم احتلال ${countries[targetCountryId].name} بنجاح! +15 جندي`);
+      nextTurn();
+    }, () => {
+      // فشل الهجوم - خسارة نصف الجيش
+      setCountries(prevCountries => {
+        const newCountries = { ...prevCountries };
+        const currentTroops = newCountries[attackingCountryId].troops;
+        const newTroops = Math.floor(currentTroops / 2);
+        newCountries[attackingCountryId].troops = newTroops;
+        return newCountries;
+      });
+      
+      setPlayers(prevPlayers => {
+        const newPlayers = [...prevPlayers];
+        const playerIndex = newPlayers.findIndex(p => p.id === currentPlayer.id);
+        if (playerIndex !== -1) {
+          const troopsLost = countries[attackingCountryId].troops - Math.floor(countries[attackingCountryId].troops / 2);
+          newPlayers[playerIndex].totalTroops -= troopsLost;
+        }
+        return newPlayers;
+      });
+      
+      alert(`فشل الهجوم! خسرت نصف جيشك في ${countries[attackingCountryId].name}`);
+      nextTurn();
+    });
   };
 
   // تقوية دولة
-  const reinforceCountry = (countryId, troops) => {
-    setCountries(prev => ({
-      ...prev,
-      [countryId]: {
-        ...prev[countryId],
-        troops: prev[countryId].troops + troops
-      }
-    }));
+  const reinforceCountry = (countryId) => {
+    setActionType('reinforce');
+    setSelectedCountry(countryId);
+    
+    console.log(`${currentPlayer.name} يقوي ${countries[countryId].name}`);
+    
+    showRiskQuestion((difficulty) => {
+      // نجحت التقوية
+      const troopsGained = getTroopsForDifficulty(difficulty);
+      
+      setCountries(prevCountries => {
+        const newCountries = { ...prevCountries };
+        newCountries[countryId].troops += troopsGained;
+        return newCountries;
+      });
+      
+      setPlayers(prevPlayers => {
+        const newPlayers = [...prevPlayers];
+        const playerIndex = newPlayers.findIndex(p => p.id === currentPlayer.id);
+        if (playerIndex !== -1) {
+          newPlayers[playerIndex].totalTroops += troopsGained;
+        }
+        return newPlayers;
+      });
+      
+      alert(`تم تقوية ${countries[countryId].name} بـ ${troopsGained} جندي!`);
+      nextTurn();
+    }, () => {
+      // فشلت التقوية - خسارة 25%
+      setCountries(prevCountries => {
+        const newCountries = { ...prevCountries };
+        const currentTroops = newCountries[countryId].troops;
+        const troopsLost = Math.floor(currentTroops * 0.25);
+        const newTroops = currentTroops - troopsLost;
+        newCountries[countryId].troops = Math.max(1, newTroops);
+        return newCountries;
+      });
+      
+      setPlayers(prevPlayers => {
+        const newPlayers = [...prevPlayers];
+        const playerIndex = newPlayers.findIndex(p => p.id === currentPlayer.id);
+        if (playerIndex !== -1) {
+          const troopsLost = Math.floor(countries[countryId].troops * 0.25);
+          newPlayers[playerIndex].totalTroops -= troopsLost;
+        }
+        return newPlayers;
+      });
+      
+      alert(`فشلت التقوية! خسرت 25% من جيش ${countries[countryId].name}`);
+      nextTurn();
+    });
   };
 
-  // تقليل قوات اللاعب
-  const reducePlayerTroops = (playerId, percentage) => {
-    setPlayers(prev => prev.map(player => {
-      if (player.id === playerId) {
-        const newTotalTroops = Math.floor(player.totalTroops * (1 - percentage));
-        return {
-          ...player,
-          totalTroops: newTotalTroops
-        };
-      }
-      return player;
-    }));
-  };
-
-  // تقليل قوات دولة
-  const reduceCountryTroops = (countryId, percentage) => {
-    setCountries(prev => ({
-      ...prev,
-      [countryId]: {
-        ...prev[countryId],
-        troops: Math.floor(prev[countryId].troops * (1 - percentage))
-      }
-    }));
-  };
-
-  // الحصول على عدد الجنود حسب الصعوبة
+  // الحصول على عدد الجنود حسب صعوبة السؤال
   const getTroopsForDifficulty = (difficulty) => {
     switch (difficulty) {
       case 'easy': return 5;
@@ -226,44 +370,116 @@ export default function RiskGame() {
     }
   };
 
-  // التحقق من التجاور
-  const isAdjacent = (countryId, playerCountries) => {
-    const adjacencyMap = {
-      egypt: ['libya', 'sudan', 'israel'],
-      libya: ['egypt', 'tunisia', 'algeria', 'chad'],
-      france: ['spain', 'germany', 'italy', 'switzerland'],
-      germany: ['france', 'poland', 'czech'],
-      usa: ['canada', 'mexico'],
-      china: ['russia', 'india', 'mongolia'],
-      russia: ['china', 'mongolia'],
-      brazil: ['argentina', 'colombia'],
-      australia: ['new_zealand'],
-      india: ['china', 'pakistan']
-    };
+  // إظهار سؤال من أسئلة Risk
+  const showRiskQuestion = (onSuccess, onFailure) => {
+    const question = getRandomRiskQuestion();
     
-    return playerCountries.some(playerCountry => 
-      adjacencyMap[playerCountry]?.includes(countryId)
-    );
+    if (!question) {
+      setCurrentQuestion({
+        id: 'default',
+        question: 'ما هي عاصمة فرنسا؟',
+        answer: 'باريس',
+        difficulty: 'easy',
+        points: 5,
+        onSuccess: () => onSuccess('easy'),
+        onFailure: onFailure
+      });
+      return;
+    }
+    
+    setCurrentQuestion({
+      ...question,
+      onSuccess: () => onSuccess(question.difficulty),
+      onFailure: onFailure
+    });
+  };
+
+  // الإجابة على السؤال
+  const answerQuestion = (isCorrect) => {
+    if (isCorrect && currentQuestion.onSuccess) {
+      currentQuestion.onSuccess();
+    } else if (!isCorrect && currentQuestion.onFailure) {
+      currentQuestion.onFailure();
+    }
+    setCurrentQuestion(null);
+    setActionType(null);
+    setSelectedCountry(null);
+    setTargetCountry(null);
   };
 
   // الدور التالي
   const nextTurn = () => {
+    // فحص انتهاء اللعبة
+    if (checkGameEnd()) return;
+    
+    // الانتقال للاعب التالي
     const nextIndex = (currentPlayerIndex + 1) % turnOrder.length;
     setCurrentPlayerIndex(nextIndex);
     
-    // التحقق من انتهاء اللعبة
-    checkGameEnd();
-  };
-
-  // التحقق من انتهاء اللعبة
-  const checkGameEnd = () => {
-    const activePlayers = players.filter(p => !p.eliminated);
-    if (activePlayers.length === 1) {
-      setGamePhase('finished');
+    const nextPlayer = players.find(p => p.id === turnOrder[nextIndex]);
+    console.log(`الدور التالي: ${nextPlayer?.name} (Index: ${nextIndex}, ID: ${turnOrder[nextIndex]})`);
+    
+    // فحص إذا انتهت الجولة الأولى (كل الدول محتلة)
+    const allCountriesOccupied = Object.values(countries).every(country => country.owner !== null);
+    if (allCountriesOccupied && gamePhase === 'playing') {
+      setGamePhase('elimination');
+      eliminatePlayersWithoutCountries();
     }
   };
 
-  const currentPlayer = gamePhase === 'playing' ? players[turnOrder[currentPlayerIndex]] : null;
+  // إقصاء اللاعبين بدون دول
+  const eliminatePlayersWithoutCountries = () => {
+    setPlayers(prevPlayers => {
+      const newPlayers = [...prevPlayers];
+      let eliminatedCount = 0;
+      
+      newPlayers.forEach(player => {
+        if (player.countries.length === 0 && !player.eliminated) {
+          player.eliminated = true;
+          player.isActive = false;
+          eliminatedCount++;
+        }
+      });
+      
+      if (eliminatedCount > 0) {
+        const activePlayers = newPlayers.filter(p => !p.eliminated);
+        const newTurnOrder = activePlayers.map(p => p.id);
+        setTurnOrder(newTurnOrder);
+        setCurrentPlayerIndex(0);
+        
+        alert(`تم إقصاء ${eliminatedCount} لاعب لعدم احتلالهم أي دولة!`);
+      }
+      
+      return newPlayers;
+    });
+  };
+
+  // فحص انتهاء اللعبة
+  const checkGameEnd = () => {
+    const activePlayers = players.filter(p => !p.eliminated);
+    
+    if (activePlayers.length === 1) {
+      setGamePhase('finished');
+      alert(`🎉 تهانينا! ${activePlayers[0].name} احتل العالم وفاز باللعبة! 🏆`);
+      return true;
+    }
+    
+    return false;
+  };
+
+  // إعادة تشغيل اللعبة
+  const restartGame = () => {
+    setGamePhase('setup');
+    setPlayers([]);
+    setCurrentPlayerIndex(0);
+    setTurnOrder([]);
+    setCountries({});
+    setCurrentQuestion(null);
+    setActionType(null);
+    setSelectedCountry(null);
+    setTargetCountry(null);
+    setRound(1);
+  };
 
   return (
     <div className="risk-game min-h-screen bg-gradient-to-br from-blue-900 via-slate-800 to-blue-900">
@@ -275,20 +491,41 @@ export default function RiskGame() {
         <SpinWheel players={players} onSpinComplete={spinForTurnOrder} />
       )}
       
-      {gamePhase === 'playing' && (
+      {(gamePhase === 'playing' || gamePhase === 'elimination') && (
         <>
           <GameUI 
             currentPlayer={currentPlayer}
             players={players}
             countries={countries}
+            gamePhase={gamePhase}
+            round={round}
+            onEndTurn={nextTurn}
+            onRestart={restartGame}
           />
-          <WorldMap 
+          <WorldMapD3 
             countries={countries}
             onCountryClick={selectCountry}
             currentPlayer={currentPlayer}
-            attackMode={attackMode}
+            actionType={actionType}
           />
         </>
+      )}
+
+      {gamePhase === 'finished' && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl p-8 text-center shadow-2xl">
+            <h1 className="text-4xl font-bold text-white mb-4">🏆 انتهت اللعبة! 🏆</h1>
+            <p className="text-xl text-white mb-6">
+              {players.find(p => !p.eliminated)?.name} احتل العالم!
+            </p>
+            <button
+              onClick={restartGame}
+              className="bg-white text-orange-500 px-8 py-3 rounded-lg font-bold text-lg hover:scale-105 transition-transform"
+            >
+              لعبة جديدة
+            </button>
+          </div>
+        </div>
       )}
 
       {currentQuestion && (
@@ -296,6 +533,9 @@ export default function RiskGame() {
           question={currentQuestion}
           onAnswer={answerQuestion}
           onClose={() => setCurrentQuestion(null)}
+          actionType={actionType}
+          selectedCountry={selectedCountry ? countries[selectedCountry]?.name : ''}
+          targetCountry={targetCountry ? countries[targetCountry]?.name : ''}
         />
       )}
     </div>
