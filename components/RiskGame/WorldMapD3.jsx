@@ -7,7 +7,7 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
   const svgRef = useRef();
   const [tooltip, setTooltip] = useState({ show: false, x: 0, y: 0, content: '' });
   const [isLoading, setIsLoading] = useState(true);
-  const [mapInitialized, setMapInitialized] = useState(false);
+  const [mapData, setMapData] = useState(null);
 
   const width = 1000;
   const height = 600;
@@ -24,31 +24,64 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
     '#8844ff'  // بنفسجي غامق - لاعب 7
   ];
 
-  // أرقام المناطق (نفس الكود السابق)
+  // أرقام المناطق
   const regionNumbers = {
     'United States of America': '1', 'Canada': '3', 'Mexico': '1', 'Brazil': '1',
     'Argentina': '1', 'Russia': '2', 'China': '12', 'India': '17', 'Australia': '10',
     'Germany': '13', 'France': '1', 'United Kingdom': '1', 'Egypt': '1', 'Nigeria': '13',
     'South Africa': '1', 'Japan': '1', 'Mongolia': '9', 'Kazakhstan': '1', 'Turkey': '1',
-    'Iran': '1', 'Saudi Arabia': '1'
+    'Iran': '1', 'Saudi Arabia': '1', 'Poland': '1', 'Ukraine': '1', 'Spain': '1',
+    'Italy': '1', 'Indonesia': '1', 'Thailand': '1', 'Vietnam': '1', 'Pakistan': '1'
   };
 
+  const getCountryId = (countryName) => {
+    const countryMapping = {
+      'Egypt': 'egypt', 'Libya': 'libya', 'Algeria': 'algeria', 'France': 'france',
+      'Germany': 'germany', 'Brazil': 'brazil', 'United States of America': 'usa',
+      'China': 'china', 'Russia': 'russia', 'Australia': 'australia', 'India': 'india',
+      'United Kingdom': 'united_kingdom', 'Spain': 'spain', 'Italy': 'italy',
+      'Canada': 'canada', 'Mexico': 'mexico', 'Argentina': 'argentina',
+      'South Africa': 'south_africa', 'Nigeria': 'nigeria', 'Japan': 'japan',
+      'South Korea': 'south_korea', 'Indonesia': 'indonesia', 'Turkey': 'turkey',
+      'Iran': 'iran', 'Saudi Arabia': 'saudi_arabia', 'Pakistan': 'pakistan',
+      'Poland': 'poland', 'Ukraine': 'ukraine', 'Kazakhstan': 'kazakhstan',
+      'Mongolia': 'mongolia', 'Thailand': 'thailand', 'Vietnam': 'vietnam'
+    };
+    return countryMapping[countryName] || countryName.toLowerCase().replace(/\s+/g, '_');
+  };
+
+  // تحميل D3 وبيانات الخريطة مرة واحدة فقط
   useEffect(() => {
-    loadD3AndCreateMap();
+    const loadMapData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // تحميل D3 إذا لم يكن محملاً
+        if (!window.d3) {
+          await loadD3Scripts();
+        }
+
+        // تحميل بيانات الخريطة
+        const worldData = await window.d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+        const countriesData = window.topojson.feature(worldData, worldData.objects.countries);
+        
+        setMapData(countriesData);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('خطأ في تحميل الخريطة:', error);
+        setIsLoading(false);
+      }
+    };
+
+    loadMapData();
   }, []);
 
+  // رسم وتحديث الخريطة عند تغيير البيانات
   useEffect(() => {
-    if (mapInitialized) {
-      updateMapColors();
-    }
-  }, [countries, currentPlayer, actionType, mapInitialized]);
-
-  const loadD3AndCreateMap = async () => {
-    if (!window.d3) {
-      await loadD3Scripts();
-    }
-    await createMap();
-  };
+    if (!mapData || !window.d3) return;
+    
+    drawMap();
+  }, [mapData, countries, currentPlayer]); // مهم: تحديث عند تغيير countries
 
   const loadD3Scripts = () => {
     return new Promise((resolve) => {
@@ -64,122 +97,116 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
     });
   };
 
-  const createMap = async () => {
-    try {
-      setIsLoading(true);
-      
-      // تحميل بيانات العالم
-      const worldData = await window.d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
-      const countriesData = window.topojson.feature(worldData, worldData.objects.countries);
-      
-      // إعداد SVG
-      const svg = window.d3.select(svgRef.current);
-      svg.selectAll("*").remove();
-      
-      const g = svg.append("g");
-      
-      const projection = window.d3.geoNaturalEarth1()
-        .scale(160)
-        .translate([width / 2, height / 2]);
-        
-      const path = window.d3.geoPath().projection(projection);
-      
-      // إعداد الزووم
-      const zoom = window.d3.zoom()
-        .scaleExtent([0.5, 8])
-        .on("zoom", (event) => {
-          g.attr("transform", event.transform);
-          g.selectAll(".country-number")
-            .style("font-size", Math.max(8, 14 / event.transform.k) + "px");
-        });
-        
-      svg.call(zoom);
-      
-      // رسم الدول
-      g.selectAll(".country")
-        .data(countriesData.features)
-        .enter()
-        .append("path")
-        .attr("class", "country")
-        .attr("d", path)
-        .attr("fill", d => getCountryColor(d))
-        .attr("stroke", d => getCountryStroke(d))
-        .attr("stroke-width", d => getCountryStrokeWidth(d))
-        .style("cursor", "pointer")
-        .style("transition", "all 0.3s ease")
-        .on("mouseover", handleMouseOver)
-        .on("mousemove", handleMouseMove)
-        .on("mouseout", handleMouseOut)
-        .on("click", handleCountryClick);
-      
-      // إضافة أرقام المناطق
-      setTimeout(() => {
-        addRegionNumbers(countriesData, g, path);
-      }, 500);
-      
-      setMapInitialized(true);
-      setIsLoading(false);
-      
-    } catch (error) {
-      console.error('خطأ في تحميل الخريطة:', error);
-      createFallbackMap();
-    }
-  };
-
-  const createFallbackMap = () => {
+  const drawMap = () => {
     const svg = window.d3.select(svgRef.current);
+    
+    // مسح المحتوى السابق
     svg.selectAll("*").remove();
+    
+    const g = svg.append("g");
     
     const projection = window.d3.geoNaturalEarth1()
       .scale(160)
       .translate([width / 2, height / 2]);
-    
-    const continentData = [
-      {name: 'أمريكا الشمالية', coords: [[-100, 50]], number: '3', id: 'usa'},
-      {name: 'أمريكا الجنوبية', coords: [[-60, -15]], number: '1', id: 'brazil'},
-      {name: 'أفريقيا', coords: [[20, 0]], number: '13', id: 'egypt'},
-      {name: 'أوروبا', coords: [[10, 55]], number: '1', id: 'france'},
-      {name: 'آسيا', coords: [[100, 35]], number: '12', id: 'china'},
-      {name: 'أستراليا', coords: [[135, -25]], number: '10', id: 'australia'}
-    ];
-    
-    continentData.forEach(continent => {
-      const coords = projection(continent.coords[0]);
-      const countryId = continent.id;
-      const country = countries[countryId];
       
-      svg.append("circle")
-        .attr("cx", coords[0])
-        .attr("cy", coords[1])
-        .attr("r", 50)
-        .attr("fill", getCountryColorById(countryId))
-        .attr("stroke", getCountryStrokeById(countryId))
-        .attr("stroke-width", getCountryStrokeWidthById(countryId))
-        .style("cursor", "pointer")
-        .on("click", () => onCountryClick && onCountryClick(countryId));
-      
-      svg.append("text")
-        .attr("x", coords[0])
-        .attr("y", coords[1])
-        .attr("text-anchor", "middle")
-        .attr("dominant-baseline", "middle")
-        .style("font-size", "14px")
-        .style("font-weight", "bold")
-        .style("fill", "white")
-        .style("stroke", "#2c3e50")
-        .style("stroke-width", "1px")
-        .style("pointer-events", "none")
-        .text(continent.number);
-    });
+    const path = window.d3.geoPath().projection(projection);
     
-    setMapInitialized(true);
-    setIsLoading(false);
-  };
-
-  const addRegionNumbers = (countriesData, g, path) => {
+    // إعداد الزووم
+    const zoom = window.d3.zoom()
+      .scaleExtent([0.5, 8])
+      .on("zoom", (event) => {
+        g.attr("transform", event.transform);
+      });
+      
+    svg.call(zoom);
+    
+    // رسم الدول
+    const countriesSelection = g.selectAll(".country")
+      .data(mapData.features)
+      .enter()
+      .append("path")
+      .attr("class", "country")
+      .attr("d", path)
+      .attr("fill", d => {
+        const countryName = d.properties.NAME || d.properties.name;
+        const countryId = getCountryId(countryName);
+        const country = countries[countryId];
+        
+        if (country && country.owner !== undefined && country.owner !== null) {
+          const color = playerColors[country.owner] || '#666666';
+          console.log(`رسم ${countryId}: مالك=${country.owner}, لون=${color}`);
+          return color;
+        }
+        return '#888888';
+      })
+      .attr("stroke", d => {
+        const countryName = d.properties.NAME || d.properties.name;
+        const countryId = getCountryId(countryName);
+        const country = countries[countryId];
+        
+        if (country && country.owner === currentPlayer?.id) {
+          return '#FFD700';
+        } else if (country && country.owner !== undefined && country.owner !== null) {
+          return '#FFFFFF';
+        }
+        return '#2c3e50';
+      })
+      .attr("stroke-width", d => {
+        const countryName = d.properties.NAME || d.properties.name;
+        const countryId = getCountryId(countryName);
+        const country = countries[countryId];
+        
+        if (country && country.owner === currentPlayer?.id) {
+          return 3;
+        }
+        return 1.5;
+      })
+      .style("cursor", "pointer")
+      .on("mouseover", function(event, d) {
+        const countryName = d.properties.NAME || d.properties.name;
+        const countryId = getCountryId(countryName);
+        const country = countries[countryId];
+        const number = regionNumbers[countryName] || '1';
+        
+        let ownerInfo = 'غير محتلة';
+        let troopsInfo = '';
+        
+        if (country && country.owner !== undefined && country.owner !== null) {
+          ownerInfo = `لاعب ${country.owner + 1}`;
+          troopsInfo = `الجنود: ${country.troops}`;
+        }
+        
+        setTooltip({
+          show: true,
+          x: event.pageX + 10,
+          y: event.pageY - 10,
+          content: `${countryName}\nقوة المنطقة: ${number}\nالمالك: ${ownerInfo}\n${troopsInfo}`
+        });
+      })
+      .on("mousemove", function(event) {
+        setTooltip(prev => ({
+          ...prev,
+          x: event.pageX + 10,
+          y: event.pageY - 10
+        }));
+      })
+      .on("mouseout", function() {
+        setTooltip({ show: false, x: 0, y: 0, content: '' });
+      })
+      .on("click", function(event, d) {
+        const countryName = d.properties.NAME || d.properties.name;
+        const countryId = getCountryId(countryName);
+        
+        console.log(`نقر على ${countryName} (${countryId})`);
+        
+        if (onCountryClick) {
+          onCountryClick(countryId);
+        }
+      });
+    
+    // إضافة أرقام المناطق
     const numberData = [];
-    
-    countriesData.features.forEach(feature => {
+    mapData.features.forEach(feature => {
       const countryName = feature.properties.NAME || feature.properties.name;
       const number = regionNumbers[countryName];
       
@@ -213,162 +240,80 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
       .text(d => d.number);
   };
 
-  const updateMapColors = () => {
-    if (!window.d3 || !mapInitialized) return;
-    
-    const svg = window.d3.select(svgRef.current);
-    svg.selectAll(".country")
-      .attr("fill", function(d) { return getCountryColor(d); })
-      .attr("stroke", function(d) { return getCountryStroke(d); })
-      .attr("stroke-width", function(d) { return getCountryStrokeWidth(d); });
-  };
+  // خريطة بديلة بسيطة (في حالة فشل تحميل D3)
+  const renderFallbackMap = () => {
+    const continents = [
+      { id: 'usa', name: 'أمريكا', x: 200, y: 250, color: countries['usa']?.owner },
+      { id: 'canada', name: 'كندا', x: 200, y: 150, color: countries['canada']?.owner },
+      { id: 'brazil', name: 'البرازيل', x: 300, y: 400, color: countries['brazil']?.owner },
+      { id: 'france', name: 'فرنسا', x: 500, y: 200, color: countries['france']?.owner },
+      { id: 'germany', name: 'ألمانيا', x: 520, y: 180, color: countries['germany']?.owner },
+      { id: 'egypt', name: 'مصر', x: 550, y: 300, color: countries['egypt']?.owner },
+      { id: 'china', name: 'الصين', x: 750, y: 250, color: countries['china']?.owner },
+      { id: 'russia', name: 'روسيا', x: 650, y: 150, color: countries['russia']?.owner },
+      { id: 'australia', name: 'أستراليا', x: 800, y: 450, color: countries['australia']?.owner },
+    ];
 
-  // الحصول على لون الدولة (إما رمادي أو لون اللاعب)
-  const getCountryColor = (feature) => {
-    const countryName = feature.properties.NAME || feature.properties.name || 'Unknown';
-    const countryId = getCountryId(countryName);
-    const country = countries[countryId];
-    
-    // إذا كانت الدولة محتلة، استخدم لون اللاعب
-    if (country && country.owner !== undefined && country.owner !== null) {
-      return playerColors[country.owner] || '#666666';
-    }
-    
-    // إذا لم تكن محتلة، استخدم اللون الرمادي
-    return '#888888'; // رمادي للدول غير المحتلة
-  };
-
-  // نفس الدالة لكن للاستخدام مع ID مباشر
-  const getCountryColorById = (countryId) => {
-    const country = countries[countryId];
-    
-    if (country && country.owner !== undefined && country.owner !== null) {
-      return playerColors[country.owner] || '#666666';
-    }
-    
-    return '#888888';
-  };
-
-  const getCountryStroke = (feature) => {
-    const countryName = feature.properties.NAME || feature.properties.name || 'Unknown';
-    const countryId = getCountryId(countryName);
-    const country = countries[countryId];
-    
-    if (country && country.owner === currentPlayer?.id) {
-      return '#FFD700'; // ذهبي للدول المملوكة للاعب الحالي
-    } else if (country && country.owner !== undefined && country.owner !== null) {
-      return '#FFFFFF'; // أبيض للدول المحتلة من قبل لاعبين آخرين
-    }
-    return '#2c3e50'; // رمادي داكن للدول غير المحتلة
-  };
-
-  const getCountryStrokeById = (countryId) => {
-    const country = countries[countryId];
-    
-    if (country && country.owner === currentPlayer?.id) {
-      return '#FFD700';
-    } else if (country && country.owner !== undefined && country.owner !== null) {
-      return '#FFFFFF';
-    }
-    return '#2c3e50';
-  };
-
-  const getCountryStrokeWidth = (feature) => {
-    const countryName = feature.properties.NAME || feature.properties.name || 'Unknown';
-    const countryId = getCountryId(countryName);
-    const country = countries[countryId];
-    
-    if (country && country.owner === currentPlayer?.id) {
-      return 3; // حدود أكثر سماكة للدول المملوكة للاعب الحالي
-    }
-    return 1.5;
-  };
-
-  const getCountryStrokeWidthById = (countryId) => {
-    const country = countries[countryId];
-    
-    if (country && country.owner === currentPlayer?.id) {
-      return 3;
-    }
-    return 1.5;
-  };
-
-  const getCountryId = (countryName) => {
-    const countryMapping = {
-      'Egypt': 'egypt', 'Libya': 'libya', 'Algeria': 'algeria', 'France': 'france',
-      'Germany': 'germany', 'Brazil': 'brazil', 'United States of America': 'usa',
-      'China': 'china', 'Russia': 'russia', 'Australia': 'australia', 'India': 'india',
-      'United Kingdom': 'united_kingdom', 'Spain': 'spain', 'Italy': 'italy',
-      'Canada': 'canada', 'Mexico': 'mexico', 'Argentina': 'argentina',
-      'South Africa': 'south_africa', 'Nigeria': 'nigeria', 'Japan': 'japan',
-      'South Korea': 'south_korea', 'Indonesia': 'indonesia', 'Turkey': 'turkey',
-      'Iran': 'iran', 'Saudi Arabia': 'saudi_arabia', 'Pakistan': 'pakistan',
-      'Poland': 'poland', 'Ukraine': 'ukraine', 'Kazakhstan': 'kazakhstan',
-      'Mongolia': 'mongolia', 'Thailand': 'thailand', 'Vietnam': 'vietnam'
-    };
-    return countryMapping[countryName] || countryName.toLowerCase().replace(/\s+/g, '_');
-  };
-
-  const handleMouseOver = (event, feature) => {
-    const countryName = feature.properties.NAME || feature.properties.name || 'منطقة غير معروفة';
-    const countryId = getCountryId(countryName);
-    const country = countries[countryId];
-    const number = regionNumbers[countryName] || '1';
-    
-    let ownerInfo = 'غير محتلة';
-    let troopsInfo = '';
-    
-    if (country && country.owner !== undefined && country.owner !== null) {
-      ownerInfo = `لاعب ${country.owner + 1}`;
-      troopsInfo = `الجنود: ${country.troops}`;
-    }
-    
-    setTooltip({
-      show: true,
-      x: event.pageX + 10,
-      y: event.pageY - 10,
-      content: `${countryName}\nقوة المنطقة: ${number}\nالمالك: ${ownerInfo}\n${troopsInfo}\nانقر للتفاعل`
-    });
-  };
-
-  const handleMouseMove = (event) => {
-    setTooltip(prev => ({
-      ...prev,
-      x: event.pageX + 10,
-      y: event.pageY - 10
-    }));
-  };
-
-  const handleMouseOut = () => {
-    setTooltip({ show: false, x: 0, y: 0, content: '' });
-  };
-
-  const handleCountryClick = (event, feature) => {
-    const countryName = feature.properties.NAME || feature.properties.name;
-    const countryId = getCountryId(countryName);
-    
-    if (onCountryClick) {
-      onCountryClick(countryId);
-    }
+    return (
+      <svg
+        ref={svgRef}
+        width={width}
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        className="w-full h-full"
+        style={{ background: '#4A9EFF' }}
+      >
+        {continents.map(continent => (
+          <g key={continent.id}>
+            <circle
+              cx={continent.x}
+              cy={continent.y}
+              r={40}
+              fill={continent.color !== undefined && continent.color !== null ? playerColors[continent.color] : '#888888'}
+              stroke={continent.color === currentPlayer?.id ? '#FFD700' : '#2c3e50'}
+              strokeWidth={continent.color === currentPlayer?.id ? 3 : 2}
+              style={{ cursor: 'pointer' }}
+              onClick={() => onCountryClick && onCountryClick(continent.id)}
+            />
+            <text
+              x={continent.x}
+              y={continent.y}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill="white"
+              fontSize="14"
+              fontWeight="bold"
+              style={{ pointerEvents: 'none' }}
+            >
+              {continent.name}
+            </text>
+          </g>
+        ))}
+      </svg>
+    );
   };
 
   return (
     <div className="fixed inset-0 pt-20 pb-4 overflow-hidden">
       <div className="w-full h-full relative bg-gradient-to-br from-blue-500 to-blue-700">
         
-        {/* SVG الخريطة */}
-        <svg
-          ref={svgRef}
-          width={width}
-          height={height}
-          viewBox={`0 0 ${width} ${height}`}
-          className="w-full h-full cursor-grab active:cursor-grabbing"
-          style={{
-            border: '3px solid #2c3e50',
-            borderRadius: '8px',
-            background: '#4A9EFF'
-          }}
-        />
+        {/* الخريطة */}
+        {!isLoading && mapData ? (
+          <svg
+            ref={svgRef}
+            width={width}
+            height={height}
+            viewBox={`0 0 ${width} ${height}`}
+            className="w-full h-full cursor-grab active:cursor-grabbing"
+            style={{
+              border: '3px solid #2c3e50',
+              borderRadius: '8px',
+              background: '#4A9EFF'
+            }}
+          />
+        ) : !isLoading ? (
+          renderFallbackMap()
+        ) : null}
         
         {/* Tooltip */}
         {tooltip.show && (
@@ -416,17 +361,38 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
               <div className="w-4 h-4 bg-gray-500 rounded border border-white"></div>
               <span className="text-gray-300">دول غير محتلة</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded border-2 border-yellow-400" style={{ backgroundColor: currentPlayer?.color || '#666' }}></div>
-              <span className="text-gray-300">دولك الحالية</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-red-500 rounded border border-white"></div>
-              <span className="text-gray-300">دول اللاعبين الآخرين</span>
-            </div>
+            {players.map((player, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <div 
+                  className="w-4 h-4 rounded border border-white"
+                  style={{ backgroundColor: playerColors[index] }}
+                ></div>
+                <span className="text-gray-300">
+                  {player?.name || `لاعب ${index + 1}`}
+                </span>
+              </div>
+            )).filter((_, i) => i < 4)}
           </div>
+        </div>
+
+        {/* معلومات الدول للتشخيص */}
+        <div className="absolute top-4 right-4 bg-white/90 rounded p-2 text-xs">
+          <div>دول محتلة: {Object.values(countries).filter(c => c.owner !== null).length}</div>
+          <div>دول فارغة: {Object.values(countries).filter(c => c.owner === null).length}</div>
+          {currentPlayer && <div>الدور: {currentPlayer.name}</div>}
         </div>
       </div>
     </div>
   );
 }
+
+// متغير للاعبين (للعرض في مفتاح الألوان)
+const players = [
+  { name: 'لاعب 1' },
+  { name: 'لاعب 2' },
+  { name: 'لاعب 3' },
+  { name: 'لاعب 4' }
+];
+
+
+
