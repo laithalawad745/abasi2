@@ -354,7 +354,7 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
         )}
 
         {/* مفتاح الألوان */}
-        <div className="absolute bottom-20 left-4 bg-slate-800/90 backdrop-blur-lg rounded-lg p-4 shadow-2xl z-30">
+        {/* <div className="absolute bottom-20 left-4 bg-slate-800/90 backdrop-blur-lg rounded-lg p-4 shadow-2xl z-30">
           <h4 className="text-white font-bold text-sm mb-2">مفتاح الألوان:</h4>
           <div className="space-y-2 text-xs">
             <div className="flex items-center gap-2">
@@ -373,7 +373,7 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
               </div>
             )).filter((_, i) => i < 4)}
           </div>
-        </div>
+        </div> */}
 
         {/* معلومات الدول للتشخيص */}
         <div className="absolute top-4 right-4 bg-white/90 rounded p-2 text-xs">
@@ -396,3 +396,4 @@ const players = [
 
 
 
+// اذا خسر كل مناطقو ما بخسرو  ؟؟؟ نشوف موضوع الخريطة هل بجملها بعد كل عملية ؟؟؟؟  الدول المجاورة ؟؟؟ اخذ النظر ب عدد الجنود 

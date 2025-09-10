@@ -9,7 +9,6 @@ export default function QuestionModal({
   selectedCountry, 
   targetCountry 
 }) {
-  const [userAnswer, setUserAnswer] = useState('');
   const [showAnswer, setShowAnswer] = useState(false);
 
   // الحصول على عنوان العملية
@@ -92,12 +91,7 @@ export default function QuestionModal({
     }
   };
 
-  const handleSubmitAnswer = () => {
-    if (!userAnswer.trim()) {
-      alert('يرجى كتابة إجابة!');
-      return;
-    }
-    
+  const handleShowAnswer = () => {
     setShowAnswer(true);
   };
 
@@ -180,33 +174,21 @@ export default function QuestionModal({
         </div>
 
         {!showAnswer ? (
-          /* Answer Input */
-          <div className="space-y-4">
-            <div>
-              <label className="block text-white font-bold mb-2">
-                إجابتك:
-              </label>
-              <input
-                type="text"
-                value={userAnswer}
-                onChange={(e) => setUserAnswer(e.target.value)}
-                placeholder="اكتب إجابتك هنا..."
-                className="w-full p-3 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-gray-400 focus:border-blue-400 focus:outline-none"
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    handleSubmitAnswer();
-                  }
-                }}
-                autoFocus
-              />
-            </div>
+          /* Show Question - Voice Answer */
+          <div className="space-y-6">
+            {/* <div className="bg-yellow-900/30 rounded-lg p-4 text-center">
+              <div className="text-yellow-300 font-bold mb-2">🎤 إجابة شفهية</div>
+              <div className="text-sm text-yellow-200">
+                ناقش الإجابة مع فريقك في ديسكورد، ثم اضغط على "عرض الإجابة" للتحقق من صحتها
+              </div>
+            </div> */}
 
             <div className="flex gap-3 justify-center">
               <button
-                onClick={handleSubmitAnswer}
+                onClick={handleShowAnswer}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-bold transition-all shadow-lg"
               >
-                إرسال الإجابة
+                عرض الإجابة الصحيحة
               </button>
               <button
                 onClick={onClose}
@@ -221,10 +203,6 @@ export default function QuestionModal({
           <div className="space-y-6">
             <div className="bg-slate-700/50 rounded-lg p-4">
               <div className="text-center mb-4">
-                <div className="text-gray-300 mb-2">إجابتك:</div>
-                <div className="text-xl font-bold text-blue-400 mb-4">
-                  {userAnswer}
-                </div>
                 <div className="text-gray-300 mb-2">الإجابة الصحيحة:</div>
                 <div className="text-xl font-bold text-green-400">
                   {question.answer}
@@ -234,7 +212,7 @@ export default function QuestionModal({
 
             <div className="text-center">
               <div className="text-white font-bold mb-4">
-                هل إجابتك صحيحة؟
+                هل كانت إجابتكم  صحيحة؟
               </div>
               <div className="flex gap-4 justify-center">
                 <button
@@ -256,9 +234,9 @@ export default function QuestionModal({
 
         {/* Tips */}
         <div className="mt-6 pt-4 border-t border-slate-600">
-          <div className="text-xs text-gray-400 text-center">
-            💡 نصيحة: فكر جيداً قبل الإجابة - النتيجة ستؤثر على إمبراطوريتك!
-          </div>
+          {/* <div className="text-xs text-gray-400 text-center">
+            💡 نصيحة: ناقش السؤال مع فريقك في ديسكورد قبل عرض الإجابة!
+          </div> */}
         </div>
       </div>
     </div>
