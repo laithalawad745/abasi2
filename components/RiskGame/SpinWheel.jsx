@@ -29,7 +29,7 @@ export default function SpinWheel({ players, onSpinComplete }) {
             {/* عجلة الحظ */}
             <div className={`relative w-64 h-64 mx-auto mb-8 ${spinning ? 'animate-spin' : ''}`}>
               <div className="w-full h-full rounded-full border-8 border-yellow-400 bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                <div className="text-white text-6xl">🎯</div>
+                <div className="text-white text-6xl"></div>
               </div>
             </div>
             

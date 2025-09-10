@@ -222,22 +222,44 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
       }
     });
     
-    g.selectAll(".country-number")
-      .data(numberData)
-      .enter()
-      .append("text")
-      .attr("class", "country-number")
-      .attr("x", d => d.centroid[0])
-      .attr("y", d => d.centroid[1])
-      .attr("text-anchor", "middle")
-      .attr("dominant-baseline", "middle")
-      .style("font-size", "14px")
-      .style("font-weight", "bold")
-      .style("fill", "white")
-      .style("stroke", "#2c3e50")
-      .style("stroke-width", "1px")
-      .style("pointer-events", "none")
-      .text(d => d.number);
+ // إضافة أرقام الجنود (بدلاً من أرقام المناطق)
+const troopsData = [];
+mapData.features.forEach(feature => {
+  const countryName = feature.properties.NAME || feature.properties.name;
+  const countryId = getCountryId(countryName);
+  const country = countries[countryId];
+  
+  // عرض عدد الجنود إذا كانت الدولة محتلة
+  if (country && country.owner !== null && country.troops > 0 && feature.geometry) {
+    const centroid = path.centroid(feature);
+    if (centroid && !isNaN(centroid[0]) && !isNaN(centroid[1])) {
+      troopsData.push({
+        country: countryName,
+        countryId: countryId,
+        troops: country.troops, // عدد الجنود الفعلي
+        owner: country.owner,
+        centroid: centroid
+      });
+    }
+  }
+});
+
+g.selectAll(".country-number")
+  .data(troopsData)
+  .enter()
+  .append("text")
+  .attr("class", "country-number")
+  .attr("x", d => d.centroid[0])
+  .attr("y", d => d.centroid[1])
+  .attr("text-anchor", "middle")
+  .attr("dominant-baseline", "middle")
+  .style("font-size", "16px") // حجم أكبر قليلاً
+  .style("font-weight", "bold")
+  .style("fill", "white")
+  .style("stroke", "#2c3e50")
+  .style("stroke-width", "2px") // حدود أوضح
+  .style("pointer-events", "none")
+  .text(d => d.troops); // عرض عدد الجنود
   };
 
   // خريطة بديلة بسيطة (في حالة فشل تحميل D3)
@@ -348,7 +370,7 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
             <div className="bg-slate-800 rounded-lg p-6 text-center">
               <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <div className="text-white">جاري تحميل الخريطة العالمية...</div>
+              <div className="text-white">جاري تحميل الخريطة ...</div>
             </div>
           </div>
         )}
@@ -376,11 +398,11 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
         </div> */}
 
         {/* معلومات الدول للتشخيص */}
-        <div className="absolute top-4 right-4 bg-white/90 rounded p-2 text-xs">
-          <div>دول محتلة: {Object.values(countries).filter(c => c.owner !== null).length}</div>
-          <div>دول فارغة: {Object.values(countries).filter(c => c.owner === null).length}</div>
-          {currentPlayer && <div>الدور: {currentPlayer.name}</div>}
-        </div>
+<div className="hidden md:block absolute top-4 right-4 bg-white/90 rounded p-2 text-xs">           
+  <div>دول محتلة: {Object.values(countries).filter(c => c.owner !== null).length}</div>           
+  <div>دول فارغة: {Object.values(countries).filter(c => c.owner === null).length}</div>           
+  {currentPlayer && <div>الدور: {currentPlayer.name}</div>}         
+</div>
       </div>
     </div>
   );

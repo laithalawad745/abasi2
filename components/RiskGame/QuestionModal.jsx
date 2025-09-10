@@ -109,13 +109,13 @@ export default function QuestionModal({
             {getActionTitle()}
           </h2>
           <div className="flex justify-center items-center gap-2">
-            <span className="text-gray-300">صعوبة السؤال:</span>
             <span className={`font-bold ${getDifficultyColor()}`}>
               {getDifficultyText()}
             </span>
-            <span className="text-gray-300">
+            <span className="text-gray-300"  > : صعوبة السؤال </span>
+            {/* <span className="text-gray-300">
               ({question.points} نقطة)
-            </span>
+            </span> */}
           </div>
         </div>
 
@@ -190,12 +190,12 @@ export default function QuestionModal({
               >
                 عرض الإجابة الصحيحة
               </button>
-              <button
+              {/* <button
                 onClick={onClose}
                 className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-bold transition-all"
               >
                 إلغاء
-              </button>
+              </button> */}
             </div>
           </div>
         ) : (

@@ -1,4 +1,4 @@
-// components/RiskGame/RiskGame.jsx - الحل النهائي الكامل
+// components/RiskGame/RiskGame.jsx - النسخة الكاملة مع اختيار مستوى السؤال
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -27,6 +27,10 @@ export default function RiskGame() {
   const [actionType, setActionType] = useState(null);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [targetCountry, setTargetCountry] = useState(null);
+  
+  // 🆕 حالة اختيار مستوى السؤال
+  const [showDifficultyModal, setShowDifficultyModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null); // {type: 'occupy'|'reinforce'|'attack', data: {...}}
 
   // ألوان اللاعبين (ثابتة ومتطابقة مع WorldMapD3)
   const playerColors = [
@@ -74,6 +78,89 @@ export default function RiskGame() {
     nigeria: ['south_africa'],
     japan: ['china', 'south_korea'],
     south_korea: ['japan', 'china']
+  };
+
+  // 🆕 مكون اختيار مستوى السؤال
+  const DifficultySelectionModal = () => {
+    if (!showDifficultyModal || !pendingAction) return null;
+
+    const handleDifficultySelect = (difficulty) => {
+      setShowDifficultyModal(false);
+      
+      // تنفيذ الإجراء المؤجل مع المستوى المختار
+      if (pendingAction.type === 'occupy') {
+        executeOccupyCountry(pendingAction.data.countryId, pendingAction.data.player, difficulty);
+      } else if (pendingAction.type === 'reinforce') {
+        executeReinforceCountry(pendingAction.data.countryId, difficulty);
+      } else if (pendingAction.type === 'attack') {
+        executeAttackCountry(pendingAction.data.targetCountryId, pendingAction.data.attackingCountryId, difficulty);
+      }
+      
+      setPendingAction(null);
+    };
+
+    const difficulties = [
+      { 
+        key: 'easy', 
+        name: 'سهل', 
+        troops: 5, 
+        color: 'from-green-500 to-emerald-500', 
+        description: 'فرصة نجاح عالية - مخاطرة منخفضة' 
+      },
+      { 
+        key: 'medium', 
+        name: 'متوسط', 
+        troops: 10, 
+        color: 'from-yellow-500 to-orange-500', 
+        description: 'فرصة نجاح متوسطة - مخاطرة متوازنة' 
+      },
+      { 
+        key: 'hard', 
+        name: 'صعب', 
+        troops: 20, 
+        color: 'from-red-500 to-pink-500', 
+        description: 'فرصة نجاح منخفضة - مخاطرة عالية' 
+      }
+    ];
+
+    return (
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="bg-slate-800 rounded-2xl p-8 max-w-md w-full mx-4 border border-slate-600">
+          <h2 className="text-2xl font-bold text-white text-center mb-6">
+             اختر مستوى السؤال
+          </h2>
+          
+          <div className="space-y-4">
+            {difficulties.map(diff => (
+              <button
+                key={diff.key}
+                onClick={() => handleDifficultySelect(diff.key)}
+                className={`w-full p-4 rounded-xl bg-gradient-to-r ${diff.color} hover:scale-105 transition-all duration-300 shadow-lg`}
+              >
+                <div className="text-white">
+                  <div className="text-xl font-bold">{diff.name}</div>
+                  {/* <div className="text-sm opacity-90 mb-1">{diff.description}</div> */}
+                  <div className="text-lg font-bold">  {diff.troops} جندي</div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => {
+              setShowDifficultyModal(false);
+              setPendingAction(null);
+              setActionType(null);
+              setSelectedCountry(null);
+              setTargetCountry(null);
+            }}
+            className="w-full mt-4 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-xl font-bold transition-colors"
+          >
+            ❌ إلغاء
+          </button>
+        </div>
+      </div>
+    );
   };
 
   // إعداد اللاعبين
@@ -188,6 +275,59 @@ export default function RiskGame() {
 
   const currentPlayer = getCurrentPlayer();
 
+  // 🔥 فحص فوري للإقصاء
+  const checkImmediateElimination = () => {
+    setPlayers(prevPlayers => {
+      const newPlayers = [...prevPlayers];
+      let eliminatedThisTurn = [];
+      
+      newPlayers.forEach(player => {
+        if (!player.eliminated) {
+          const playerCountries = Object.values(countries).filter(c => c.owner === player.id);
+          
+          if (playerCountries.length === 0) {
+            player.eliminated = true;
+            player.isActive = false;
+            eliminatedThisTurn.push(player.name);
+            console.log(`❌ تم إقصاء ${player.name} - لا يملك أي دولة!`);
+          }
+          else if (player.totalTroops < 3) {
+            player.eliminated = true;
+            player.isActive = false;
+            eliminatedThisTurn.push(player.name);
+            console.log(`❌ تم إقصاء ${player.name} - جيش ضعيف جداً!`);
+            
+            // تحرير دوله وجعلها محايدة ضعيفة
+            playerCountries.forEach(country => {
+              const countryId = Object.keys(countries).find(id => countries[id] === country);
+              if (countryId) {
+                setCountries(prev => ({
+                  ...prev,
+                  [countryId]: { ...prev[countryId], owner: null, troops: 1 }
+                }));
+              }
+            });
+          }
+        }
+      });
+      
+      if (eliminatedThisTurn.length > 0) {
+        const activePlayers = newPlayers.filter(p => !p.eliminated);
+        const newTurnOrder = activePlayers.map(p => p.id);
+        setTurnOrder(newTurnOrder);
+        
+        if (newTurnOrder.length > 0) {
+          const newIndex = Math.min(currentPlayerIndex, newTurnOrder.length - 1);
+          setCurrentPlayerIndex(newIndex);
+        }
+        
+        alert(`🔥 تم إقصاء: ${eliminatedThisTurn.join(', ')}!`);
+      }
+      
+      return newPlayers;
+    });
+  };
+
   // اختيار دولة
   const selectCountry = (countryId) => {
     const country = countries[countryId];
@@ -227,15 +367,25 @@ export default function RiskGame() {
     }
   };
 
-  // احتلال دولة فارغة
+  // 🆕 احتلال دولة فارغة - عرض اختيار المستوى
   const occupyCountry = (countryId, player) => {
     setActionType('occupy');
     setSelectedCountry(countryId);
     
-    console.log(`🏴 ${player.name} (ID: ${player.id}) يحاول احتلال ${countries[countryId].name}`);
+    // إظهار modal اختيار المستوى
+    setPendingAction({
+      type: 'occupy',
+      data: { countryId, player }
+    });
+    setShowDifficultyModal(true);
+  };
+
+  // 🆕 تنفيذ احتلال الدولة بالمستوى المختار
+  const executeOccupyCountry = (countryId, player, difficulty) => {
+    console.log(`🏴 ${player.name} (ID: ${player.id}) يحاول احتلال ${countries[countryId].name} - مستوى ${difficulty}`);
     
-    showRiskQuestion((difficulty) => {
-      const troopsGained = getTroopsForDifficulty(difficulty);
+    showRiskQuestion(difficulty, (selectedDifficulty) => {
+      const troopsGained = getTroopsForDifficulty(selectedDifficulty);
       
       console.log(`✅ نجح في الاحتلال! اللاعب ${player.id} سيملك ${countryId} بـ ${troopsGained} جندي`);
       
@@ -249,7 +399,6 @@ export default function RiskGame() {
         };
         
         console.log(`🌍 تحديث الدولة ${countryId}: مالك = ${player.id}, جنود = ${troopsGained}`);
-        console.log(`🎨 لون اللاعب ${player.id}: ${playerColors[player.id]}`);
         
         return newCountries;
       });
@@ -271,29 +420,39 @@ export default function RiskGame() {
         return newPlayers;
       });
       
-      alert(`تم احتلال ${countries[countryId].name} بـ ${troopsGained} جندي!`);
+      // alert(`✅ تم احتلال ${countries[countryId].name} بـ ${troopsGained} جندي!`);
       
       setTimeout(() => {
         nextTurn();
       }, 1000);
       
     }, () => {
-      alert('فشل في احتلال الدولة!');
+      // alert('❌ فشل في احتلال الدولة!');
       setTimeout(() => {
         nextTurn();
       }, 1000);
     });
   };
 
-  // تقوية دولة
+  // 🆕 تقوية دولة - عرض اختيار المستوى
   const reinforceCountry = (countryId) => {
     setActionType('reinforce');
     setSelectedCountry(countryId);
     
-    console.log(`💪 ${currentPlayer.name} يحاول تقوية ${countries[countryId].name}`);
+    // إظهار modal اختيار المستوى
+    setPendingAction({
+      type: 'reinforce',
+      data: { countryId }
+    });
+    setShowDifficultyModal(true);
+  };
+
+  // 🆕 تنفيذ تقوية الدولة بالمستوى المختار
+  const executeReinforceCountry = (countryId, difficulty) => {
+    console.log(`💪 ${currentPlayer.name} يحاول تقوية ${countries[countryId].name} - مستوى ${difficulty}`);
     
-    showRiskQuestion((difficulty) => {
-      const troopsGained = getTroopsForDifficulty(difficulty);
+    showRiskQuestion(difficulty, (selectedDifficulty) => {
+      const troopsGained = getTroopsForDifficulty(selectedDifficulty);
       
       setCountries(prevCountries => {
         const newCountries = { ...prevCountries };
@@ -313,18 +472,18 @@ export default function RiskGame() {
         return newPlayers;
       });
       
-      alert(`تمت تقوية ${countries[countryId].name} بـ ${troopsGained} جندي إضافي!`);
+      alert(`💪 تمت تقوية ${countries[countryId].name} بـ ${troopsGained} جندي إضافي!`);
       setTimeout(() => {
         nextTurn();
       }, 1000);
     }, () => {
-      // فشلت التقوية - خسارة 25%
+      // فشلت التقوية - خسارة 50%
       setCountries(prevCountries => {
         const newCountries = { ...prevCountries };
         const currentTroops = newCountries[countryId].troops;
-        const troopsLost = Math.floor(currentTroops * 0.25);
-        const newTroops = currentTroops - troopsLost;
-        newCountries[countryId].troops = Math.max(1, newTroops);
+        const troopsLost = Math.floor(currentTroops * 0.5);
+        const newTroops = Math.max(1, currentTroops - troopsLost);
+        newCountries[countryId].troops = newTroops;
         return newCountries;
       });
       
@@ -332,20 +491,22 @@ export default function RiskGame() {
         const newPlayers = [...prevPlayers];
         const playerIndex = newPlayers.findIndex(p => p.id === currentPlayer.id);
         if (playerIndex !== -1) {
-          const troopsLost = Math.floor(countries[countryId].troops * 0.25);
+          const troopsLost = Math.floor(countries[countryId].troops * 0.5);
           newPlayers[playerIndex].totalTroops -= troopsLost;
         }
         return newPlayers;
       });
       
-      alert(`خسرت 25% من جيش ${countries[countryId].name}`);
+      alert(`💔 خسرت 50% من جيش ${countries[countryId].name}`);
+      
       setTimeout(() => {
+        checkImmediateElimination();
         nextTurn();
       }, 1000);
     });
   };
 
-  // مهاجمة دولة
+  // 🆕 مهاجمة دولة - عرض اختيار المستوى
   const attackCountry = (targetCountryId) => {
     const attackingCountryId = Object.keys(countries).find(id => 
       countries[id].owner === currentPlayer.id && 
@@ -357,13 +518,29 @@ export default function RiskGame() {
       return;
     }
     
+    // التأكد أن لديه جنود كافية للهجوم
+    if (countries[attackingCountryId].troops < 2) {
+      alert('تحتاج على الأقل جنديين للهجوم!');
+      return;
+    }
+    
     setActionType('attack');
     setSelectedCountry(attackingCountryId);
     setTargetCountry(targetCountryId);
     
-    console.log(`⚔️ ${currentPlayer.name} يهاجم ${countries[targetCountryId].name} من ${countries[attackingCountryId].name}`);
+    // إظهار modal اختيار المستوى
+    setPendingAction({
+      type: 'attack',
+      data: { targetCountryId, attackingCountryId }
+    });
+    setShowDifficultyModal(true);
+  };
+
+  // 🆕 تنفيذ الهجوم بالمستوى المختار
+  const executeAttackCountry = (targetCountryId, attackingCountryId, difficulty) => {
+    console.log(`⚔️ ${currentPlayer.name} يهاجم ${countries[targetCountryId].name} من ${countries[attackingCountryId].name} - مستوى ${difficulty}`);
     
-    showRiskQuestion(() => {
+    showRiskQuestion(difficulty, () => {
       const previousOwner = countries[targetCountryId].owner;
       
       console.log(`✅ نجح الهجوم! اللاعب ${currentPlayer.id} سيأخذ ${targetCountryId} من اللاعب ${previousOwner}`);
@@ -376,9 +553,6 @@ export default function RiskGame() {
           owner: currentPlayer.id,
           troops: 15
         };
-        
-        console.log(`🌍 تحديث الدولة المهاجمة ${targetCountryId}: مالك جديد = ${currentPlayer.id}`);
-        
         return newCountries;
       });
       
@@ -407,19 +581,23 @@ export default function RiskGame() {
         return newPlayers;
       });
       
-      alert(`تم احتلال ${countries[targetCountryId].name} بنجاح!`);
+      alert(`⚔️ تم احتلال ${countries[targetCountryId].name} بنجاح!`);
       
       setTimeout(() => {
+        checkImmediateElimination();
         nextTurn();
       }, 1000);
       
     }, () => {
-      // فشل الهجوم - خسارة نصف الجيش
+      // فشل الهجوم - خسارة 75%
       setCountries(prevCountries => {
         const newCountries = { ...prevCountries };
         const currentTroops = newCountries[attackingCountryId].troops;
-        const newTroops = Math.floor(currentTroops / 2);
+        
+        const troopsLost = Math.floor(currentTroops * 0.75);
+        const newTroops = Math.max(1, currentTroops - troopsLost);
         newCountries[attackingCountryId].troops = newTroops;
+        
         return newCountries;
       });
       
@@ -427,14 +605,16 @@ export default function RiskGame() {
         const newPlayers = [...prevPlayers];
         const playerIndex = newPlayers.findIndex(p => p.id === currentPlayer.id);
         if (playerIndex !== -1) {
-          const troopsLost = countries[attackingCountryId].troops - Math.floor(countries[attackingCountryId].troops / 2);
+          const troopsLost = Math.floor(countries[attackingCountryId].troops * 0.75);
           newPlayers[playerIndex].totalTroops -= troopsLost;
         }
         return newPlayers;
       });
       
-      alert(`فشل الهجوم! خسرت نصف جيشك في ${countries[attackingCountryId].name}`);
+      alert(`💔 فشل الهجوم! خسرت 75% من جيش ${countries[attackingCountryId].name}`);
+      
       setTimeout(() => {
+        checkImmediateElimination();
         nextTurn();
       }, 1000);
     });
@@ -450,8 +630,8 @@ export default function RiskGame() {
     }
   };
 
-  // إظهار سؤال من أسئلة Risk
-  const showRiskQuestion = (onSuccess, onFailure) => {
+  // 🆕 إظهار سؤال من أسئلة Risk مع مستوى محدد
+  const showRiskQuestion = (difficulty, onSuccess, onFailure) => {
     const question = getRandomRiskQuestion();
     
     if (!question) {
@@ -459,9 +639,9 @@ export default function RiskGame() {
         id: 'default',
         question: 'ما هي عاصمة فرنسا؟',
         answer: 'باريس',
-        difficulty: 'easy',
-        points: 5,
-        onSuccess: () => onSuccess('easy'),
+        difficulty: difficulty,
+        points: getTroopsForDifficulty(difficulty),
+        onSuccess: () => onSuccess(difficulty),
         onFailure: onFailure
       });
       return;
@@ -469,7 +649,9 @@ export default function RiskGame() {
     
     setCurrentQuestion({
       ...question,
-      onSuccess: () => onSuccess(question.difficulty),
+      difficulty: difficulty, // فرض المستوى المختار
+      points: getTroopsForDifficulty(difficulty),
+      onSuccess: () => onSuccess(difficulty),
       onFailure: onFailure
     });
   };
@@ -487,23 +669,20 @@ export default function RiskGame() {
     setTargetCountry(null);
   };
 
-  // الدور التالي - مُعدلة بالكامل
+  // الدور التالي
   const nextTurn = () => {
     console.log('🔄 محاولة الانتقال للدور التالي...');
     
-    // فحص انتهاء اللعبة أولاً
     if (checkGameEnd()) {
       console.log('🏆 اللعبة انتهت!');
       return;
     }
     
-    // التأكد من وجود turnOrder
     if (turnOrder.length === 0) {
       console.log('❌ turnOrder فارغ، لا يمكن الانتقال');
       return;
     }
     
-    // حساب الفهرس التالي
     const nextIndex = (currentPlayerIndex + 1) % turnOrder.length;
     const nextPlayerId = turnOrder[nextIndex];
     const nextPlayer = players.find(p => p.id === nextPlayerId);
@@ -511,13 +690,11 @@ export default function RiskGame() {
     console.log(`🎮 الانتقال من اللاعب ${currentPlayerIndex} إلى ${nextIndex}`);
     console.log(`🎮 اللاعب التالي: ${nextPlayer?.name} (ID: ${nextPlayerId})`);
     
-    // التأكد أن اللاعب التالي غير مقصى
     if (nextPlayer && !nextPlayer.eliminated) {
       setCurrentPlayerIndex(nextIndex);
       console.log(`✅ تم الانتقال بنجاح إلى ${nextPlayer.name}`);
     } else {
       console.log(`⚠️ اللاعب التالي مقصى، البحث عن لاعب آخر...`);
-      // البحث عن أول لاعب غير مقصى
       const activePlayers = players.filter(p => !p.eliminated);
       if (activePlayers.length > 0) {
         const firstActivePlayer = activePlayers[0];
@@ -527,12 +704,10 @@ export default function RiskGame() {
       }
     }
     
-    // تنظيف الحالات
     setActionType(null);
     setSelectedCountry(null);
     setTargetCountry(null);
     
-    // فحص إذا انتهت الجولة الأولى
     const allCountriesOccupied = Object.values(countries).every(country => country.owner !== null);
     if (allCountriesOccupied && gamePhase === 'playing') {
       setGamePhase('elimination');
@@ -579,7 +754,13 @@ export default function RiskGame() {
     if (activePlayers.length <= 1) {
       setGamePhase('finished');
       if (activePlayers.length === 1) {
-        alert(`🎉 تهانينا! ${activePlayers[0].name} احتل العالم وفاز باللعبة! 🏆`);
+        const winner = activePlayers[0];
+        const winnerCountries = Object.values(countries).filter(c => c.owner === winner.id);
+        alert(`🎉 ${winner.name} فاز باللعبة! 
+السيطرة: ${winnerCountries.length} دولة
+القوة: ${winner.totalTroops} جندي`);
+      } else {
+        alert('🔥 لم يبق أي لاعب! نهاية مأساوية للعالم!');
       }
       return true;
     }
@@ -599,6 +780,8 @@ export default function RiskGame() {
     setSelectedCountry(null);
     setTargetCountry(null);
     setRound(1);
+    setShowDifficultyModal(false);
+    setPendingAction(null);
     console.log('🔄 تم إعادة تشغيل اللعبة');
   };
 
@@ -644,14 +827,14 @@ export default function RiskGame() {
           />
           
           {/* زر الانتقال اليدوي للطوارئ */}
-          <div className="fixed bottom-4 right-4 z-50">
+          {/* <div className="fixed bottom-4 right-4 z-50">
             <button
               onClick={manualNextTurn}
               className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg"
             >
               انتقال يدوي
             </button>
-          </div>
+          </div> */}
         </>
       )}
 
@@ -664,7 +847,7 @@ export default function RiskGame() {
             </p>
             <button
               onClick={restartGame}
-              className="bg-white text-orange-500 px-8 py-3 rounded-lg font-bold text-lg hover:scale-105 transition-transform"
+              className="bg-white text-orange-600 px-8 py-4 rounded-xl font-bold text-xl hover:bg-gray-100 transition-colors"
             >
               لعبة جديدة
             </button>
@@ -672,16 +855,16 @@ export default function RiskGame() {
         </div>
       )}
 
+      {/* نافذة السؤال */}
       {currentQuestion && (
-        <QuestionModal
+        <QuestionModal 
           question={currentQuestion}
           onAnswer={answerQuestion}
-          onClose={() => setCurrentQuestion(null)}
-          actionType={actionType}
-          selectedCountry={selectedCountry ? countries[selectedCountry]?.name : ''}
-          targetCountry={targetCountry ? countries[targetCountry]?.name : ''}
         />
       )}
+
+      {/* 🆕 نافذة اختيار مستوى السؤال */}
+      <DifficultySelectionModal />
     </div>
   );
 }

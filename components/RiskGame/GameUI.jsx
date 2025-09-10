@@ -65,12 +65,7 @@ export default function GameUI({
         <div className="flex justify-between items-center max-w-7xl mx-auto">
           {/* اللوجو والعنوان */}
           <div className="flex items-center gap-4">
-            <Link 
-              href="/"
-              className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-pink-400 hover:scale-105 transition-transform"
-            >
-              قومبز جيم
-            </Link>
+
             <div className="hidden md:block text-lg font-bold text-white">
               الهيمنة العالمية
             </div>
@@ -105,7 +100,9 @@ export default function GameUI({
       </div>
 
       {/* لوحة اللاعبين */}
-      <div className="fixed top-20 right-4 w-80 bg-slate-800/90 backdrop-blur-lg rounded-lg p-4 shadow-2xl z-30 max-h-96 overflow-y-auto">
+<div className="hidden md:block fixed top-20 right-4 w-80 bg-slate-800/90 backdrop-blur-lg rounded-lg p-4 shadow-2xl z-30 max-h-96 overflow-y-auto">     
+     
+     
         <h3 className="text-white font-bold text-lg mb-3 text-center">👑 لوحة اللاعبين</h3>
         
         <div className="space-y-3">
@@ -192,7 +189,7 @@ export default function GameUI({
       </div>
 
       {/* لوحة التعليمات */}
-      <div className="fixed bottom-4 right-4 w-80 bg-slate-800/90 backdrop-blur-lg rounded-lg p-4 shadow-2xl z-30">
+      {/* <div className="fixed bottom-4 right-4 w-80 bg-slate-800/90 backdrop-blur-lg rounded-lg p-4 shadow-2xl z-30">
         <h4 className="text-white font-bold text-sm mb-2">💡 تعليمات اللعب:</h4>
         <div className="text-xs text-gray-300 space-y-1">
           {gamePhase === 'playing' && getGameProgress() < 100 ? (
@@ -218,7 +215,7 @@ export default function GameUI({
             </>
           )}
         </div>
-      </div>
+      </div> */}
 
       {/* شريط التقدم السفلي */}
       <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-lg border-t border-slate-700 p-2 z-30">

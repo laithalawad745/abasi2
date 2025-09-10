@@ -6,6 +6,6 @@ export default function RiskPage() {
 }
 
 export const metadata = {
-  title: 'الهيمنة العالمية - قومبز جيم',
+  title: 'الهيمنة العالمية   ',
   description: 'لعبة الاستراتيجية والمعرفة - Risk Style Game',
 };
