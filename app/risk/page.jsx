@@ -6,6 +6,6 @@ export default function RiskPage() {
 }
 
 export const metadata = {
-  title: 'الهيمنة العالمية   ',
+  title: 'الهيمنة    ',
   description: 'لعبة الاستراتيجية والمعرفة - Risk Style Game',
 };

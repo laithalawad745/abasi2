@@ -67,7 +67,7 @@ export default function GameUI({
           <div className="flex items-center gap-4">
 
             <div className="hidden md:block text-lg font-bold text-white">
-              الهيمنة العالمية
+              الهيمنة 
             </div>
           </div>
 

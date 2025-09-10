@@ -33,7 +33,7 @@ export default function GameSetup({ startAbsiMatch }) {
               onClick={startAbsiMatch}
               className="bg-gradient-to-r cursor-pointer from-purple-600 via-pink-500 to-blue-500 hover:from-purple-700 hover:via-pink-600 hover:to-blue-600 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-purple-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-purple-400/50 hover:border-pink-400/70"
             >
-              🎯 المباراة الكاملة
+               المباراة الكاملة
             </button>
 
             {/* فقرة من أسرع */}
@@ -41,7 +41,7 @@ export default function GameSetup({ startAbsiMatch }) {
               onClick={() => window.location.href = '/fastest'}
               className="bg-gradient-to-r cursor-pointer from-orange-500 via-red-500 to-yellow-500 hover:from-orange-600 hover:via-red-600 hover:to-yellow-600 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-orange-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-orange-400/50 hover:border-red-400/70"
             >
-              ⚡ أسرع
+             من أسرع
             </button>
 
             {/* بطولة المعرفة - الجديدة */}
@@ -49,7 +49,7 @@ export default function GameSetup({ startAbsiMatch }) {
               onClick={() => window.location.href = '/tournament'}
               className="bg-gradient-to-r cursor-pointer from-yellow-600 via-orange-500 to-red-500 hover:from-yellow-700 hover:via-orange-600 hover:to-red-600 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-yellow-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-yellow-400/50 hover:border-orange-400/70"
             >
-              🏆 الإقصاء
+               الإقصاء
             </button>
 
             {/* لعبة النرد */}
@@ -57,7 +57,7 @@ export default function GameSetup({ startAbsiMatch }) {
               onClick={() => window.location.href = '/dice'}
               className="bg-gradient-to-r cursor-pointer from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-600 hover:via-teal-600 hover:to-cyan-600 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-emerald-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-emerald-400/50 hover:border-teal-400/70"
             >
-              🎲 النرد
+              النرد
             </button>
 
             {/* حول أوروبا */}
@@ -65,7 +65,7 @@ export default function GameSetup({ startAbsiMatch }) {
               onClick={() => window.location.href = '/europe'}
               className="bg-gradient-to-r cursor-pointer from-green-600 via-emerald-600 to-teal-600 hover:from-green-700 hover:via-emerald-700 hover:to-teal-700 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-green-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-green-400/50 hover:border-emerald-400/70"
             >
-              🇪🇺 أوروبا
+               أوروبا
             </button>
 
             {/* حول الوطن العربي */}
@@ -73,7 +73,7 @@ export default function GameSetup({ startAbsiMatch }) {
               onClick={() => window.location.href = '/arab'}
               className="bg-gradient-to-r cursor-pointer from-amber-600 via-yellow-600 to-orange-600 hover:from-amber-700 hover:via-yellow-700 hover:to-orange-700 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-amber-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-amber-400/50 hover:border-yellow-400/70"
             >
-              🕌 الوطن العربي
+               الوطن العربي
             </button>
 
             {/* من هو؟ */}
@@ -81,14 +81,13 @@ export default function GameSetup({ startAbsiMatch }) {
               onClick={() => window.location.href = '/guess-who'}
               className="bg-gradient-to-r cursor-pointer from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-indigo-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-indigo-400/50 hover:border-purple-400/70"
             >
-              🤔 من هو؟
+               من هو؟
             </button>
 
             {/* 🔥 الهيمنة العالمية - داخل الـ Grid */}
             <Link href="/risk" className="block">
               <button className="w-full bg-gradient-to-r cursor-pointer from-red-600 via-orange-500 to-yellow-500 hover:from-red-700 hover:via-orange-600 hover:to-yellow-600 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-red-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-red-400/50 hover:border-orange-400/70">
-                🌍 الهيمنة العالمية
-                <div className="text-xs md:text-sm opacity-80 mt-1 md:mt-2">لعبة الاستراتيجية والمعرفة</div>
+                 الهيمنة 
               </button>
             </Link>
           </div>

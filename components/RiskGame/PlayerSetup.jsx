@@ -7,7 +7,7 @@ export default function PlayerSetup({ onSetupComplete }) {
   return (
     <div className="flex items-center justify-center min-h-screen p-8">
       <div className="bg-slate-800/90 backdrop-blur-lg rounded-3xl p-8 border border-slate-600 max-w-md w-full text-center">
-        <h1 className="text-4xl font-bold text-white mb-8">لعبة الهيمنة العالمية</h1>
+        {/* <h1 className="text-4xl font-bold text-white mb-8"> الهيمنة </h1> */}
         
         <div className="mb-8">
           <label className="block text-white text-xl mb-4">عدد اللاعبين</label>
