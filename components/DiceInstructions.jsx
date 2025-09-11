@@ -23,7 +23,7 @@ export default function DiceInstructions() {
           <div className="bg-slate-800/95 backdrop-blur-lg rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-slate-600 shadow-2xl">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-pink-400">
-                🎲 تعليمات لعبة النرد
+                تعليمات لعبة النرد
               </h2>
               <button
                 onClick={() => setShowInstructions(false)}
