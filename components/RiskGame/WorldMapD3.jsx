@@ -1,4 +1,4 @@
-// components/RiskGame/WorldMapD3.jsx - النسخة المحدثة مع دعم جميع دول العالم
+// components/RiskGame/WorldMapD3.jsx
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -24,170 +24,29 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
     '#8844ff'  // بنفسجي غامق - لاعب 7
   ];
 
-  // أرقام المناطق - موسع لدول أكثر
+  // أرقام المناطق
   const regionNumbers = {
     'United States of America': '1', 'Canada': '3', 'Mexico': '1', 'Brazil': '1',
     'Argentina': '1', 'Russia': '2', 'China': '12', 'India': '17', 'Australia': '10',
     'Germany': '13', 'France': '1', 'United Kingdom': '1', 'Egypt': '1', 'Nigeria': '13',
     'South Africa': '1', 'Japan': '1', 'Mongolia': '9', 'Kazakhstan': '1', 'Turkey': '1',
     'Iran': '1', 'Saudi Arabia': '1', 'Poland': '1', 'Ukraine': '1', 'Spain': '1',
-    'Italy': '1', 'Indonesia': '1', 'Thailand': '1', 'Vietnam': '1', 'Pakistan': '1',
-    'Peru': '1', 'Colombia': '1', 'Venezuela': '1', 'Chile': '1', 'Bolivia': '1',
-    'Paraguay': '1', 'Uruguay': '1', 'Ecuador': '1', 'Guyana': '1', 'Suriname': '1',
-    'Norway': '1', 'Sweden': '1', 'Finland': '1', 'Romania': '1', 'Greece': '1',
-    'Belarus': '1', 'Czech Republic': '1', 'Austria': '1', 'Switzerland': '1',
-    'Netherlands': '1', 'Belgium': '1', 'Denmark': '1', 'Portugal': '1',
-    'Ireland': '1', 'Iceland': '1', 'South Korea': '1', 'North Korea': '1',
-    'Malaysia': '1', 'Philippines': '1', 'Iraq': '1', 'Afghanistan': '1',
-    'Uzbekistan': '1', 'Myanmar': '1', 'Laos': '1', 'Cambodia': '1',
-    'Bangladesh': '1', 'Sri Lanka': '1', 'Nepal': '1', 'Bhutan': '1',
-    'United Arab Emirates': '1', 'Qatar': '1', 'Kuwait': '1', 'Bahrain': '1',
-    'Oman': '1', 'Yemen': '1', 'Jordan': '1', 'Lebanon': '1', 'Syria': '1',
-    'Israel': '1', 'Palestine': '1', 'Cyprus': '1', 'Libya': '1', 'Algeria': '1',
-    'Morocco': '1', 'Tunisia': '1', 'Sudan': '1', 'South Sudan': '1',
-    'Ethiopia': '1', 'Somalia': '1', 'Kenya': '1', 'Tanzania': '1', 'Uganda': '1',
-    'Ghana': '1', 'Ivory Coast': '1', 'Cameroon': '1', 'Congo': '1',
-    'Democratic Republic of the Congo': '1', 'Angola': '1', 'Zambia': '1',
-    'Zimbabwe': '1', 'Botswana': '1', 'Namibia': '1', 'Madagascar': '1',
-    'New Zealand': '1', 'Papua New Guinea': '1', 'Fiji': '1', 'Greenland': '1',
-    'Guatemala': '1', 'Cuba': '1'
+    'Italy': '1', 'Indonesia': '1', 'Thailand': '1', 'Vietnam': '1', 'Pakistan': '1'
   };
 
-  // دالة تحديد معرف الدولة - موسعة لتشمل جميع الدول
   const getCountryId = (countryName) => {
     const countryMapping = {
-      // أمريكا الشمالية
-      'United States of America': 'usa',
-      'Canada': 'canada', 
-      'Mexico': 'mexico',
-      'Greenland': 'greenland',
-      'Guatemala': 'guatemala',
-      'Cuba': 'cuba',
-      
-      // أمريكا الجنوبية  
-      'Brazil': 'brazil',
-      'Argentina': 'argentina',
-      'Peru': 'peru',
-      'Colombia': 'colombia', 
-      'Venezuela': 'venezuela',
-      'Chile': 'chile',
-      'Bolivia': 'bolivia',
-      'Paraguay': 'paraguay',
-      'Uruguay': 'uruguay',
-      'Ecuador': 'ecuador',
-      'Guyana': 'guyana',
-      'Suriname': 'suriname',
-      
-      // أوروبا
-      'United Kingdom': 'united_kingdom',
-      'France': 'france',
-      'Germany': 'germany',
-      'Italy': 'italy',
-      'Spain': 'spain',
-      'Poland': 'poland',
-      'Ukraine': 'ukraine',
-      'Russia': 'russia',
-      'Norway': 'norway',
-      'Sweden': 'sweden',
-      'Finland': 'finland',
-      'Romania': 'romania',
-      'Greece': 'greece',
-      'Turkey': 'turkey',
-      'Belarus': 'belarus',
-      'Czech Republic': 'czech_republic',
-      'Austria': 'austria',
-      'Switzerland': 'switzerland',
-      'Netherlands': 'netherlands',
-      'Belgium': 'belgium',
-      'Denmark': 'denmark',
-      'Portugal': 'portugal',
-      'Ireland': 'ireland',
-      'Iceland': 'iceland',
-      
-      // آسيا
-      'China': 'china',
-      'India': 'india',
-      'Japan': 'japan',
-      'South Korea': 'south_korea',
-      'North Korea': 'north_korea',
-      'Thailand': 'thailand',
-      'Vietnam': 'vietnam',
-      'Indonesia': 'indonesia',
-      'Malaysia': 'malaysia',
-      'Philippines': 'philippines',
-      'Pakistan': 'pakistan',
-      'Iran': 'iran',
-      'Iraq': 'iraq',
-      'Afghanistan': 'afghanistan',
-      'Kazakhstan': 'kazakhstan',
-      'Uzbekistan': 'uzbekistan',
-      'Mongolia': 'mongolia',
-      'Myanmar': 'myanmar',
-      'Laos': 'laos',
-      'Cambodia': 'cambodia',
-      'Bangladesh': 'bangladesh',
-      'Sri Lanka': 'sri_lanka',
-      'Nepal': 'nepal',
-      'Bhutan': 'bhutan',
-      
-      // الشرق الأوسط
-      'Saudi Arabia': 'saudi_arabia',
-      'United Arab Emirates': 'uae',
-      'Qatar': 'qatar',
-      'Kuwait': 'kuwait',
-      'Bahrain': 'bahrain',
-      'Oman': 'oman',
-      'Yemen': 'yemen',
-      'Jordan': 'jordan',
-      'Lebanon': 'lebanon',
-      'Syria': 'syria',
-      'Israel': 'israel',
-      'Palestine': 'palestine',
-      'Cyprus': 'cyprus',
-      
-      // أفريقيا
-      'Egypt': 'egypt',
-      'Libya': 'libya',
-      'Algeria': 'algeria',
-      'Morocco': 'morocco',
-      'Tunisia': 'tunisia',
-      'Sudan': 'sudan',
-      'South Sudan': 'south_sudan',
-      'Ethiopia': 'ethiopia',
-      'Somalia': 'somalia',
-      'Kenya': 'kenya',
-      'Tanzania': 'tanzania',
-      'Uganda': 'uganda',
-      'Nigeria': 'nigeria',
-      'South Africa': 'south_africa',
-      'Ghana': 'ghana',
-      'Ivory Coast': 'ivory_coast',
-      'Côte d\'Ivoire': 'ivory_coast', // اسم بديل
-      'Cameroon': 'cameroon',
-      'Congo': 'congo',
-      'Democratic Republic of the Congo': 'dr_congo',
-      'Angola': 'angola',
-      'Zambia': 'zambia',
-      'Zimbabwe': 'zimbabwe',
-      'Botswana': 'botswana',
-      'Namibia': 'namibia',
-      'Madagascar': 'madagascar',
-      
-      // أوقيانوسيا
-      'Australia': 'australia',
-      'New Zealand': 'new_zealand',
-      'Papua New Guinea': 'papua_new_guinea',
-      'Fiji': 'fiji',
-      
-      // أسماء بديلة شائعة
-      'USA': 'usa',
-      'UK': 'united_kingdom',
-      'UAE': 'uae',
-      'DRC': 'dr_congo',
-      'Republic of the Congo': 'congo',
-      'Democratic Republic of Congo': 'dr_congo'
+      'Egypt': 'egypt', 'Libya': 'libya', 'Algeria': 'algeria', 'France': 'france',
+      'Germany': 'germany', 'Brazil': 'brazil', 'United States of America': 'usa',
+      'China': 'china', 'Russia': 'russia', 'Australia': 'australia', 'India': 'india',
+      'United Kingdom': 'united_kingdom', 'Spain': 'spain', 'Italy': 'italy',
+      'Canada': 'canada', 'Mexico': 'mexico', 'Argentina': 'argentina',
+      'South Africa': 'south_africa', 'Nigeria': 'nigeria', 'Japan': 'japan',
+      'South Korea': 'south_korea', 'Indonesia': 'indonesia', 'Turkey': 'turkey',
+      'Iran': 'iran', 'Saudi Arabia': 'saudi_arabia', 'Pakistan': 'pakistan',
+      'Poland': 'poland', 'Ukraine': 'ukraine', 'Kazakhstan': 'kazakhstan',
+      'Mongolia': 'mongolia', 'Thailand': 'thailand', 'Vietnam': 'vietnam'
     };
-    
     return countryMapping[countryName] || countryName.toLowerCase().replace(/\s+/g, '_');
   };
 
@@ -278,7 +137,7 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
           console.log(`رسم ${countryId}: مالك=${country.owner}, لون=${color}`);
           return color;
         }
-        return '#888888'; // دول غير محتلة
+        return '#888888';
       })
       .attr("stroke", d => {
         const countryName = d.properties.NAME || d.properties.name;
@@ -286,11 +145,11 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
         const country = countries[countryId];
         
         if (country && country.owner === currentPlayer?.id) {
-          return '#FFD700'; // ذهبي للاعب الحالي
+          return '#FFD700';
         } else if (country && country.owner !== undefined && country.owner !== null) {
-          return '#FFFFFF'; // أبيض للدول المحتلة
+          return '#FFFFFF';
         }
-        return '#2c3e50'; // رمادي للدول الفارغة
+        return '#2c3e50';
       })
       .attr("stroke-width", d => {
         const countryName = d.properties.NAME || d.properties.name;
@@ -298,7 +157,7 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
         const country = countries[countryId];
         
         if (country && country.owner === currentPlayer?.id) {
-          return 3; // خط سميك للاعب الحالي
+          return 3;
         }
         return 1.5;
       })
@@ -311,29 +170,17 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
         
         let ownerInfo = 'غير محتلة';
         let troopsInfo = '';
-        let statusInfo = '';
         
         if (country && country.owner !== undefined && country.owner !== null) {
           ownerInfo = `لاعب ${country.owner + 1}`;
           troopsInfo = `الجنود: ${country.troops}`;
         }
         
-        // معلومات إضافية حسب نوع العملية
-        if (currentPlayer && country) {
-          if (country.owner === null) {
-            statusInfo = '\n🏴 اضغط للاحتلال';
-          } else if (country.owner === currentPlayer.id) {
-            statusInfo = '\n💪 اضغط للتقوية';
-          } else {
-            statusInfo = '\n⚔️ اضغط للهجوم';
-          }
-        }
-        
         setTooltip({
           show: true,
           x: event.pageX + 10,
           y: event.pageY - 10,
-          content: `${countryName}\nقوة المنطقة: ${number}\nالمالك: ${ownerInfo}\n${troopsInfo}${statusInfo}`
+          content: `${countryName}\nقوة المنطقة: ${number}\nالمالك: ${ownerInfo}\n${troopsInfo}`
         });
       })
       .on("mousemove", function(event) {
@@ -357,45 +204,62 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
         }
       });
     
-    // إضافة أرقام الجنود (بدلاً من أرقام المناطق)
-    const troopsData = [];
+    // إضافة أرقام المناطق
+    const numberData = [];
     mapData.features.forEach(feature => {
       const countryName = feature.properties.NAME || feature.properties.name;
-      const countryId = getCountryId(countryName);
-      const country = countries[countryId];
+      const number = regionNumbers[countryName];
       
-      // عرض عدد الجنود إذا كانت الدولة محتلة
-      if (country && country.owner !== null && country.troops > 0 && feature.geometry) {
+      if (number && feature.geometry) {
         const centroid = path.centroid(feature);
         if (centroid && !isNaN(centroid[0]) && !isNaN(centroid[1])) {
-          troopsData.push({
+          numberData.push({
             country: countryName,
-            countryId: countryId,
-            troops: country.troops, // عدد الجنود الفعلي
-            owner: country.owner,
+            number: number,
             centroid: centroid
           });
         }
       }
     });
+    
+ // إضافة أرقام الجنود (بدلاً من أرقام المناطق)
+const troopsData = [];
+mapData.features.forEach(feature => {
+  const countryName = feature.properties.NAME || feature.properties.name;
+  const countryId = getCountryId(countryName);
+  const country = countries[countryId];
+  
+  // عرض عدد الجنود إذا كانت الدولة محتلة
+  if (country && country.owner !== null && country.troops > 0 && feature.geometry) {
+    const centroid = path.centroid(feature);
+    if (centroid && !isNaN(centroid[0]) && !isNaN(centroid[1])) {
+      troopsData.push({
+        country: countryName,
+        countryId: countryId,
+        troops: country.troops, // عدد الجنود الفعلي
+        owner: country.owner,
+        centroid: centroid
+      });
+    }
+  }
+});
 
-    // رسم أرقام الجنود على الخريطة
-    g.selectAll(".country-number")
-      .data(troopsData)
-      .enter()
-      .append("text")
-      .attr("class", "country-number")
-      .attr("x", d => d.centroid[0])
-      .attr("y", d => d.centroid[1])
-      .attr("text-anchor", "middle")
-      .attr("dominant-baseline", "middle")
-      .style("font-size", "16px") // حجم أكبر قليلاً
-      .style("font-weight", "bold")
-      .style("fill", "white")
-      .style("stroke", "#2c3e50")
-      .style("stroke-width", "2px") // حدود أوضح
-      .style("pointer-events", "none")
-      .text(d => d.troops); // عرض عدد الجنود
+g.selectAll(".country-number")
+  .data(troopsData)
+  .enter()
+  .append("text")
+  .attr("class", "country-number")
+  .attr("x", d => d.centroid[0])
+  .attr("y", d => d.centroid[1])
+  .attr("text-anchor", "middle")
+  .attr("dominant-baseline", "middle")
+  .style("font-size", "16px") // حجم أكبر قليلاً
+  .style("font-weight", "bold")
+  .style("fill", "white")
+  .style("stroke", "#2c3e50")
+  .style("stroke-width", "2px") // حدود أوضح
+  .style("pointer-events", "none")
+  .text(d => d.troops); // عرض عدد الجنود
   };
 
   // خريطة بديلة بسيطة (في حالة فشل تحميل D3)
@@ -511,24 +375,34 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
           </div>
         )}
 
-        {/* معلومات الدول للتشخيص */}
-        <div className="hidden md:block absolute top-4 right-4 bg-white/90 rounded p-2 text-xs">           
-          <div>دول محتلة: {Object.values(countries).filter(c => c.owner !== null).length}</div>           
-          <div>دول فارغة: {Object.values(countries).filter(c => c.owner === null).length}</div>           
-          <div>إجمالي الدول: {Object.keys(countries).length}</div>
-          {currentPlayer && <div>الدور: {currentPlayer.name}</div>}         
-        </div>
-
-        {/* تعليمات اللعب */}
-        <div className="absolute bottom-4 left-4 bg-slate-800/90 backdrop-blur-lg rounded-lg p-4 shadow-2xl z-30 max-w-xs">
-          <h4 className="text-white font-bold text-sm mb-2">كيفية اللعب:</h4>
-          <div className="space-y-1 text-xs text-gray-300">
-            <div>🏴 دول رمادية: اضغط للاحتلال</div>
-            <div>💪 دولك: اضغط للتقوية</div>
-            <div>⚔️ دول الأعداء: اضغط للهجوم</div>
-            <div>🎯 يجب أن تكون الدول مجاورة للهجوم</div>
+        {/* مفتاح الألوان */}
+        {/* <div className="absolute bottom-20 left-4 bg-slate-800/90 backdrop-blur-lg rounded-lg p-4 shadow-2xl z-30">
+          <h4 className="text-white font-bold text-sm mb-2">مفتاح الألوان:</h4>
+          <div className="space-y-2 text-xs">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-gray-500 rounded border border-white"></div>
+              <span className="text-gray-300">دول غير محتلة</span>
+            </div>
+            {players.map((player, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <div 
+                  className="w-4 h-4 rounded border border-white"
+                  style={{ backgroundColor: playerColors[index] }}
+                ></div>
+                <span className="text-gray-300">
+                  {player?.name || `لاعب ${index + 1}`}
+                </span>
+              </div>
+            )).filter((_, i) => i < 4)}
           </div>
-        </div>
+        </div> */}
+
+        {/* معلومات الدول للتشخيص */}
+<div className="hidden md:block absolute top-4 right-4 bg-white/90 rounded p-2 text-xs">           
+  <div>دول محتلة: {Object.values(countries).filter(c => c.owner !== null).length}</div>           
+  <div>دول فارغة: {Object.values(countries).filter(c => c.owner === null).length}</div>           
+  {currentPlayer && <div>الدور: {currentPlayer.name}</div>}         
+</div>
       </div>
     </div>
   );
@@ -541,3 +415,7 @@ const players = [
   { name: 'لاعب 3' },
   { name: 'لاعب 4' }
 ];
+
+
+
+// اذا خسر كل مناطقو ما بخسرو  ؟؟؟ نشوف موضوع الخريطة هل بجملها بعد كل عملية ؟؟؟؟  الدول المجاورة ؟؟؟ اخذ النظر ب عدد الجنود 
