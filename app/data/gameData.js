@@ -621,7 +621,7 @@ questions: [
 
  {
     id: 'world_tour',
-    name: 'حول أوروبا',
+    name: ' أوروبا',
     countries: [
       {
         id: 'norway',

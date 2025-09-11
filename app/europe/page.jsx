@@ -2,7 +2,7 @@
 import EuropeGame from '../../components/EuropeGame';
 
 export const metadata = {
-  title: 'حول أوروبا - Absi',
+  title: ' أوروبا - Absi',
   description: 'لعبة حول أوروبا - اكتشف الدول الأوروبية وأجب على الأسئلة!',
 };
 

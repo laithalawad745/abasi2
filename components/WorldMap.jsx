@@ -15,17 +15,31 @@ export default function WorldMap({
   return (
     <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-4 md:p-8 mb-4 md:mb-8 shadow-2xl border border-slate-700">
       <div className="text-center mb-6">
-        <h3 className="font-bold mb-4 p-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl shadow-lg text-lg md:text-xl">
+        {/* <h3 className="font-bold mb-4 p-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl shadow-lg text-lg md:text-xl">
            {worldTopic.name}
-        </h3>
-        <div className="bg-slate-700/30 backdrop-blur-sm rounded-xl p-4 border border-emerald-500/30">
+        </h3> */}
+             <div className="text-center mb-2 mt-0">
+        <div className={`inline-flex items-center gap-3 px-6 py-3 rounded-2xl font-bold shadow-xl backdrop-blur-sm border-2 ${
+          currentTurn === 'red' 
+            ? 'bg-gradient-to-r from-red-500/30 to-pink-500/30 border-red-400/50 text-red-300'
+            : 'bg-gradient-to-r from-blue-500/30 to-indigo-500/30 border-blue-400/50 text-blue-300'
+        }`}>
+          <span className="text-2xl">{currentTurn === 'red' ? '🔴' : '🔵'}</span>
+          <span className="text-lg">
+            دور {currentTurn === 'red' ? 'الفريق الأحمر' : 'الفريق الأزرق'}
+          </span>
+          <span className="text-sm opacity-75">اختر دولة أوروبية للهجوم!</span>
+        </div>
+      </div>
+
+        {/* <div className="bg-slate-700/30 backdrop-blur-sm rounded-xl p-4 border border-emerald-500/30">
           <p className="text-slate-300 text-sm md:text-base mb-2">
-            <span className="text-emerald-400 font-bold">⚔️ قواعد اللعب:</span> اختر دولة أوروبية للإجابة على سؤال عنها
+            <span className="text-emerald-400 font-bold"> قواعد اللعب:</span> اختر دولة أوروبية للإجابة على سؤال عنها
           </p>
           <p className="text-slate-400 text-xs md:text-sm">
             كل إجابة صحيحة تحتل الدولة وتكسب نقاطها • {worldTopic.countries.length} دولة أوروبية متاحة للاحتلال
           </p>
-        </div>
+        </div> */}
       </div>
 
       {/* 🖥️ عرض الخريطة للشاشات الكبيرة (مخفي على الهاتف) */}
@@ -236,19 +250,7 @@ export default function WorldMap({
       </div>
 
       {/* مؤشر الدور المحسّن */}
-      <div className="text-center mt-6">
-        <div className={`inline-flex items-center gap-3 px-6 py-3 rounded-2xl font-bold shadow-xl backdrop-blur-sm border-2 ${
-          currentTurn === 'red' 
-            ? 'bg-gradient-to-r from-red-500/30 to-pink-500/30 border-red-400/50 text-red-300'
-            : 'bg-gradient-to-r from-blue-500/30 to-indigo-500/30 border-blue-400/50 text-blue-300'
-        }`}>
-          <span className="text-2xl">{currentTurn === 'red' ? '🔴' : '🔵'}</span>
-          <span className="text-lg">
-            دور {currentTurn === 'red' ? 'الفريق الأحمر' : 'الفريق الأزرق'}
-          </span>
-          <span className="text-sm opacity-75">اختر دولة أوروبية للهجوم!</span>
-        </div>
-      </div>
+ 
     </div>
   );
 }

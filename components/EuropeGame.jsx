@@ -334,12 +334,12 @@ export default function EuropeGame() {
               أوروبا
           </h1>
           <div className="flex gap-4">
-            <button
+            {/* <button
               onClick={resetGame}
               className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-lg transition-all duration-300"
             >
               إعادة تشغيل
-            </button>
+            </button> */}
             <Link 
               href="/"
               className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold text-sm md:text-base shadow-lg transition-all duration-300"
