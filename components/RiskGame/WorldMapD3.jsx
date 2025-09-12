@@ -1,4 +1,4 @@
-// components/RiskGame/WorldMapD3.jsx - محسن لإصلاح مشكلة الألوان
+// components/RiskGame/WorldMapD3.jsx - إضافة الدول الجديدة فقط
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -24,16 +24,41 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
     '#8844ff'  // بنفسجي غامق - لاعب 7
   ];
 
-  // 🆕 قائمة الدول المتاحة في اللعبة
+  // 🆕 قائمة الدول المتاحة في اللعبة - مع الدول الجديدة المضافة
   const availableCountries = [
+    // الدول الأصلية
     'egypt', 'libya', 'algeria', 'france', 'germany', 'spain', 'italy', 
     'united_kingdom', 'poland', 'ukraine', 'turkey', 'iran', 'saudi_arabia',
     'pakistan', 'india', 'china', 'mongolia', 'russia', 'kazakhstan',
     'thailand', 'vietnam', 'indonesia', 'australia', 'brazil', 'argentina',
-    'usa', 'canada', 'mexico', 'south_africa', 'nigeria', 'japan', 'south_korea'
+    'usa', 'canada', 'mexico', 'south_africa', 'nigeria', 'japan', 'south_korea',
+    
+    // 🆕 الدول الجديدة المضافة
+    // أوروبا
+    'norway', 'sweden', 'finland', 'denmark', 'netherlands', 'belgium', 'switzerland',
+    'austria', 'czech_republic', 'romania', 'bulgaria', 'greece', 'portugal',
+    
+    // آسيا
+    'myanmar', 'malaysia', 'philippines', 'north_korea', 'afghanistan', 'uzbekistan',
+    'bangladesh', 'sri_lanka', 'nepal', 'bhutan', 'laos', 'cambodia',
+    
+    // أفريقيا
+    'morocco', 'tunisia', 'sudan', 'ethiopia', 'kenya', 'tanzania', 'zambia',
+    'zimbabwe', 'botswana', 'namibia', 'madagascar', 'ghana', 'ivory_coast',
+    'cameroon', 'democratic_republic_congo', 'angola',
+    
+    // الأمريكتين
+    'chile', 'peru', 'colombia', 'venezuela', 'bolivia', 'ecuador', 'uruguay',
+    'guatemala', 'cuba', 'panama', 'costa_rica', 'nicaragua',
+    
+    // أوقيانوسيا
+    'new_zealand', 'papua_new_guinea', 'fiji',
+    
+    // الشرق الأوسط
+    'israel', 'lebanon', 'syria', 'jordan', 'iraq', 'yemen', 'oman', 'uae', 'kuwait', 'qatar'
   ];
 
-  // 🆕 دالة للتحقق من توفر الدولة
+  // دالة للتحقق من توفر الدولة
   const isCountryAvailable = (countryId) => {
     return availableCountries.includes(countryId);
   };
@@ -59,7 +84,30 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
       'South Korea': 'south_korea', 'Indonesia': 'indonesia', 'Turkey': 'turkey',
       'Iran': 'iran', 'Saudi Arabia': 'saudi_arabia', 'Pakistan': 'pakistan',
       'Poland': 'poland', 'Ukraine': 'ukraine', 'Kazakhstan': 'kazakhstan',
-      'Mongolia': 'mongolia', 'Thailand': 'thailand', 'Vietnam': 'vietnam'
+      'Mongolia': 'mongolia', 'Thailand': 'thailand', 'Vietnam': 'vietnam',
+      
+      // 🆕 ربط الدول الجديدة
+      'Norway': 'norway', 'Sweden': 'sweden', 'Finland': 'finland', 'Denmark': 'denmark',
+      'Netherlands': 'netherlands', 'Belgium': 'belgium', 'Switzerland': 'switzerland',
+      'Austria': 'austria', 'Czech Republic': 'czech_republic', 'Romania': 'romania',
+      'Bulgaria': 'bulgaria', 'Greece': 'greece', 'Portugal': 'portugal',
+      'Myanmar': 'myanmar', 'Malaysia': 'malaysia', 'Philippines': 'philippines',
+      'North Korea': 'north_korea', 'Afghanistan': 'afghanistan', 'Uzbekistan': 'uzbekistan',
+      'Bangladesh': 'bangladesh', 'Sri Lanka': 'sri_lanka', 'Nepal': 'nepal',
+      'Bhutan': 'bhutan', 'Laos': 'laos', 'Cambodia': 'cambodia',
+      'Morocco': 'morocco', 'Tunisia': 'tunisia', 'Sudan': 'sudan', 'Ethiopia': 'ethiopia',
+      'Kenya': 'kenya', 'Tanzania': 'tanzania', 'Zambia': 'zambia', 'Zimbabwe': 'zimbabwe',
+      'Botswana': 'botswana', 'Namibia': 'namibia', 'Madagascar': 'madagascar',
+      'Ghana': 'ghana', 'Ivory Coast': 'ivory_coast', 'Cameroon': 'cameroon',
+      'Democratic Republic of the Congo': 'democratic_republic_congo', 'Angola': 'angola',
+      'Chile': 'chile', 'Peru': 'peru', 'Colombia': 'colombia', 'Venezuela': 'venezuela',
+      'Bolivia': 'bolivia', 'Ecuador': 'ecuador', 'Uruguay': 'uruguay',
+      'Guatemala': 'guatemala', 'Cuba': 'cuba', 'Panama': 'panama',
+      'Costa Rica': 'costa_rica', 'Nicaragua': 'nicaragua',
+      'New Zealand': 'new_zealand', 'Papua New Guinea': 'papua_new_guinea', 'Fiji': 'fiji',
+      'Israel': 'israel', 'Lebanon': 'lebanon', 'Syria': 'syria', 'Jordan': 'jordan',
+      'Iraq': 'iraq', 'Yemen': 'yemen', 'Oman': 'oman', 'United Arab Emirates': 'uae',
+      'Kuwait': 'kuwait', 'Qatar': 'qatar'
     };
     return countryMapping[countryName] || countryName.toLowerCase().replace(/\s+/g, '_');
   };
@@ -90,36 +138,17 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
     loadMapData();
   }, []);
 
-  // 🔥 رسم وتحديث الخريطة عند تغيير البيانات (محسن)
+  // رسم وتحديث الخريطة عند تغيير البيانات - محسّن للأداء
   useEffect(() => {
     if (!mapData || !window.d3) return;
     
-    console.log('🔄 useEffect triggered - إعادة رسم الخريطة');
-    console.log('🔄 countries state:', countries);
-    
-    // إضافة تأخير قصير لضمان اكتمال state updates
+    // تقليل إعادة الرسم بـ debounce
     const timer = setTimeout(() => {
       drawMap();
-    }, 50);
+    }, 150);
     
     return () => clearTimeout(timer);
   }, [mapData, countries, currentPlayer]);
-
-  // 🔥 useEffect منفصل لمراقبة تغييرات countries فقط
-  useEffect(() => {
-    if (!mapData || !window.d3) return;
-    
-    console.log('🎯 Countries changed - force redraw');
-    
-    // فرض إعادة رسم فورية للخريطة
-    const timer = setTimeout(() => {
-      if (svgRef.current) {
-        drawMap();
-      }
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, [countries]);
 
   const loadD3Scripts = () => {
     return new Promise((resolve) => {
@@ -135,14 +164,14 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
     });
   };
 
-  // 🔥 دالة الرسم المحسنة
+  // دالة الرسم المحسنة
   const drawMap = () => {
     const svg = window.d3.select(svgRef.current);
     
     // مسح المحتوى السابق بالكامل
     svg.selectAll("*").remove();
     
-    // 🔥 إضافة log للتحقق من حالة countries
+    // إضافة log للتحقق من حالة countries
     console.log('🗺️ رسم الخريطة - حالة countries:', countries);
     
     const g = svg.append("g");
@@ -174,67 +203,48 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
         const countryId = getCountryId(countryName);
         const country = countries[countryId];
         
-        // 🔥 إضافة log مفصل لكل دولة
-        if (countryId === 'libya' || countryId === 'egypt') {
-          console.log(`🎨 رسم ${countryName} (${countryId}):`, {
-            owner: country?.owner,
-            troops: country?.troops,
-            available: isCountryAvailable(countryId)
-          });
+        // تحديد اللون بناءً على حالة الدولة
+        if (!isCountryAvailable(countryId)) {
+          return '#666666'; // دول غير متاحة - رمادي غامق
         }
         
-        // إذا كانت الدولة مملوكة
         if (country && country.owner !== undefined && country.owner !== null) {
-          const color = playerColors[country.owner] || '#666666';
-          console.log(`🎨 ${countryId} ملوّنة بـ ${color} للاعب ${country.owner}`);
-          return color;
+          return playerColors[country.owner] || '#888888'; // دول مملوكة - لون اللاعب
         }
         
-        // إذا كانت الدولة غير مملوكة، تحديد اللون حسب التوفر
-        if (isCountryAvailable(countryId)) {
-          return '#888888'; // رمادي عادي للدول المتاحة
-        } else {
-          return '#cccccc'; // رمادي فاتح للدول غير المتاحة
-        }
+        return '#cccccc'; // دول فارغة ومتاحة - رمادي فاتح
       })
       .attr("stroke", d => {
         const countryName = d.properties.NAME || d.properties.name;
         const countryId = getCountryId(countryName);
         const country = countries[countryId];
         
-        if (country && country.owner === currentPlayer?.id) {
-          return '#FFD700';
-        } else if (country && country.owner !== undefined && country.owner !== null) {
-          return '#FFFFFF';
+        if (!isCountryAvailable(countryId)) {
+          return '#444444';
         }
         
-        // حدود مختلفة للدول غير المتاحة
-        if (isCountryAvailable(countryId)) {
-          return '#2c3e50'; // حدود عادية للدول المتاحة
-        } else {
-          return '#999999'; // حدود فاتحة للدول غير المتاحة
+        if (currentPlayer && country && country.owner === currentPlayer.id) {
+          return '#FFD700'; // حدود ذهبية للاعب الحالي
         }
+        
+        return '#2c3e50';
       })
       .attr("stroke-width", d => {
         const countryName = d.properties.NAME || d.properties.name;
         const countryId = getCountryId(countryName);
         const country = countries[countryId];
         
-        if (country && country.owner === currentPlayer?.id) {
-          return 3;
+        if (currentPlayer && country && country.owner === currentPlayer.id) {
+          return 3; // حدود أعرض للاعب الحالي
         }
-        return 1.5;
+        
+        return 1;
       })
       .style("cursor", d => {
         const countryName = d.properties.NAME || d.properties.name;
         const countryId = getCountryId(countryName);
         
-        // تغيير المؤشر حسب توفر الدولة
-        if (isCountryAvailable(countryId)) {
-          return "pointer"; // يد للدول المتاحة
-        } else {
-          return "not-allowed"; // منع للدول غير المتاحة
-        }
+        return isCountryAvailable(countryId) ? 'pointer' : 'not-allowed';
       })
       .on("mouseover", function(event, d) {
         const countryName = d.properties.NAME || d.properties.name;
@@ -363,8 +373,6 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
               onClick={() => {
                 if (isCountryAvailable(continent.id) && onCountryClick) {
                   onCountryClick(continent.id);
-                } else if (!isCountryAvailable(continent.id)) {
-                  alert(`❌ ${continent.name} غير متاحة في هذه اللعبة!`);
                 }
               }}
             />
@@ -373,10 +381,12 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
               y={continent.y}
               textAnchor="middle"
               dominantBaseline="middle"
-              fill="white"
-              fontSize="14"
-              fontWeight="bold"
-              style={{ pointerEvents: 'none' }}
+              style={{
+                fill: 'white',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                pointerEvents: 'none'
+              }}
             >
               {continent.name}
             </text>
@@ -386,71 +396,44 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
     );
   };
 
-  return (
-    <div className="fixed inset-0 pt-20 pb-4 overflow-hidden">
-      <div className="w-full h-full relative bg-gradient-to-br from-blue-500 to-blue-700">
-        
-        {/* الخريطة */}
-        {!isLoading && mapData ? (
-          <svg
-            ref={svgRef}
-            width={width}
-            height={height}
-            viewBox={`0 0 ${width} ${height}`}
-            className="w-full h-full cursor-grab active:cursor-grabbing"
-            style={{
-              border: '3px solid #2c3e50',
-              borderRadius: '8px',
-              background: '#4A9EFF'
-            }}
-          />
-        ) : !isLoading ? (
-          renderFallbackMap()
-        ) : null}
-        
-        {/* Tooltip */}
-        {tooltip.show && (
-          <div
-            className="absolute bg-slate-800/95 text-white px-3 py-2 rounded-lg text-sm pointer-events-none z-50 whitespace-pre-line shadow-lg"
-            style={{
-              left: tooltip.x,
-              top: tooltip.y,
-              transform: 'translate(-50%, -100%)'
-            }}
-          >
-            {tooltip.content}
-          </div>
-        )}
-        
-        {/* مؤشر الدور الحالي */}
-        {currentPlayer && (
-          <div className="absolute top-24 left-1/2 transform -translate-x-1/2 bg-slate-800/90 backdrop-blur-lg rounded-lg px-6 py-3 border-2" style={{ borderColor: currentPlayer.color }}>
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-6 h-6 rounded-full border-2 border-white"
-                style={{ backgroundColor: currentPlayer.color }}
-              ></div>
-              <span className="text-white font-bold">{currentPlayer.name}</span>
-              <span className="text-gray-300">- اختر دولة</span>
-            </div>
-          </div>
-        )}
-
-        {/* دليل الألوان */}
-        <div className="absolute top-4 right-4 bg-slate-800/90 backdrop-blur-lg rounded-lg p-4 text-white text-sm">
-          <h3 className="font-bold mb-2">دليل الألوان:</h3>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-gray-600"></div>
-              <span>دول متاحة للعب</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-gray-300"></div>
-              <span>دول غير متاحة</span>
-            </div>
-          </div>
+  if (isLoading) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-blue-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-blue-800 font-semibold">جاري تحميل الخريطة...</p>
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="relative w-full h-full">
+      {mapData ? (
+        <svg
+          ref={svgRef}
+          width={width}
+          height={height}
+          viewBox={`0 0 ${width} ${height}`}
+          className="w-full h-full"
+          style={{ background: '#4A9EFF' }}
+        />
+      ) : (
+        renderFallbackMap()
+      )}
+      
+      {/* Tooltip */}
+      {tooltip.show && (
+        <div
+          className="absolute bg-black bg-opacity-80 text-white p-2 rounded text-sm pointer-events-none z-50 whitespace-pre-line"
+          style={{
+            left: tooltip.x + 10,
+            top: tooltip.y - 10
+          }}
+        >
+          {tooltip.content}
+        </div>
+      )}
     </div>
   );
 }
