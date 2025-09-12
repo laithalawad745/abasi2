@@ -45,120 +45,177 @@ export default function RiskGame() {
   ];
 
   // 🆕 خريطة الدول المجاورة - مع إضافة الدول الجديدة
-  const adjacentCountries = {
-    // الدول الأصلية
-    egypt: ['libya', 'algeria'],
-    libya: ['egypt', 'algeria', 'france'],
-    algeria: ['egypt', 'libya', 'france', 'spain'],
-    france: ['libya', 'algeria', 'spain', 'germany', 'united_kingdom'],
-    germany: ['france', 'poland', 'ukraine'],
-    spain: ['algeria', 'france'],
-    italy: ['france', 'germany'],
-    united_kingdom: ['france'],
-    poland: ['germany', 'ukraine', 'russia'],
-    ukraine: ['germany', 'poland', 'russia', 'turkey'],
-    turkey: ['ukraine', 'iran', 'saudi_arabia'],
-    iran: ['turkey', 'pakistan', 'saudi_arabia'],
-    saudi_arabia: ['turkey', 'iran', 'pakistan'],
-    pakistan: ['iran', 'saudi_arabia', 'india', 'china'],
-    india: ['pakistan', 'china', 'thailand'],
-    china: ['pakistan', 'india', 'thailand', 'mongolia', 'russia'],
-    mongolia: ['china', 'russia'],
-    russia: ['poland', 'ukraine', 'mongolia', 'china', 'kazakhstan'],
-    kazakhstan: ['russia'],
-    thailand: ['india', 'china', 'vietnam', 'indonesia'],
-    vietnam: ['thailand', 'china'],
-    indonesia: ['thailand', 'australia'],
-    australia: ['indonesia'],
-    brazil: ['argentina', 'usa'],
-    argentina: ['brazil'],
-    usa: ['brazil', 'canada', 'mexico'],
-    canada: ['usa'],
-    mexico: ['usa'],
-    south_africa: ['nigeria'],
-    nigeria: ['south_africa'],
-    japan: ['china', 'south_korea'],
-    south_korea: ['japan', 'china'],
-    
-    // 🆕 الدول الجديدة مع اتصالاتها
-    // أوروبا الشمالية
-    norway: ['sweden', 'finland', 'united_kingdom'],
-    sweden: ['norway', 'finland', 'denmark'],
-    finland: ['norway', 'sweden', 'russia'],
-    denmark: ['sweden', 'germany', 'netherlands'],
-    netherlands: ['germany', 'belgium', 'denmark'],
-    belgium: ['netherlands', 'germany', 'france'],
-    switzerland: ['france', 'germany', 'austria', 'italy'],
-    austria: ['germany', 'czech_republic', 'switzerland', 'italy'],
-    czech_republic: ['germany', 'poland', 'austria'],
-    romania: ['ukraine', 'bulgaria'],
-    bulgaria: ['romania', 'turkey', 'greece'],
-    greece: ['bulgaria', 'turkey', 'italy'],
-    portugal: ['spain'],
-    
-    // آسيا الجديدة
-    myanmar: ['china', 'india', 'bangladesh', 'thailand', 'laos'],
-    malaysia: ['thailand', 'indonesia'],
-    philippines: ['malaysia'],
-    north_korea: ['china', 'russia', 'south_korea'],
-    afghanistan: ['iran', 'pakistan', 'china', 'uzbekistan', 'kazakhstan'],
-    uzbekistan: ['afghanistan', 'kazakhstan'],
-    bangladesh: ['india', 'myanmar'],
-    sri_lanka: ['india'],
-    nepal: ['india', 'china'],
-    bhutan: ['india', 'china'],
-    laos: ['china', 'vietnam', 'thailand', 'myanmar'],
-    cambodia: ['thailand', 'vietnam'],
-    
-    // أفريقيا الجديدة
-    morocco: ['algeria', 'spain', 'portugal'],
-    tunisia: ['libya', 'algeria'],
-    sudan: ['egypt', 'libya', 'ethiopia'],
-    ethiopia: ['sudan', 'kenya'],
-    kenya: ['ethiopia', 'tanzania'],
-    tanzania: ['kenya', 'zambia', 'zimbabwe'],
-    zambia: ['tanzania', 'zimbabwe', 'botswana', 'angola', 'democratic_republic_congo'],
-    zimbabwe: ['zambia', 'tanzania', 'botswana', 'south_africa'],
-    botswana: ['zambia', 'zimbabwe', 'south_africa', 'namibia'],
-    namibia: ['botswana', 'south_africa', 'angola'],
-    madagascar: [],
-    ghana: ['nigeria', 'ivory_coast'],
-    ivory_coast: ['ghana', 'nigeria'],
-    cameroon: ['nigeria', 'democratic_republic_congo'],
-    democratic_republic_congo: ['cameroon', 'zambia', 'angola'],
-    angola: ['democratic_republic_congo', 'zambia', 'namibia'],
-    
-    // الأمريكتين الجديدة
-    chile: ['argentina', 'peru', 'bolivia'],
-    peru: ['chile', 'bolivia', 'brazil', 'colombia', 'ecuador'],
-    colombia: ['venezuela', 'brazil', 'peru', 'ecuador', 'panama'],
-    venezuela: ['colombia', 'brazil'],
-    bolivia: ['brazil', 'argentina', 'chile', 'peru'],
-    ecuador: ['peru', 'colombia'],
-    uruguay: ['brazil', 'argentina'],
-    guatemala: ['mexico', 'panama'],
-    cuba: [],
-    panama: ['colombia', 'costa_rica', 'guatemala'],
-    costa_rica: ['panama', 'nicaragua'],
-    nicaragua: ['costa_rica'],
-    
-    // أوقيانوسيا الجديدة
-    new_zealand: ['australia'],
-    papua_new_guinea: ['indonesia', 'australia'],
-    fiji: [],
-    
-    // الشرق الأوسط الجديد
-    israel: ['syria', 'jordan', 'egypt', 'lebanon'],
-    lebanon: ['syria', 'israel'],
-    syria: ['turkey', 'iraq', 'jordan', 'lebanon', 'israel'],
-    jordan: ['syria', 'iraq', 'saudi_arabia', 'israel'],
-    iraq: ['iran', 'turkey', 'syria', 'jordan', 'saudi_arabia', 'kuwait'],
-    yemen: ['saudi_arabia', 'oman'],
-    oman: ['yemen', 'saudi_arabia', 'uae'],
-    uae: ['oman', 'saudi_arabia', 'qatar'],
-    kuwait: ['iraq', 'saudi_arabia'],
-    qatar: ['saudi_arabia', 'uae']
-  };
+// في ملف components/RiskGame/RiskGame.jsx
+
+const adjacentCountries = {
+  // الدول الأصلية
+  egypt: ['libya', 'algeria', 'sudan'],
+  libya: ['egypt', 'algeria', 'france', 'chad', 'sudan', 'tunisia'],
+  algeria: ['egypt', 'libya', 'france', 'spain', 'morocco', 'tunisia', 'mali', 'niger'],
+  france: ['libya', 'algeria', 'spain', 'germany', 'united_kingdom', 'belgium', 'switzerland', 'italy'],
+  germany: ['france', 'poland', 'ukraine', 'denmark', 'netherlands', 'belgium', 'switzerland', 'austria', 'czech_republic'],
+  spain: ['algeria', 'france', 'portugal'],
+  italy: ['france', 'germany', 'switzerland', 'austria', 'slovenia', 'croatia'],
+  united_kingdom: ['france', 'ireland', 'iceland'],
+  poland: ['germany', 'ukraine', 'russia', 'czech_republic', 'slovakia', 'lithuania', 'belarus'],
+  ukraine: ['germany', 'poland', 'russia', 'turkey', 'romania', 'slovakia', 'hungary', 'belarus'],
+  turkey: ['ukraine', 'iran', 'saudi_arabia', 'bulgaria', 'greece', 'georgia', 'armenia'],
+  iran: ['turkey', 'pakistan', 'saudi_arabia', 'afghanistan', 'armenia', 'azerbaijan', 'turkmenistan'],
+  saudi_arabia: ['turkey', 'iran', 'pakistan', 'iraq', 'jordan', 'yemen', 'oman', 'uae', 'kuwait', 'qatar'],
+  pakistan: ['iran', 'saudi_arabia', 'india', 'china', 'afghanistan'],
+  india: ['pakistan', 'china', 'thailand', 'bangladesh', 'myanmar', 'sri_lanka', 'nepal', 'bhutan'],
+  china: ['pakistan', 'india', 'thailand', 'mongolia', 'russia', 'kazakhstan', 'kyrgyzstan', 'tajikistan', 'afghanistan', 'myanmar', 'vietnam', 'north_korea', 'nepal', 'bhutan', 'laos'],
+  mongolia: ['china', 'russia'],
+  russia: ['poland', 'ukraine', 'mongolia', 'china', 'kazakhstan', 'finland', 'estonia', 'latvia', 'lithuania', 'georgia', 'belarus'],
+  kazakhstan: ['russia', 'china', 'uzbekistan', 'kyrgyzstan', 'tajikistan', 'turkmenistan'],
+  thailand: ['india', 'china', 'vietnam', 'indonesia', 'myanmar', 'laos', 'cambodia'],
+  vietnam: ['thailand', 'china', 'laos', 'cambodia'],
+  indonesia: ['thailand', 'australia', 'malaysia', 'papua_new_guinea'],
+  australia: ['indonesia', 'papua_new_guinea', 'new_zealand'],
+  brazil: ['argentina', 'usa', 'colombia', 'venezuela', 'peru', 'bolivia', 'uruguay', 'paraguay', 'guyana', 'suriname'],
+  argentina: ['brazil', 'chile', 'bolivia', 'paraguay', 'uruguay'],
+  usa: ['brazil', 'canada', 'mexico', 'cuba'],
+  canada: ['usa', 'greenland'],
+  mexico: ['usa', 'guatemala', 'honduras'],
+  south_africa: ['nigeria', 'namibia', 'botswana', 'zimbabwe', 'mozambique'],
+  nigeria: ['south_africa', 'chad', 'cameroon', 'niger', 'benin', 'ghana'],
+  japan: ['china', 'south_korea', 'north_korea'],
+  south_korea: ['japan', 'china', 'north_korea'],
+  
+  // === الدول الأربع في وسط أفريقيا (بدون تكرار) ===
+  gabon: ['cameroon', 'congo', 'central_african_republic'],
+  south_sudan: ['sudan', 'ethiopia', 'uganda', 'kenya', 'central_african_republic', 'democratic_republic_congo'],
+  central_african_republic: ['chad', 'sudan', 'south_sudan', 'democratic_republic_congo', 'cameroon', 'congo', 'gabon'],
+  democratic_republic_congo: ['zambia', 'angola', 'cameroon', 'central_african_republic', 'south_sudan', 'uganda', 'congo', 'gabon'],
+  congo: ['cameroon', 'central_african_republic', 'democratic_republic_congo', 'gabon'],
+  
+  // تشاد (محدث ليشمل الدول الجديدة)
+  chad: ['sudan', 'libya', 'nigeria', 'cameroon', 'central_african_republic', 'niger'],
+  
+  // الدول المجاورة المحدثة
+  sudan: ['egypt', 'libya', 'ethiopia', 'chad', 'eritrea', 'south_sudan'],
+  ethiopia: ['sudan', 'kenya', 'somalia', 'eritrea', 'south_sudan'],
+  kenya: ['ethiopia', 'tanzania', 'somalia', 'south_sudan', 'uganda'],
+  uganda: ['south_sudan', 'kenya', 'tanzania', 'democratic_republic_congo'],
+  cameroon: ['nigeria', 'chad', 'central_african_republic', 'democratic_republic_congo', 'congo', 'gabon'],
+  zambia: ['tanzania', 'zimbabwe', 'botswana', 'angola', 'democratic_republic_congo', 'malawi'],
+  angola: ['zambia', 'namibia', 'democratic_republic_congo'],
+  
+  // باقي الدول المطلوبة
+  belarus: ['russia', 'poland', 'ukraine', 'lithuania'],
+  czech_republic: ['germany', 'poland', 'austria', 'slovakia'],
+  somalia: ['ethiopia', 'kenya'],
+  ivory_coast: ['ghana', 'liberia', 'guinea', 'burkina_faso'],
+  ghana: ['nigeria', 'ivory_coast', 'burkina_faso', 'togo'],
+  
+  // باقي الدول (مثل السابق)
+  tajikistan: ['china', 'afghanistan', 'uzbekistan', 'kyrgyzstan'],
+  turkmenistan: ['iran', 'afghanistan', 'uzbekistan', 'kazakhstan'],
+  armenia: ['turkey', 'iran', 'georgia', 'azerbaijan'],
+  georgia: ['russia', 'turkey', 'armenia', 'azerbaijan'],
+  uzbekistan: ['afghanistan', 'kazakhstan', 'kyrgyzstan', 'tajikistan', 'turkmenistan'],
+  kyrgyzstan: ['china', 'kazakhstan', 'uzbekistan', 'tajikistan'],
+  azerbaijan: ['iran', 'armenia', 'georgia'],
+  estonia: ['russia', 'latvia'],
+  latvia: ['russia', 'estonia', 'lithuania'],
+  lithuania: ['russia', 'poland', 'latvia', 'belarus'],
+  slovakia: ['poland', 'ukraine', 'czech_republic', 'hungary', 'austria'],
+  slovenia: ['italy', 'austria', 'hungary', 'croatia'],
+  hungary: ['ukraine', 'slovakia', 'austria', 'slovenia', 'croatia', 'serbia', 'romania'],
+  croatia: ['italy', 'slovenia', 'hungary', 'serbia', 'bosnia_herzegovina'],
+  bosnia_herzegovina: ['croatia', 'serbia', 'montenegro'],
+  serbia: ['hungary', 'romania', 'bulgaria', 'croatia', 'bosnia_herzegovina', 'montenegro'],
+  montenegro: ['serbia', 'bosnia_herzegovina', 'albania'],
+  albania: ['montenegro', 'greece'],
+  ireland: ['united_kingdom', 'iceland'],
+  iceland: ['united_kingdom', 'ireland', 'greenland'],
+  eritrea: ['sudan', 'ethiopia'],
+  niger: ['algeria', 'libya', 'chad', 'nigeria', 'mali', 'burkina_faso'],
+  mali: ['algeria', 'mauritania', 'senegal', 'guinea', 'burkina_faso', 'niger'],
+  mauritania: ['western_sahara', 'morocco', 'algeria', 'mali', 'senegal'],
+  western_sahara: ['morocco', 'mauritania'],
+  benin: ['nigeria', 'niger', 'burkina_faso', 'togo'],
+  togo: ['benin', 'burkina_faso', 'ghana'],
+  burkina_faso: ['mali', 'niger', 'benin', 'togo', 'ghana', 'ivory_coast'],
+  liberia: ['guinea', 'ivory_coast', 'sierra_leone'],
+  guinea: ['mali', 'senegal', 'guinea_bissau', 'sierra_leone', 'liberia', 'ivory_coast'],
+  sierra_leone: ['guinea', 'liberia'],
+  guinea_bissau: ['senegal', 'guinea'],
+  senegal: ['mauritania', 'mali', 'guinea', 'guinea_bissau'],
+  malawi: ['tanzania', 'zambia', 'mozambique'],
+  mozambique: ['tanzania', 'malawi', 'zimbabwe', 'south_africa'],
+  greenland: ['canada', 'iceland'],
+  paraguay: ['brazil', 'argentina', 'bolivia'],
+  suriname: ['brazil', 'guyana'],
+  guyana: ['brazil', 'suriname', 'venezuela'],
+  honduras: ['mexico', 'guatemala', 'nicaragua'],
+  
+  // أوروبا
+  norway: ['sweden', 'finland', 'united_kingdom'],
+  sweden: ['norway', 'finland', 'denmark'],
+  finland: ['norway', 'sweden', 'russia', 'estonia'],
+  denmark: ['sweden', 'germany', 'netherlands'],
+  netherlands: ['germany', 'belgium', 'denmark'],
+  belgium: ['netherlands', 'germany', 'france'],
+  switzerland: ['france', 'germany', 'austria', 'italy'],
+  austria: ['germany', 'czech_republic', 'switzerland', 'italy', 'slovenia', 'hungary', 'slovakia'],
+  romania: ['ukraine', 'bulgaria', 'serbia', 'hungary'],
+  bulgaria: ['romania', 'turkey', 'greece', 'serbia'],
+  greece: ['bulgaria', 'turkey', 'italy', 'albania'],
+  portugal: ['spain'],
+  
+  // آسيا
+  north_korea: ['china', 'russia', 'south_korea'],
+  myanmar: ['china', 'india', 'bangladesh', 'thailand', 'laos'],
+  malaysia: ['thailand', 'indonesia'],
+  philippines: ['malaysia'],
+  afghanistan: ['iran', 'pakistan', 'china', 'uzbekistan', 'turkmenistan', 'tajikistan'],
+  bangladesh: ['india', 'myanmar'],
+  sri_lanka: ['india'],
+  nepal: ['india', 'china'],
+  bhutan: ['india', 'china'],
+  laos: ['china', 'vietnam', 'thailand', 'myanmar', 'cambodia'],
+  cambodia: ['thailand', 'vietnam', 'laos'],
+  
+  // أفريقيا
+  morocco: ['algeria', 'spain', 'portugal', 'western_sahara', 'mauritania'],
+  tunisia: ['libya', 'algeria'],
+  tanzania: ['kenya', 'zambia', 'zimbabwe', 'uganda', 'malawi', 'mozambique'],
+  zimbabwe: ['zambia', 'tanzania', 'botswana', 'south_africa', 'mozambique'],
+  botswana: ['zambia', 'zimbabwe', 'south_africa', 'namibia'],
+  namibia: ['botswana', 'south_africa', 'angola'],
+  madagascar: [],
+  
+  // الأمريكتان
+  chile: ['argentina', 'peru', 'bolivia'],
+  peru: ['brazil', 'colombia', 'bolivia', 'chile'],
+  colombia: ['venezuela', 'brazil', 'peru', 'panama'],
+  venezuela: ['colombia', 'brazil', 'guyana'],
+  bolivia: ['brazil', 'argentina', 'chile', 'peru', 'paraguay'],
+  ecuador: ['colombia', 'peru'],
+  uruguay: ['brazil', 'argentina'],
+  guatemala: ['mexico', 'honduras'],
+  cuba: ['usa'],
+  panama: ['colombia', 'costa_rica'],
+  costa_rica: ['panama', 'nicaragua'],
+  nicaragua: ['costa_rica', 'guatemala', 'honduras'],
+  
+  // أوقيانوسيا
+  new_zealand: ['australia'],
+  papua_new_guinea: ['indonesia', 'australia'],
+  fiji: ['new_zealand'],
+  
+  // الشرق الأوسط
+
+  syria: ['lebanon', 'israel', 'jordan', 'iraq', 'turkey'],
+  jordan: ['israel', 'syria', 'iraq', 'saudi_arabia'],
+  iraq: ['syria', 'jordan', 'iran', 'turkey', 'saudi_arabia', 'kuwait'],
+  yemen: ['saudi_arabia', 'oman'],
+  oman: ['yemen', 'uae', 'saudi_arabia'],
+  uae: ['oman', 'saudi_arabia', 'qatar'],
+  kuwait: ['iraq', 'saudi_arabia'],
+  qatar: ['saudi_arabia', 'uae']
+};
 
   // اللاعب الحالي
   const currentPlayer = players[turnOrder[currentPlayerIndex]];
@@ -172,56 +229,71 @@ export default function RiskGame() {
 
   // تهيئة الدول
   const initializeCountries = () => {
-    const countryNames = {
-      // الدول الأصلية
-      egypt: 'مصر', libya: 'ليبيا', algeria: 'الجزائر', france: 'فرنسا',
-      germany: 'ألمانيا', spain: 'إسبانيا', italy: 'إيطاليا',
-      united_kingdom: 'المملكة المتحدة', poland: 'بولندا', ukraine: 'أوكرانيا',
-      turkey: 'تركيا', iran: 'إيران', saudi_arabia: 'السعودية',
-      pakistan: 'باكستان', india: 'الهند', china: 'الصين',
-      mongolia: 'منغوليا', russia: 'روسيا', kazakhstan: 'كازاخستان',
-      thailand: 'تايلاند', vietnam: 'فيتنام', indonesia: 'إندونيسيا',
-      australia: 'أستراليا', brazil: 'البرازيل', argentina: 'الأرجنتين',
-      usa: 'الولايات المتحدة', canada: 'كندا', mexico: 'المكسيك',
-      south_africa: 'جنوب أفريقيا', nigeria: 'نيجيريا', japan: 'اليابان',
-      south_korea: 'كوريا الجنوبية',
-      
-      // 🆕 الدول الجديدة
-      // أوروبا الشمالية والوسطى
-      norway: 'النرويج', sweden: 'السويد', finland: 'فنلندا', denmark: 'الدنمارك',
-      netherlands: 'هولندا', belgium: 'بلجيكا', switzerland: 'سويسرا',
-      austria: 'النمسا', czech_republic: 'التشيك', romania: 'رومانيا',
-      bulgaria: 'بلغاريا', greece: 'اليونان', portugal: 'البرتغال',
-      
-      // آسيا الجديدة
-      myanmar: 'ميانمار', malaysia: 'ماليزيا', philippines: 'الفلبين',
-      north_korea: 'كوريا الشمالية', afghanistan: 'أفغانستان', uzbekistan: 'أوزبكستان',
-      bangladesh: 'بنغلادش', sri_lanka: 'سريلانكا', nepal: 'نيبال',
-      bhutan: 'بوتان', laos: 'لاوس', cambodia: 'كمبوديا',
-      
-      // أفريقيا الجديدة
-      morocco: 'المغرب', tunisia: 'تونس', sudan: 'السودان',
-      ethiopia: 'إثيوبيا', kenya: 'كينيا', tanzania: 'تنزانيا',
-      zambia: 'زامبيا', zimbabwe: 'زيمبابوي', botswana: 'بوتسوانا',
-      namibia: 'ناميبيا', madagascar: 'مدغشقر', ghana: 'غانا',
-      ivory_coast: 'ساحل العاج', cameroon: 'الكاميرون',
-      democratic_republic_congo: 'الكونغو الديمقراطية', angola: 'أنغولا',
-      
-      // الأمريكتين الجديدة
-      chile: 'تشيلي', peru: 'بيرو', colombia: 'كولومبيا',
-      venezuela: 'فنزويلا', bolivia: 'بوليفيا', ecuador: 'الإكوادور',
-      uruguay: 'أوروغواي', guatemala: 'غواتيمالا', cuba: 'كوبا',
-      panama: 'بنما', costa_rica: 'كوستاريكا', nicaragua: 'نيكاراغوا',
-      
-      // أوقيانوسيا الجديدة
-      new_zealand: 'نيوزيلندا', papua_new_guinea: 'بابوا نيو غينيا', fiji: 'فيجي',
-      
-      // الشرق الأوسط الجديد
-      israel: 'إسرائيل', lebanon: 'لبنان', syria: 'سوريا', jordan: 'الأردن',
-      iraq: 'العراق', yemen: 'اليمن', oman: 'عمان', uae: 'الإمارات',
-      kuwait: 'الكويت', qatar: 'قطر'
-    };
-    
+
+const countryNames = {
+  // الدول الأصلية
+  egypt: 'مصر', libya: 'ليبيا', algeria: 'الجزائر', france: 'فرنسا',
+  germany: 'ألمانيا', spain: 'إسبانيا', italy: 'إيطاليا',
+  united_kingdom: 'المملكة المتحدة', poland: 'بولندا', ukraine: 'أوكرانيا',
+  turkey: 'تركيا', iran: 'إيران', saudi_arabia: 'السعودية',
+  pakistan: 'باكستان', india: 'الهند', china: 'الصين',
+  mongolia: 'منغوليا', russia: 'روسيا', kazakhstan: 'كازاخستان',
+  thailand: 'تايلاند', vietnam: 'فيتنام', indonesia: 'إندونيسيا',
+  australia: 'أستراليا', brazil: 'البرازيل', argentina: 'الأرجنتين',
+  usa: 'الولايات المتحدة', canada: 'كندا', mexico: 'المكسيك',
+  south_africa: 'جنوب أفريقيا', nigeria: 'نيجيريا', japan: 'اليابان',
+  south_korea: 'كوريا الجنوبية', chad: 'تشاد',
+  
+  // === الدول الأربع في وسط أفريقيا ===
+  gabon: 'الغابون',
+  south_sudan: 'جنوب السودان', 
+  central_african_republic: 'جمهورية أفريقيا الوسطى',
+  democratic_republic_congo: 'جمهورية الكونغو الديمقراطية',
+  congo: 'جمهورية الكونغو',
+  
+  // باقي الدول
+  belarus: 'بيلاروسيا', czech_republic: 'التشيك', somalia: 'الصومال',
+  ivory_coast: 'ساحل العاج', ghana: 'غانا',
+  
+  // الدول الموجودة سابقاً
+  norway: 'النرويج', sweden: 'السويد', finland: 'فنلندا', denmark: 'الدنمارك',
+  netherlands: 'هولندا', belgium: 'بلجيكا', switzerland: 'سويسرا',
+  austria: 'النمسا', romania: 'رومانيا', bulgaria: 'بلغاريا', 
+  greece: 'اليونان', portugal: 'البرتغال',
+  myanmar: 'ميانمار', malaysia: 'ماليزيا', philippines: 'الفلبين',
+  north_korea: 'كوريا الشمالية', afghanistan: 'أفغانستان', uzbekistan: 'أوزبكستان',
+  bangladesh: 'بنغلادش', sri_lanka: 'سريلانكا', nepal: 'نيبال',
+  bhutan: 'بوتان', laos: 'لاوس', cambodia: 'كمبوديا',
+  morocco: 'المغرب', tunisia: 'تونس', sudan: 'السودان',
+  ethiopia: 'إثيوبيا', kenya: 'كينيا', tanzania: 'تنزانيا',
+  zambia: 'زامبيا', zimbabwe: 'زيمبابوي', botswana: 'بوتسوانا',
+  namibia: 'ناميبيا', madagascar: 'مدغشقر', cameroon: 'الكاميرون', angola: 'أنغولا',
+  chile: 'تشيلي', peru: 'بيرو', colombia: 'كولومبيا',
+  venezuela: 'فنزويلا', bolivia: 'بوليفيا', ecuador: 'الإكوادور',
+  uruguay: 'أوروغواي', guatemala: 'غواتيمالا', cuba: 'كوبا',
+  panama: 'بنما', costa_rica: 'كوستاريكا', nicaragua: 'نيكاراغوا',
+  new_zealand: 'نيوزيلندا', papua_new_guinea: 'بابوا نيو غينيا', fiji: 'فيجي',
+  israel: 'إسرائيل', lebanon: 'لبنان', syria: 'سوريا', jordan: 'الأردن',
+  iraq: 'العراق', yemen: 'اليمن', oman: 'عمان', uae: 'الإمارات',
+  kuwait: 'الكويت', qatar: 'قطر',
+  
+  // الدول الجديدة الأخرى
+  tajikistan: 'طاجكستان', turkmenistan: 'تركمانستان', 
+  armenia: 'أرمينيا', georgia: 'جورجيا', kyrgyzstan: 'قيرغيزستان', azerbaijan: 'أذربيجان',
+  estonia: 'استونيا', latvia: 'ليتفيا', lithuania: 'ليتوانيا',
+  slovakia: 'سلوفاكيا', slovenia: 'سلوفينيا', hungary: 'هنغاريا',
+  croatia: 'كرواتيا', bosnia_herzegovina: 'البوسنة والهرسك',
+  serbia: 'صربيا', montenegro: 'الجبل الأسود', albania: 'ألبانيا',
+  ireland: 'ايرلندا', iceland: 'أيسلندا',
+  eritrea: 'إريتريا', uganda: 'أوغندا',
+  niger: 'النيجر', mali: 'مالي', mauritania: 'موريتانيا',
+  western_sahara: 'الصحراء الغربية', benin: 'بنين', togo: 'توغو',
+  burkina_faso: 'بوركينا فاسو', liberia: 'ليبيريا', guinea: 'غينيا',
+  sierra_leone: 'سيراليون', guinea_bissau: 'غينيا بيساو',
+  senegal: 'السنغال', malawi: 'مالاوي', mozambique: 'موزمبيق', 
+  greenland: 'جرينلاند', paraguay: 'باراغواي',
+  suriname: 'سورينام', guyana: 'غويانا', honduras: 'هندوراس'
+};
     const initialCountries = {};
     Object.keys(countryNames).forEach(countryId => {
       initialCountries[countryId] = {
