@@ -1,4 +1,4 @@
-// components/RiskGame/WorldMapD3.jsx
+// components/RiskGame/WorldMapD3.jsx - محسن لإصلاح مشكلة الألوان
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -23,6 +23,20 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
     '#ff8844', // برتقالي - لاعب 6
     '#8844ff'  // بنفسجي غامق - لاعب 7
   ];
+
+  // 🆕 قائمة الدول المتاحة في اللعبة
+  const availableCountries = [
+    'egypt', 'libya', 'algeria', 'france', 'germany', 'spain', 'italy', 
+    'united_kingdom', 'poland', 'ukraine', 'turkey', 'iran', 'saudi_arabia',
+    'pakistan', 'india', 'china', 'mongolia', 'russia', 'kazakhstan',
+    'thailand', 'vietnam', 'indonesia', 'australia', 'brazil', 'argentina',
+    'usa', 'canada', 'mexico', 'south_africa', 'nigeria', 'japan', 'south_korea'
+  ];
+
+  // 🆕 دالة للتحقق من توفر الدولة
+  const isCountryAvailable = (countryId) => {
+    return availableCountries.includes(countryId);
+  };
 
   // أرقام المناطق
   const regionNumbers = {
@@ -76,12 +90,36 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
     loadMapData();
   }, []);
 
-  // رسم وتحديث الخريطة عند تغيير البيانات
+  // 🔥 رسم وتحديث الخريطة عند تغيير البيانات (محسن)
   useEffect(() => {
     if (!mapData || !window.d3) return;
     
-    drawMap();
-  }, [mapData, countries, currentPlayer]); // مهم: تحديث عند تغيير countries
+    console.log('🔄 useEffect triggered - إعادة رسم الخريطة');
+    console.log('🔄 countries state:', countries);
+    
+    // إضافة تأخير قصير لضمان اكتمال state updates
+    const timer = setTimeout(() => {
+      drawMap();
+    }, 50);
+    
+    return () => clearTimeout(timer);
+  }, [mapData, countries, currentPlayer]);
+
+  // 🔥 useEffect منفصل لمراقبة تغييرات countries فقط
+  useEffect(() => {
+    if (!mapData || !window.d3) return;
+    
+    console.log('🎯 Countries changed - force redraw');
+    
+    // فرض إعادة رسم فورية للخريطة
+    const timer = setTimeout(() => {
+      if (svgRef.current) {
+        drawMap();
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [countries]);
 
   const loadD3Scripts = () => {
     return new Promise((resolve) => {
@@ -97,11 +135,15 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
     });
   };
 
+  // 🔥 دالة الرسم المحسنة
   const drawMap = () => {
     const svg = window.d3.select(svgRef.current);
     
-    // مسح المحتوى السابق
+    // مسح المحتوى السابق بالكامل
     svg.selectAll("*").remove();
+    
+    // 🔥 إضافة log للتحقق من حالة countries
+    console.log('🗺️ رسم الخريطة - حالة countries:', countries);
     
     const g = svg.append("g");
     
@@ -120,7 +162,7 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
       
     svg.call(zoom);
     
-    // رسم الدول
+    // رسم الدول مع تحسينات
     const countriesSelection = g.selectAll(".country")
       .data(mapData.features)
       .enter()
@@ -132,12 +174,28 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
         const countryId = getCountryId(countryName);
         const country = countries[countryId];
         
+        // 🔥 إضافة log مفصل لكل دولة
+        if (countryId === 'libya' || countryId === 'egypt') {
+          console.log(`🎨 رسم ${countryName} (${countryId}):`, {
+            owner: country?.owner,
+            troops: country?.troops,
+            available: isCountryAvailable(countryId)
+          });
+        }
+        
+        // إذا كانت الدولة مملوكة
         if (country && country.owner !== undefined && country.owner !== null) {
           const color = playerColors[country.owner] || '#666666';
-          console.log(`رسم ${countryId}: مالك=${country.owner}, لون=${color}`);
+          console.log(`🎨 ${countryId} ملوّنة بـ ${color} للاعب ${country.owner}`);
           return color;
         }
-        return '#888888';
+        
+        // إذا كانت الدولة غير مملوكة، تحديد اللون حسب التوفر
+        if (isCountryAvailable(countryId)) {
+          return '#888888'; // رمادي عادي للدول المتاحة
+        } else {
+          return '#cccccc'; // رمادي فاتح للدول غير المتاحة
+        }
       })
       .attr("stroke", d => {
         const countryName = d.properties.NAME || d.properties.name;
@@ -149,7 +207,13 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
         } else if (country && country.owner !== undefined && country.owner !== null) {
           return '#FFFFFF';
         }
-        return '#2c3e50';
+        
+        // حدود مختلفة للدول غير المتاحة
+        if (isCountryAvailable(countryId)) {
+          return '#2c3e50'; // حدود عادية للدول المتاحة
+        } else {
+          return '#999999'; // حدود فاتحة للدول غير المتاحة
+        }
       })
       .attr("stroke-width", d => {
         const countryName = d.properties.NAME || d.properties.name;
@@ -161,7 +225,17 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
         }
         return 1.5;
       })
-      .style("cursor", "pointer")
+      .style("cursor", d => {
+        const countryName = d.properties.NAME || d.properties.name;
+        const countryId = getCountryId(countryName);
+        
+        // تغيير المؤشر حسب توفر الدولة
+        if (isCountryAvailable(countryId)) {
+          return "pointer"; // يد للدول المتاحة
+        } else {
+          return "not-allowed"; // منع للدول غير المتاحة
+        }
+      })
       .on("mouseover", function(event, d) {
         const countryName = d.properties.NAME || d.properties.name;
         const countryId = getCountryId(countryName);
@@ -170,96 +244,82 @@ export default function WorldMapD3({ countries, onCountryClick, currentPlayer, a
         
         let ownerInfo = 'غير محتلة';
         let troopsInfo = '';
+        let availabilityInfo = '';
+        
+        // إضافة معلومات التوفر
+        if (isCountryAvailable(countryId)) {
+          availabilityInfo = '✅ متاحة للعب';
+        } else {
+          availabilityInfo = '❌ غير متاحة';
+        }
         
         if (country && country.owner !== undefined && country.owner !== null) {
-          ownerInfo = `لاعب ${country.owner + 1}`;
-          troopsInfo = `الجنود: ${country.troops}`;
+          ownerInfo = `مملوكة - لاعب ${country.owner + 1}`;
+          troopsInfo = `\nالجنود: ${country.troops || 1}`;
         }
         
         setTooltip({
           show: true,
-          x: event.pageX + 10,
-          y: event.pageY - 10,
-          content: `${countryName}\nقوة المنطقة: ${number}\nالمالك: ${ownerInfo}\n${troopsInfo}`
+          x: event.pageX,
+          y: event.pageY,
+          content: `${countryName}\n${availabilityInfo}\n${ownerInfo}${troopsInfo}\nمناطق: ${number}`
         });
       })
-      .on("mousemove", function(event) {
-        setTooltip(prev => ({
-          ...prev,
-          x: event.pageX + 10,
-          y: event.pageY - 10
-        }));
-      })
-      .on("mouseout", function() {
+      .on("mouseout", () => {
         setTooltip({ show: false, x: 0, y: 0, content: '' });
       })
       .on("click", function(event, d) {
         const countryName = d.properties.NAME || d.properties.name;
         const countryId = getCountryId(countryName);
         
-        console.log(`نقر على ${countryName} (${countryId})`);
+        // منع النقر على الدول غير المتاحة
+        if (!isCountryAvailable(countryId)) {
+          alert(`❌ ${countryName} غير متاحة في هذه اللعبة!`);
+          return;
+        }
         
         if (onCountryClick) {
           onCountryClick(countryId);
         }
       });
-    
-    // إضافة أرقام المناطق
-    const numberData = [];
-    mapData.features.forEach(feature => {
-      const countryName = feature.properties.NAME || feature.properties.name;
-      const number = regionNumbers[countryName];
+
+    // رسم أرقام الجنود على الدول المحتلة
+    const troopsData = [];
+    mapData.features.forEach(d => {
+      const countryName = d.properties.NAME || d.properties.name;
+      const countryId = getCountryId(countryName);
+      const country = countries[countryId];
       
-      if (number && feature.geometry) {
-        const centroid = path.centroid(feature);
+      if (country && country.owner !== undefined && country.owner !== null && country.troops) {
+        const centroid = path.centroid(d);
         if (centroid && !isNaN(centroid[0]) && !isNaN(centroid[1])) {
-          numberData.push({
-            country: countryName,
-            number: number,
+          troopsData.push({
+            countryName: countryName,
+            countryId: countryId,
+            troops: country.troops,
+            owner: country.owner,
             centroid: centroid
           });
         }
       }
     });
-    
- // إضافة أرقام الجنود (بدلاً من أرقام المناطق)
-const troopsData = [];
-mapData.features.forEach(feature => {
-  const countryName = feature.properties.NAME || feature.properties.name;
-  const countryId = getCountryId(countryName);
-  const country = countries[countryId];
-  
-  // عرض عدد الجنود إذا كانت الدولة محتلة
-  if (country && country.owner !== null && country.troops > 0 && feature.geometry) {
-    const centroid = path.centroid(feature);
-    if (centroid && !isNaN(centroid[0]) && !isNaN(centroid[1])) {
-      troopsData.push({
-        country: countryName,
-        countryId: countryId,
-        troops: country.troops, // عدد الجنود الفعلي
-        owner: country.owner,
-        centroid: centroid
-      });
-    }
-  }
-});
 
-g.selectAll(".country-number")
-  .data(troopsData)
-  .enter()
-  .append("text")
-  .attr("class", "country-number")
-  .attr("x", d => d.centroid[0])
-  .attr("y", d => d.centroid[1])
-  .attr("text-anchor", "middle")
-  .attr("dominant-baseline", "middle")
-  .style("font-size", "16px") // حجم أكبر قليلاً
-  .style("font-weight", "bold")
-  .style("fill", "white")
-  .style("stroke", "#2c3e50")
-  .style("stroke-width", "2px") // حدود أوضح
-  .style("pointer-events", "none")
-  .text(d => d.troops); // عرض عدد الجنود
+    g.selectAll(".country-number")
+      .data(troopsData)
+      .enter()
+      .append("text")
+      .attr("class", "country-number")
+      .attr("x", d => d.centroid[0])
+      .attr("y", d => d.centroid[1])
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "middle")
+      .style("font-size", "16px")
+      .style("font-weight", "bold")
+      .style("fill", "white")
+      .style("stroke", "#2c3e50")
+      .style("stroke-width", "2px")
+      .style("pointer-events", "none")
+      .text(d => d.troops);
   };
 
   // خريطة بديلة بسيطة (في حالة فشل تحميل D3)
@@ -291,11 +351,22 @@ g.selectAll(".country-number")
               cx={continent.x}
               cy={continent.y}
               r={40}
-              fill={continent.color !== undefined && continent.color !== null ? playerColors[continent.color] : '#888888'}
+              fill={continent.color !== undefined && continent.color !== null ? 
+                playerColors[continent.color] : 
+                (isCountryAvailable(continent.id) ? '#888888' : '#cccccc')
+              }
               stroke={continent.color === currentPlayer?.id ? '#FFD700' : '#2c3e50'}
               strokeWidth={continent.color === currentPlayer?.id ? 3 : 2}
-              style={{ cursor: 'pointer' }}
-              onClick={() => onCountryClick && onCountryClick(continent.id)}
+              style={{ 
+                cursor: isCountryAvailable(continent.id) ? 'pointer' : 'not-allowed' 
+              }}
+              onClick={() => {
+                if (isCountryAvailable(continent.id) && onCountryClick) {
+                  onCountryClick(continent.id);
+                } else if (!isCountryAvailable(continent.id)) {
+                  alert(`❌ ${continent.name} غير متاحة في هذه اللعبة!`);
+                }
+              }}
             />
             <text
               x={continent.x}
@@ -365,57 +436,21 @@ g.selectAll(".country-number")
           </div>
         )}
 
-        {/* رسالة التحميل */}
-        {isLoading && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <div className="bg-slate-800 rounded-lg p-6 text-center">
-              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <div className="text-white">جاري تحميل الخريطة ...</div>
-            </div>
-          </div>
-        )}
-
-        {/* مفتاح الألوان */}
-        {/* <div className="absolute bottom-20 left-4 bg-slate-800/90 backdrop-blur-lg rounded-lg p-4 shadow-2xl z-30">
-          <h4 className="text-white font-bold text-sm mb-2">مفتاح الألوان:</h4>
-          <div className="space-y-2 text-xs">
+        {/* دليل الألوان */}
+        <div className="absolute top-4 right-4 bg-slate-800/90 backdrop-blur-lg rounded-lg p-4 text-white text-sm">
+          <h3 className="font-bold mb-2">دليل الألوان:</h3>
+          <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-gray-500 rounded border border-white"></div>
-              <span className="text-gray-300">دول غير محتلة</span>
+              <div className="w-4 h-4 rounded bg-gray-600"></div>
+              <span>دول متاحة للعب</span>
             </div>
-            {players.map((player, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <div 
-                  className="w-4 h-4 rounded border border-white"
-                  style={{ backgroundColor: playerColors[index] }}
-                ></div>
-                <span className="text-gray-300">
-                  {player?.name || `لاعب ${index + 1}`}
-                </span>
-              </div>
-            )).filter((_, i) => i < 4)}
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-gray-300"></div>
+              <span>دول غير متاحة</span>
+            </div>
           </div>
-        </div> */}
-
-        {/* معلومات الدول للتشخيص */}
-<div className="hidden md:block absolute top-4 right-4 bg-white/90 rounded p-2 text-xs">           
-  <div>دول محتلة: {Object.values(countries).filter(c => c.owner !== null).length}</div>           
-  <div>دول فارغة: {Object.values(countries).filter(c => c.owner === null).length}</div>           
-  {currentPlayer && <div>الدور: {currentPlayer.name}</div>}         
-</div>
+        </div>
       </div>
     </div>
   );
 }
-
-// متغير للاعبين (للعرض في مفتاح الألوان)
-const players = [
-  { name: 'لاعب 1' },
-  { name: 'لاعب 2' },
-  { name: 'لاعب 3' },
-  { name: 'لاعب 4' }
-];
-
-
-
-// اذا خسر كل مناطقو ما بخسرو  ؟؟؟ نشوف موضوع الخريطة هل بجملها بعد كل عملية ؟؟؟؟  الدول المجاورة ؟؟؟ اخذ النظر ب عدد الجنود 
