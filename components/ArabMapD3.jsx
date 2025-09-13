@@ -332,34 +332,7 @@ export default function ArabMapD3({
         )}
 
         {/* 📱 عرض الدول للشاشات الصغيرة */}
-        <div className="block md:hidden absolute inset-0 overflow-y-auto">
-          <div className="grid grid-cols-2 gap-3 p-4">
-            {arabTopic?.countries?.map(country => {
-              const isOccupied = occupiedCountries.includes(country.id);
-              const occupiedByTeam = teamCountries.red.includes(country.id) ? 'red' : 
-                                   teamCountries.blue.includes(country.id) ? 'blue' : null;
-              
-              return (
-                <button
-                  key={country.id}
-                  onClick={() => !isOccupied && selectCountry(country)}
-                  disabled={isOccupied}
-                  className={`p-4 rounded-xl font-bold transition-all duration-300 border-2 ${
-                    isOccupied
-                      ? occupiedByTeam === 'red'
-                        ? 'bg-red-500/80 border-red-400 text-white cursor-not-allowed'
-                        : 'bg-blue-500/80 border-blue-400 text-white cursor-not-allowed'
-                      : 'bg-slate-700/50 border-amber-400/50 text-amber-400 hover:bg-slate-600/70 hover:scale-105'
-                  }`}
-                >
-                  <div className="text-lg mb-1">{country.flag}</div>
-                  <div className="text-sm">{country.name}</div>
-                  <div className="text-xs mt-1">{country.points} نقطة</div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+      
       </div>
     </div>
   );
