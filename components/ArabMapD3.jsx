@@ -447,7 +447,7 @@ export default function ArabMapD3({
           width={width}
           height={height}
           viewBox={`0 0 ${width} ${height}`}
-          className="w-full h-auto border-2 border-slate-600 rounded-xl bg-gradient-to-b from-sky-400 to-blue-500"
+          className="w-full  sl:h-[200px] border-2  border-slate-600 rounded-xl bg-gradient-to-b from-sky-400 to-blue-500"
         />
         
         {/* نصائح التنقل */}
