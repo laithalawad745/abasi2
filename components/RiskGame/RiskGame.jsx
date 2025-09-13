@@ -955,7 +955,7 @@ const countryNames = {
         <div className="min-h-screen bg-gradient-to-br from-purple-900 to-blue-900 flex items-center justify-center p-4">
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 text-center">
             <h1 className="text-4xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-8">
-              🏆 انتهت اللعبة!
+               انتهت اللعبة!
             </h1>
             <p className="text-2xl text-white mb-8">
               الفائز: {players.find(p => !p.eliminated)?.name || 'لا يوجد'}

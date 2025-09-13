@@ -24,3 +24,52 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* 🆕 تخصيص أنماط التوست للعبة */
+.Toastify__toast-container {
+  font-family: 'Arial', sans-serif !important;
+}
+
+.Toastify__toast {
+  font-family: 'Arial', sans-serif !important;
+  border-radius: 12px !important;
+  font-weight: bold !important;
+  text-align: center !important;
+  min-height: 64px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+  margin-bottom: 8px !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.Toastify__progress-bar {
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
+.Toastify__close-button {
+  color: white !important;
+  opacity: 0.8 !important;
+}
+
+.Toastify__close-button:hover {
+  opacity: 1 !important;
+}
+
+/* تحسين التوست للشاشات الصغيرة */
+@media (max-width: 768px) {
+  .Toastify__toast-container {
+    width: 95% !important;
+    padding: 0 !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+  
+  .Toastify__toast {
+    margin: 0 0 8px 0 !important;
+    font-size: 14px !important;
+    min-height: 56px !important;
+    padding: 12px !important;
+  }
+}
