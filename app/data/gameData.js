@@ -1277,30 +1277,30 @@ questions: [
         ]
       },
 
-      {
-        id: 'bahrain',
-        name: 'البحرين',
-        points: 150,
-        flag: '🇧🇭',
-        position: { x: 72, y: 35 },
-        questions: [
-          {
-            question: 'ما هي عاصمة البحرين؟',
-            answer: 'المنامة',
-            difficulty: 'easy'
-          },
-          {
-            question: 'ما هو الاسم القديم للبحرين؟',
-            answer: 'دلمون',
-            difficulty: 'medium'
-          },
-          {
-            question: 'ما هو أول بئر نفط في الخليج؟',
-            answer: 'بئر البحرين',
-            difficulty: 'hard'
-          }
-        ]
-      },
+   {
+      id: 'somalia',
+      name: 'الصومال',
+      points: 300,
+      flag: '🇸🇴',
+      position: { x: 75, y: 65 },
+      questions: [
+        {
+          question: 'ما هي عاصمة الصومال؟',
+          answer: 'مقديشو',
+          difficulty: 'easy'
+        },
+        {
+          question: 'ما هو لقب الصومال؟',
+          answer: 'قرن أفريقيا',
+          difficulty: 'medium'
+        },
+        {
+          question: 'ما هو المحيط الذي يطل عليه الصومال؟',
+          answer: 'المحيط الهندي',
+          difficulty: 'hard'
+        }
+      ]
+    },
 
       {
         id: 'oman',

@@ -23,7 +23,6 @@ export default function WorldQuestion({
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
       // رجّع viewport لفوق (مش سكرول كونتينر داخلي)
-      window.scrollTo({ top: 0, behavior: 'auto' });
     }
     return () => {
       document.documentElement.style.overflow = '';

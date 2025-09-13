@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { sampleTopics } from '../app/data/gameData';
-import ArabMapD3 from './ArabMapD3'; // ✅ تغيير: استخدام ArabMapD3 بدلاً من ArabMap
+import ArabMapD3 from './ArabMapD3';
 import WorldQuestion from './WorldQuestion';
 import { ImageModal } from './Modals';
 
@@ -35,6 +35,8 @@ export default function ArabGame() {
     const arabData = sampleTopics.find(topic => topic.id === 'arab_world');
     if (arabData) {
       setArabTopic(arabData);
+      console.log('🌍 تم تحميل بيانات الوطن العربي:', arabData.countries.length, 'دولة');
+      console.log('🇧🇭 البحرين موجودة:', arabData.countries.find(c => c.id === 'bahrain') ? '✅' : '❌');
     }
   }, []);
 
@@ -149,8 +151,9 @@ export default function ArabGame() {
       setCurrentWorldQuestion(null);
       setShowWorldAnswer(false);
       
-      // التحقق من انتهاء اللعبة
+      // ✅ إصلاح: التحقق من انتهاء اللعبة عند اكتمال جميع الدول
       if (arabTopic && newOccupiedCountries.length >= arabTopic.countries.length) {
+        console.log('🏆 انتهت اللعبة! تم احتلال جميع الدول العربية');
         setTimeout(() => {
           setGamePhase('finished');
         }, 1500);
@@ -165,8 +168,9 @@ export default function ArabGame() {
       setCurrentWorldQuestion(null);
       setShowWorldAnswer(false);
       
-      // التحقق من انتهاء اللعبة
+      // ✅ إصلاح: التحقق من انتهاء اللعبة عند اكتمال جميع الدول
       if (arabTopic && occupiedCountries.length >= arabTopic.countries.length) {
+        console.log('🏆 انتهت اللعبة! تم احتلال جميع الدول العربية');
         setTimeout(() => {
           setGamePhase('finished');
         }, 1500);
@@ -224,6 +228,12 @@ export default function ArabGame() {
             
             <div className="text-lg text-slate-300 text-right">
               <p className="mb-4">🌍 اكتشف الدول العربية وأجب على الأسئلة!</p>
+              {arabTopic && (
+                <p className="mb-4 text-yellow-400">
+                  📊 عدد الدول المتاحة: {arabTopic.countries.length} دولة
+                  {arabTopic.countries.find(c => c.id === 'somalia') && ' (تشمل الصومال 🇸🇴)'}
+                </p>
+              )}
               <ul className="list-disc list-inside space-y-2">
                 <li className="text-green-400">انقر على أي دولة عربية في الخريطة</li>
                 <li className="text-blue-400">أجب على السؤال لتحتل الدولة</li>
@@ -292,7 +302,27 @@ export default function ArabGame() {
             </div>
           </div>
 
-          {/* ✅ استخدام ArabMapD3 بدلاً من ArabMap */}
+          {/* إحصائيات التقدم */}
+          {arabTopic && (
+            <div className="bg-slate-800/50 backdrop-blur-lg rounded-xl p-4 mb-6 shadow-lg border border-slate-700">
+              <div className="text-center">
+                <h3 className="text-lg font-bold text-white mb-2">تقدم اللعبة</h3>
+                <div className="flex justify-center items-center gap-4 text-sm">
+                  <span className="text-green-400">محتلة: {occupiedCountries.length}</span>
+                  <span className="text-yellow-400">متبقية: {arabTopic.countries.length - occupiedCountries.length}</span>
+                  <span className="text-blue-400">المجموع: {arabTopic.countries.length}</span>
+                </div>
+                <div className="w-full bg-slate-700 rounded-full h-3 mt-3">
+                  <div 
+                    className="bg-gradient-to-r from-green-400 to-emerald-400 h-3 rounded-full transition-all duration-500"
+                    style={{ width: `${(occupiedCountries.length / arabTopic.countries.length) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* الخريطة */}
           {arabTopic && (
             <ArabMapD3 
               arabTopic={arabTopic}
@@ -322,61 +352,93 @@ export default function ArabGame() {
     );
   }
 
-  // صفحة انتهاء اللعبة
+  // ✅ إصلاح: صفحة انتهاء اللعبة الكاملة
   if (gamePhase === 'finished') {
     const winner = teams[0].score > teams[1].score ? teams[0] : teams[1];
     const isDraw = teams[0].score === teams[1].score;
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-900 to-slate-900 flex items-center justify-center p-4 md:p-8">
-        <div className="text-center space-y-8 max-w-2xl">
-          <h1 className="text-3xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
+        <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-8 md:p-12 max-w-2xl w-full text-center shadow-2xl border border-slate-700">
+          
+          {/* عنوان الانتهاء */}
+          <h1 className="text-3xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400 mb-8">
             انتهت الرحلة! 🏆
           </h1>
           
+          {/* نتيجة الفوز */}
           {isDraw ? (
-            <div className="text-2xl md:text-4xl font-bold text-yellow-400">
-              تعادل! 🤝
+            <div className="mb-8">
+              <div className="text-2xl md:text-4xl font-bold text-yellow-400 mb-4">
+                تعادل! 🤝
+              </div>
+              <p className="text-lg text-slate-300">
+                حققتم نفس عدد النقاط في رحلة الوطن العربي
+              </p>
             </div>
           ) : (
-            <div className={`text-2xl md:text-4xl font-bold ${winner.color === 'red' ? 'text-red-400' : 'text-blue-400'}`}>
-              الفائز: {winner.name}! 🎉
+            <div className="mb-8">
+              <div className={`text-2xl md:text-4xl font-bold mb-4 ${winner.color === 'red' ? 'text-red-400' : 'text-blue-400'}`}>
+                الفائز: {winner.name}! 
+              </div>
+    
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-red-500/20 p-6 rounded-2xl border border-red-400/50">
-              <h3 className="text-red-400 font-bold text-xl mb-2">{teams[0].name}</h3>
-              <p className="text-3xl font-bold text-white">{teams[0].score}</p>
-              <p className="text-red-300 mt-2">{teamCountries.red.length} دولة</p>
+          {/* عرض النتائج النهائية */}
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="bg-gradient-to-br from-red-500/30 to-pink-500/30 border border-red-400/50 rounded-xl p-4">
+              <h3 className="text-lg font-bold text-red-300 mb-2">{teams[0].name}</h3>
+              <p className="text-2xl font-bold text-white">{teams[0].score} نقطة</p>
+              <p className="text-sm text-red-200 mt-1">{teamCountries.red.length} دولة محتلة</p>
             </div>
             
-            <div className="bg-blue-500/20 p-6 rounded-2xl border border-blue-400/50">
-              <h3 className="text-blue-400 font-bold text-xl mb-2">{teams[1].name}</h3>
-              <p className="text-3xl font-bold text-white">{teams[1].score}</p>
-              <p className="text-blue-300 mt-2">{teamCountries.blue.length} دولة</p>
+            <div className="bg-gradient-to-br from-blue-500/30 to-indigo-500/30 border border-blue-400/50 rounded-xl p-4">
+              <h3 className="text-lg font-bold text-blue-300 mb-2">{teams[1].name}</h3>
+              <p className="text-2xl font-bold text-white">{teams[1].score} نقطة</p>
+              <p className="text-sm text-blue-200 mt-1">{teamCountries.blue.length} دولة محتلة</p>
             </div>
           </div>
 
+          {/* إحصائيات اللعبة */}
+    
+          
+          {/* أزرار التنقل */}
           <div className="flex flex-col md:flex-row gap-4 justify-center">
             <button
               onClick={resetGame}
-              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-xl shadow-2xl transition-all duration-300 hover:scale-105"
+              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-bold text-lg shadow-2xl transition-all duration-300 hover:scale-105"
             >
-              🔄 لعب مرة أخرى
+              🔄 رحلة جديدة
             </button>
             
             <Link 
               href="/"
-              className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-4 rounded-2xl font-bold text-xl shadow-2xl transition-all duration-300 hover:scale-105 text-center"
+              className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-bold text-lg shadow-2xl transition-all duration-300 hover:scale-105"
             >
               ← العودة للرئيسية
             </Link>
           </div>
+
+          {/* رسالة شكر */}
+    
         </div>
       </div>
     );
   }
 
-  return null;
+  // في حالة حدوث خطأ أو حالة غير متوقعة
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-900 to-slate-900 flex items-center justify-center p-4">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-red-400 mb-4">خطأ غير متوقع</h1>
+        <button
+          onClick={resetGame}
+          className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-3 rounded-xl font-bold"
+        >
+          إعادة تحميل اللعبة
+        </button>
+      </div>
+    </div>
+  );
 }
