@@ -212,7 +212,7 @@ export default function WorldMap({ countries, onCountryClick, currentPlayer, att
                     fontSize="12"
                     className="pointer-events-none select-none"
                   >
-                    👑
+                    
                   </text>
                 )}
 

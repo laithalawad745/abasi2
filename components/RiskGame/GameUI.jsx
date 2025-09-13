@@ -55,7 +55,7 @@ export default function GameUI({
     } else if (gamePhase === 'elimination') {
       return 'مرحلة الإقصاء - المعركة من أجل البقاء!';
     }
-    return 'جاري اللعب...';
+    return '';
   };
 
   return (
@@ -76,9 +76,9 @@ export default function GameUI({
               <div className="text-sm text-gray-300">
                 {getGameStatusMessage()}
               </div>
-              <div className="text-xs text-gray-400">
+              {/* <div className="text-xs text-gray-400">
                 الجولة {round}
-              </div>
+              </div> */}
             </div>
             
             <button
