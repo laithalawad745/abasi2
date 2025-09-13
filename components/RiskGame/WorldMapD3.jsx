@@ -516,7 +516,7 @@ const getCountryId = (countryName) => {
   }
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-screen">
       {mapData ? (
         <svg
           ref={svgRef}
