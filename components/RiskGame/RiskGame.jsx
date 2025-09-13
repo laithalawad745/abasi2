@@ -10,6 +10,7 @@ import SpinWheel from './SpinWheel';
 import WorldMapD3 from './WorldMapD3';
 import GameUI from './GameUI';
 import QuestionModal from './QuestionModal';
+import ToastNotification, { showSuccessToast, showErrorToast, showWarningToast, showInfoToast } from '../ToastNotification';
 
 export default function RiskGame() {
   // حالة اللعبة الأساسية
@@ -518,8 +519,8 @@ const countryNames = {
       }, 1000);
       
     }, () => {
-      alert('❌ فشل في احتلال الدولة!');
-      setTimeout(() => {
+showErrorToast(` فشل احتلال ${countryId.replace(/_/g, ' ')}`);
+    setTimeout(() => {
         nextTurn();
       }, 1000);
     });
@@ -563,7 +564,7 @@ const countryNames = {
         return newPlayers;
       });
       
-      alert(`💪 تمت تقوية ${countries[countryId].name} بـ ${troopsGained} جندي إضافي!`);
+      showSuccessToast(` تمت تقوية ${countries[countryId].name} بـ ${troopsGained} جندي إضافي!`);
       setTimeout(() => {
         nextTurn();
       }, 1000);
@@ -588,7 +589,7 @@ const countryNames = {
         return newPlayers;
       });
       
-      alert(`💔 خسرت 50% من جيش ${countries[countryId].name}`);
+      showErrorToast(`💔 خسرت 50% من جيش ${countries[countryId].name}`);
       
       setTimeout(() => {
         checkImmediateElimination();
@@ -605,13 +606,13 @@ const countryNames = {
     );
     
     if (!attackingCountryId) {
-      alert('لا يوجد دولة مجاورة للهجوم منها!');
+      showErrorToast(`يمكنك فقط مهاجمة الدول المجاورة لدولك!`);
       return;
     }
     
     // التأكد أن لديه جنود كافية للهجوم (الحد الأدنى)
     if (countries[attackingCountryId].troops < 2) {
-      alert('تحتاج على الأقل جنديين للهجوم!');
+      showErrorToast(`تحتاج على الأقل جنديين للهجوم!`);
       return;
     }
 
@@ -620,7 +621,7 @@ const countryNames = {
     const defendingTroops = countries[targetCountryId].troops;
 
     if (attackingTroops < defendingTroops) {
-      alert(`❌ لا يمكنك مهاجمة دولة أقوى منك!
+     showErrorToast(`❌ لا يمكنك مهاجمة دولة أقوى منك!
     
 قوتك في ${countries[attackingCountryId].name}: ${attackingTroops} جندي
 قوة العدو في ${countries[targetCountryId].name}: ${defendingTroops} جندي
@@ -720,9 +721,10 @@ const countryNames = {
         return newPlayers;
       });
       
-      alert(`🎯 نجح الهجوم! تم احتلال ${countries[targetCountryId].name} بقوة ${finalTroops} جندي!
+  
+            showSuccessToast(` نجح الهجوم! تم احتلال ${countries[targetCountryId].name} بقوة ${finalTroops} جندي!
 خسائرك: ${attackLosses} جندي من ${countries[attackingCountryId].name}`);
-      
+
       setTimeout(() => {
         checkImmediateElimination();
         nextTurn();
@@ -754,7 +756,7 @@ const countryNames = {
         return newPlayers;
       });
       
-      alert(`💥 فشل الهجوم! خسرت ${lostTroops} جندي من ${countries[attackingCountryId].name}
+      showErrorToast(`💥 فشل الهجوم! خسرت ${lostTroops} جندي من ${countries[attackingCountryId].name}
 الباقي: ${remainingTroops} جندي`);
       
       setTimeout(() => {
@@ -806,7 +808,7 @@ const countryNames = {
           setCurrentPlayerIndex(newIndex);
         }
         
-        alert(`🔥 تم إقصاء: ${eliminatedThisTurn.join(', ')}!`);
+        showErrorToast(` تم إقصاء: ${eliminatedThisTurn.join(', ')}!`);
       }
       
       return newPlayers;
@@ -826,7 +828,9 @@ const countryNames = {
       return;
     }
 
-    console.log(`🎯 اللاعب ${currentPlayer.name} (ID: ${currentPlayer.id}) نقر على ${country.name} (مالك حالي: ${country.owner})`);
+    
+
+
     
     if (country.owner === null) {
       // دولة فارغة - احتلال
@@ -847,7 +851,9 @@ const countryNames = {
       if (canAttack) {
         attackCountry(countryId);
       } else {
-        alert('يمكنك فقط مهاجمة الدول المجاورة لدولك!');
+      showErrorToast(`يمكنك فقط مهاجمة الدول المجاورة لدولك!`);
+      setTimeout(() => {
+      }, 1000);
       }
     }
   };
@@ -884,7 +890,8 @@ const countryNames = {
     const activePlayers = players.filter(p => !p.eliminated);
     if (activePlayers.length === 1) {
       const winner = activePlayers[0];
-      alert(`🏆 انتهت اللعبة! الفائز هو ${winner.name}!`);
+      showSuccessToast(` انتهت اللعبة! الفائز هو ${winner.name}!`);
+
       setGamePhase('finished');
       return true;
     }
@@ -923,6 +930,7 @@ const countryNames = {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
+       <ToastNotification />
       {gamePhase === 'setup' && (
         <PlayerSetup onSetupComplete={setupPlayers} />
       )}
