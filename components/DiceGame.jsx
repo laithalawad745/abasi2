@@ -562,7 +562,7 @@ export default function DiceGame() {
         )}
 
         {/* تعليمات اللعبة */}
-        <DiceInstructions />
+        {/* <DiceInstructions /> */}
       </div>
     </div>
   );
