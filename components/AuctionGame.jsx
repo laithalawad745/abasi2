@@ -25,6 +25,22 @@ export default function AuctionGame() {
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [showAnswer, setShowAnswer] = useState(false);
   const [questionCategory, setQuestionCategory] = useState(null);
+  
+  // 🆕 حالة الأسئلة المستخدمة
+  const [usedQuestions, setUsedQuestions] = useState([]);
+
+  // 🆕 تحميل الأسئلة المستخدمة من localStorage عند بداية المكون
+  useEffect(() => {
+    const savedUsedQuestions = localStorage.getItem('auctionUsedQuestions');
+    if (savedUsedQuestions) {
+      setUsedQuestions(JSON.parse(savedUsedQuestions));
+    }
+  }, []);
+
+  // 🆕 حفظ الأسئلة المستخدمة في localStorage عند التحديث
+  useEffect(() => {
+    localStorage.setItem('auctionUsedQuestions', JSON.stringify(usedQuestions));
+  }, [usedQuestions]);
 
   // بدء اللعبة
   const startGame = () => {
@@ -35,8 +51,21 @@ export default function AuctionGame() {
   // بدء جولة جديدة
   const startNewRound = () => {
     const questionData = getRandomQuestion();
-    setCurrentQuestion(questionData.question);
-    setQuestionCategory(questionData.category);
+    if (!questionData) {
+      // في حالة انتهاء جميع الأسئلة، إعادة تعيين الأسئلة المستخدمة
+      setUsedQuestions([]);
+      const newQuestionData = getRandomQuestion();
+      setCurrentQuestion(newQuestionData.question);
+      setQuestionCategory(newQuestionData.category);
+      // 🆕 إضافة السؤال للأسئلة المستخدمة
+      setUsedQuestions([newQuestionData.question.id]);
+    } else {
+      setCurrentQuestion(questionData.question);
+      setQuestionCategory(questionData.category);
+      // 🆕 إضافة السؤال للأسئلة المستخدمة
+      setUsedQuestions(prev => [...prev, questionData.question.id]);
+    }
+    
     setCurrentBid(50);
     setBidIncrement(50);
     setCurrentOwner('blue'); // الأزرق يبدأ دائماً
@@ -44,17 +73,32 @@ export default function AuctionGame() {
     setShowAnswer(false);
   };
 
-  // الحصول على سؤال عشوائي
+  // 🆕 الحصول على سؤال عشوائي (مع تجنب الأسئلة المستخدمة)
   const getRandomQuestion = () => {
     const categories = Object.keys(auctionGameData);
-    const randomCategory = categories[Math.floor(Math.random() * categories.length)];
-    const questions = auctionGameData[randomCategory];
-    const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+    let availableQuestions = [];
     
-    return {
-      question: randomQuestion,
-      category: randomCategory
-    };
+    // جمع جميع الأسئلة المتاحة (غير المستخدمة)
+    categories.forEach(category => {
+      const categoryQuestions = auctionGameData[category].filter(
+        question => !usedQuestions.includes(question.id)
+      );
+      categoryQuestions.forEach(question => {
+        availableQuestions.push({
+          question,
+          category
+        });
+      });
+    });
+    
+    // إذا لم تعد هناك أسئلة متاحة، إرجاع null
+    if (availableQuestions.length === 0) {
+      return null;
+    }
+    
+    // اختيار سؤال عشوائي من الأسئلة المتاحة
+    const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+    return availableQuestions[randomIndex];
   };
 
   // زيادة المزايدة
@@ -112,6 +156,8 @@ export default function AuctionGame() {
       { name: 'الفريق الأحمر', color: 'red', score: 0 },
       { name: 'الفريق الأزرق', color: 'blue', score: 0 }
     ]);
+    // 🆕 إعادة تعيين الأسئلة المستخدمة أيضاً
+    setUsedQuestions([]);
   };
 
   // زيادة/تقليل قيمة الزيادة
@@ -201,30 +247,28 @@ export default function AuctionGame() {
                 team.color === 'red' 
                   ? 'bg-red-500/20 border border-red-500/50' 
                   : 'bg-blue-500/20 border border-blue-500/50'
-              } ${currentOwner === team.color ? 'ring-2 ring-yellow-400' : ''}`}
+              } ${currentOwner === team.color ? 'ring-2 ring-yellow-400 shadow-lg' : ''}`}
             >
-              <h3 className="text-white font-bold text-lg">{team.name}</h3>
-              <p className={`text-2xl font-bold ${team.score >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {team.score} نقطة
-              </p>
-              {currentOwner === team.color && (
-                <p className="text-yellow-400 text-sm mt-1">مالك السؤال الحالي</p>
-              )}
+              <h3 className={`font-bold text-lg ${team.color === 'red' ? 'text-red-400' : 'text-blue-400'}`}>
+                {team.name}
+              </h3>
+              <p className="text-2xl font-bold text-white">{team.score}</p>
+              <p className="text-xs text-slate-300">نقطة</p>
             </div>
           ))}
         </div>
 
-        {/* معلومات السؤال */}
-        <div className="bg-slate-800/50 rounded-xl p-8 text-center mb-8">
-          <div className="mb-6">
-            <h2 className="text-3xl font-bold text-yellow-400 mb-4">
-              📚 {questionCategory}
-            </h2>
-            <div className="text-6xl font-bold text-white mb-4">
-              {currentBid} نقطة
-            </div>
-            <div className="text-slate-300">
-              <p className="mb-2">
+        {/* معلومات المزاد الحالي */}
+        <div className="bg-slate-800/50 rounded-xl p-6 mb-6">
+          <div className="text-center mb-6">
+            <p className="text-slate-300 mb-2">
+              الفئة: <span className="text-yellow-400 font-bold">{questionCategory}</span>
+            </p>
+            <p className="text-2xl font-bold text-white mb-2">
+              المزاد الحالي: <span className="text-yellow-400">{currentBid}</span> نقطة
+            </p>
+            <div className="space-y-1 text-slate-300">
+              <p>
                 <span className={`font-bold ${currentOwner === 'red' ? 'text-red-400' : 'text-blue-400'}`}>
                   {currentOwner === 'red' ? 'الفريق الأحمر' : 'الفريق الأزرق'}
                 </span> يملك السؤال حالياً
@@ -239,7 +283,6 @@ export default function AuctionGame() {
 
           {/* أزرار التحكم في قيمة الزيادة */}
           <div className="mb-6">
-            <p className="text-slate-300 mb-2">قيمة الزيادة:</p>
             <div className="flex items-center justify-center gap-4">
               <button
                 onClick={() => adjustIncrement(-50)}
@@ -294,46 +337,53 @@ export default function AuctionGame() {
           <div className="text-center mb-8">
             <div className={`inline-block px-6 py-3 rounded-xl ${
               currentOwner === 'red' 
-                ? 'bg-red-500/20 border border-red-500/50 text-red-400' 
-                : 'bg-blue-500/20 border border-blue-500/50 text-blue-400'
+                ? 'bg-red-500/20 border border-red-500/50' 
+                : 'bg-blue-500/20 border border-blue-500/50'
             }`}>
-              <p className="font-bold text-lg">
-                🎯 {currentOwner === 'red' ? 'الفريق الأحمر' : 'الفريق الأزرق'} فاز بالمزاد!
+              <p className={`font-bold text-xl ${currentOwner === 'red' ? 'text-red-400' : 'text-blue-400'}`}>
+                {currentOwner === 'red' ? 'الفريق الأحمر' : 'الفريق الأزرق'} فاز بالمزاد
               </p>
-              <p className="text-white text-2xl font-bold">{currentBid} نقطة</p>
+              <p className="text-slate-300">ب <span className="text-yellow-400 font-bold">{currentBid}</span> نقطة</p>
             </div>
           </div>
 
           {/* السؤال */}
-          <div className="bg-slate-800/50 rounded-xl p-8 text-center mb-8">
-            <h2 className="text-xl font-bold text-white mb-6">{currentQuestion.question}</h2>
+          <div className="bg-slate-800/50 rounded-xl p-8 mb-8 text-center">
+            <div className="mb-6">
+              <span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-full font-bold text-sm">
+                {questionCategory}
+              </span>
+            </div>
             
-            {/* عرض الإجابة */}
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">
+              {currentQuestion?.question}
+            </h2>
+            
             {!showAnswer ? (
               <button
                 onClick={() => setShowAnswer(true)}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-lg"
+                className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105"
               >
-                👁️ إظهار الإجابة
+                عرض الإجابة
               </button>
             ) : (
-              <div className="space-y-6">
-                <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-4">
-                  <p className="text-green-400 font-bold">الإجابة الصحيحة:</p>
-                  <p className="text-white text-lg">{currentQuestion.answer}</p>
+              <div>
+                <div className="bg-slate-700/50 rounded-xl p-6 mb-6">
+                  <h3 className="text-green-400 font-bold text-lg mb-2">الإجابة الصحيحة:</h3>
+                  <p className="text-2xl font-bold text-white">{currentQuestion?.answer}</p>
                 </div>
                 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <button
                     onClick={correctAnswer}
-                    className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-lg"
+                    className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105"
                   >
                     ✅ إجابة صحيحة (+{currentBid})
                   </button>
                   
                   <button
                     onClick={wrongAnswer}
-                    className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-lg"
+                    className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105"
                   >
                     ❌ إجابة خاطئة (-{currentBid})
                   </button>
@@ -346,65 +396,64 @@ export default function AuctionGame() {
     );
   }
 
-  // شاشة النهاية
+  // شاشة النتائج النهائية
   if (gamePhase === 'finished') {
-    const winner = teams.reduce((prev, current) => (prev.score > current.score) ? prev : current);
-    const isDraw = teams[0].score === teams[1].score;
+    const winner = teams[0].score > teams[1].score ? teams[0] : 
+                   teams[1].score > teams[0].score ? teams[1] : null;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 flex items-center justify-center">
         <div className="max-w-2xl mx-auto text-center">
-          <div className="bg-slate-800/50 rounded-xl p-8">
-            {/* العنوان */}
+          <div className="bg-slate-800/50 rounded-2xl p-8">
             <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400 mb-8">
-              🏆 انتهت لعبة المزاد!
+              🏆 انتهت اللعبة!
             </h1>
+            
+            {winner ? (
+              <div className="mb-8">
+                <h2 className={`text-3xl font-bold mb-4 ${winner.color === 'red' ? 'text-red-400' : 'text-blue-400'}`}>
+                  🎉 {winner.name} هو الفائز!
+                </h2>
+                <p className="text-xl text-white">بنتيجة {winner.score} نقطة</p>
+              </div>
+            ) : (
+              <div className="mb-8">
+                <h2 className="text-3xl font-bold text-yellow-400 mb-4">🤝 تعادل!</h2>
+                <p className="text-xl text-white">كلا الفريقين حصل على {teams[0].score} نقطة</p>
+              </div>
+            )}
 
-            {/* النتيجة النهائية */}
+            {/* النتائج التفصيلية */}
             <div className="grid grid-cols-2 gap-4 mb-8">
               {teams.map(team => (
                 <div
                   key={team.color}
-                  className={`p-6 rounded-xl ${
+                  className={`p-4 rounded-xl ${
                     team.color === 'red' 
                       ? 'bg-red-500/20 border border-red-500/50' 
                       : 'bg-blue-500/20 border border-blue-500/50'
-                  } ${!isDraw && winner.color === team.color ? 'ring-2 ring-yellow-400' : ''}`}
+                  }`}
                 >
-                  <h3 className="text-white font-bold text-lg">{team.name}</h3>
-                  <p className={`text-3xl font-bold ${team.score >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {team.score} نقطة
-                  </p>
-                  {!isDraw && winner.color === team.color && (
-                    <p className="text-yellow-400 text-sm mt-2">🏆 الفائز</p>
-                  )}
+                  <h3 className={`font-bold text-lg ${team.color === 'red' ? 'text-red-400' : 'text-blue-400'}`}>
+                    {team.name}
+                  </h3>
+                  <p className="text-2xl font-bold text-white">{team.score}</p>
+                  <p className="text-xs text-slate-300">نقطة نهائية</p>
                 </div>
               ))}
             </div>
 
-            {/* إعلان النتيجة */}
-            <div className="mb-8">
-              {isDraw ? (
-                <h2 className="text-2xl font-bold text-yellow-400">🤝 تعادل!</h2>
-              ) : (
-                <h2 className="text-2xl font-bold text-green-400">
-                  🎉 {winner.name} هو الفائز!
-                </h2>
-              )}
-            </div>
-
-            {/* أزرار الإجراءات */}
-            <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={resetGame}
-                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-lg"
+                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105"
               >
                 🔄 لعب مرة أخرى
               </button>
               
               <Link
                 href="/"
-                className="block w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-4 rounded-xl font-bold text-lg"
+                className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 inline-block text-center"
               >
                 🏠 العودة للقائمة الرئيسية
               </Link>
