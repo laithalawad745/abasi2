@@ -517,9 +517,15 @@ export default function QuizGame() {
 
       {/* المحتوى الرئيسي */}
       <div 
-        className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 select-none mt-8 md:mt-24"
+        className="min-h-screen bg-[#0a0a0f] relative overflow-hidden select-none mt-8 md:mt-24"
         style={{ paddingTop: '120px' }}
       >
+        {/* خلفية متحركة */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 right-1/2 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        </div>
         <div className="max-w-7xl mx-auto p-2 md:p-4">
           {/* نتائج الفرق فقط */}
           <TeamScoresOnly 
