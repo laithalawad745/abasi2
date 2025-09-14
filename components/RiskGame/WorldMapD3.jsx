@@ -356,7 +356,7 @@ const getCountryId = (countryName) => {
       
       let ownerInfo = 'غير محتلة';
       let troopsInfo = '';
-      let availabilityInfo = '✅ متاحة للعب';
+  
       
       if (country && country.owner !== undefined && country.owner !== null) {
         ownerInfo = `مملوكة - لاعب ${country.owner + 1}`;
@@ -367,7 +367,7 @@ const getCountryId = (countryName) => {
         show: true,
         x: event.pageX,
         y: event.pageY,
-        content: `${countryName}\n${availabilityInfo}\n${ownerInfo}${troopsInfo}\nمناطق: ${number}`
+        content: `${countryName}\n${ownerInfo}${troopsInfo}\nمناطق: ${number}`
       });
     })
     .on("mouseout", () => {
