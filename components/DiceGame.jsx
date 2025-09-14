@@ -5,11 +5,10 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { diceGameData } from '../app/data/diceGameData';
 import DiceComponent from './DiceComponent';
-import DiceInstructions from './DiceInstructions';
 
 export default function DiceGame() {
   // حالة اللعبة
-  const [gamePhase, setGamePhase] = useState('waiting'); // 'waiting', 'rolling', 'questioning', 'finished'
+  const [gamePhase, setGamePhase] = useState('setup'); // 'setup', 'waiting', 'rolling', 'questioning', 'finished'
   const [teams, setTeams] = useState([
     { name: 'الفريق الأحمر', color: 'red', score: 0 },
     { name: 'الفريق الأزرق', color: 'blue', score: 0 }
@@ -22,32 +21,52 @@ export default function DiceGame() {
   const [diceRollComplete, setDiceRollComplete] = useState({ question: false, points: false });
   const [roundNumber, setRoundNumber] = useState(1);
   const [maxRounds] = useState(10);
+  const [isClient, setIsClient] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  // 🆕 حالة الأسئلة المستخدمة
+  // 🆕 نظام إدارة الأسئلة المستخدمة
   const [usedQuestions, setUsedQuestions] = useState(new Set());
 
-  // 🆕 تحميل الأسئلة المستخدمة من localStorage عند البداية
+  // Client-side mounting وتحميل الأسئلة المستخدمة
   useEffect(() => {
+    setIsClient(true);
+    
+    // 🔄 تحميل الأسئلة المستخدمة من localStorage
     try {
       const savedUsedQuestions = localStorage.getItem('dice-game-used-questions');
       if (savedUsedQuestions) {
         const parsedQuestions = JSON.parse(savedUsedQuestions);
         setUsedQuestions(new Set(parsedQuestions));
+        console.log('📊 تم تحميل', parsedQuestions.length, 'سؤال مستخدم');
       }
     } catch (error) {
       console.log('فشل في تحميل الأسئلة المستخدمة:', error);
     }
   }, []);
 
-  // 🆕 حفظ الأسئلة المستخدمة في localStorage عند التحديث
+  // 💾 حفظ الأسئلة المستخدمة عند تغييرها
   useEffect(() => {
-    try {
-      const questionsArray = Array.from(usedQuestions);
-      localStorage.setItem('dice-game-used-questions', JSON.stringify(questionsArray));
-    } catch (error) {
-      console.log('فشل في حفظ الأسئلة المستخدمة:', error);
+    if (isClient && usedQuestions.size > 0) {
+      try {
+        const questionsArray = Array.from(usedQuestions);
+        localStorage.setItem('dice-game-used-questions', JSON.stringify(questionsArray));
+        console.log('💾 تم حفظ الأسئلة المستخدمة:', questionsArray.length);
+      } catch (error) {
+        console.log('فشل في حفظ الأسئلة المستخدمة:', error);
+      }
     }
-  }, [usedQuestions]);
+  }, [usedQuestions, isClient]);
+
+  // 🗑️ إعادة تعيين الأسئلة المستخدمة فقط
+  const resetUsedQuestions = () => {
+    setUsedQuestions(new Set());
+    try {
+      localStorage.removeItem('dice-game-used-questions');
+      console.log('🗑️ تم مسح جميع الأسئلة المستخدمة');
+    } catch (error) {
+      console.log('فشل في حذف الأسئلة المستخدمة:', error);
+    }
+  };
 
   // 🆕 دالة للحصول على سؤال غير مستخدم
   const getUnusedQuestion = (questionTypeIndex) => {
@@ -78,7 +97,15 @@ export default function DiceGame() {
         }
       }
       
-      // إذا لم تعد هناك أي أسئلة متاحة على الإطلاق
+      // إذا لم تعد هناك أي أسئلة متاحة، استخدم أي سؤال
+      console.warn('⚠️ لا توجد أسئلة جديدة، سيتم استخدام سؤال مكرر...');
+      if (questionType.questions.length > 0) {
+        const randomIndex = Math.floor(Math.random() * questionType.questions.length);
+        return {
+          question: questionType.questions[randomIndex],
+          category: questionType
+        };
+      }
       return null;
     }
 
@@ -97,14 +124,22 @@ export default function DiceGame() {
     setUsedQuestions(prev => new Set([...prev, `${categoryId}-${questionId}`]));
   };
 
-  // 🆕 دالة لإعادة تعيين الأسئلة المستخدمة
-  const resetUsedQuestions = () => {
-    setUsedQuestions(new Set());
-    try {
-      localStorage.removeItem('dice-game-used-questions');
-    } catch (error) {
-      console.log('فشل في حذف الأسئلة المستخدمة:', error);
-    }
+  // 🆕 حساب إحصائيات الأسئلة
+  const getQuestionStats = () => {
+    const totalQuestions = diceGameData.questionTypes.reduce((sum, type) => 
+      sum + type.questions.length, 0
+    );
+    const usedCount = usedQuestions.size;
+    const remainingCount = totalQuestions - usedCount;
+    
+    const categoryStats = diceGameData.questionTypes.map(type => ({
+      ...type,
+      total: type.questions.length,
+      used: Array.from(usedQuestions).filter(id => id.startsWith(`${type.id}-`)).length,
+      remaining: type.questions.length - Array.from(usedQuestions).filter(id => id.startsWith(`${type.id}-`)).length
+    }));
+    
+    return { totalQuestions, usedCount, remainingCount, categories: categoryStats };
   };
 
   // إعادة تعيين حالة النرد
@@ -113,11 +148,19 @@ export default function DiceGame() {
     setIsRolling(false);
     setShowAnswer(false);
     setCurrentQuestion(null);
+    setIsProcessing(false);
+  };
+
+  // بدء اللعبة
+  const startGame = () => {
+    if (!isClient) return;
+    setGamePhase('waiting');
+    console.log('🎮 بدء لعبة النرد مع', usedQuestions.size, 'سؤال مستخدم مسبقاً');
   };
 
   // رمي النردين
   const rollDice = () => {
-    if (isRolling) return;
+    if (isRolling || isProcessing) return;
     
     resetDiceState();
     setGamePhase('rolling');
@@ -151,8 +194,7 @@ export default function DiceGame() {
         const questionData = getUnusedQuestion(rollResults.questionType);
         
         if (!questionData) {
-          // لا توجد أسئلة متاحة - عرض رسالة
-          setGamePhase('no-questions');
+          console.error('❌ لا توجد أسئلة متاحة');
           return;
         }
 
@@ -182,18 +224,22 @@ export default function DiceGame() {
 
   // منح النقاط
   const awardPoints = (teamIndex) => {
-    if (currentQuestion) {
+    if (currentQuestion && !isProcessing) {
+      setIsProcessing(true);
       const newTeams = [...teams];
       newTeams[teamIndex].score += currentQuestion.points;
       setTeams(newTeams);
       
-      nextTurn();
+      setTimeout(() => nextTurn(), 1500);
     }
   };
 
   // عدم وجود إجابة صحيحة
   const noCorrectAnswer = () => {
-    nextTurn();
+    if (!isProcessing) {
+      setIsProcessing(true);
+      setTimeout(() => nextTurn(), 1500);
+    }
   };
 
   // الدور التالي
@@ -216,66 +262,164 @@ export default function DiceGame() {
 
   // إعادة تشغيل اللعبة
   const resetGame = () => {
-    setGamePhase('waiting');
+    setGamePhase('setup');
     setTeams([
       { name: 'الفريق الأحمر', color: 'red', score: 0 },
       { name: 'الفريق الأزرق', color: 'blue', score: 0 }
     ]);
     setCurrentTurn('red');
     setRoundNumber(1);
+    setUsedQuestions(new Set());
+    localStorage.removeItem('dice-game-used-questions');
     resetDiceState();
-  };
-
-  // 🆕 حساب إحصائيات الأسئلة
-  const getQuestionStats = () => {
-    const totalQuestions = diceGameData.questionTypes.reduce((sum, type) => 
-      sum + type.questions.length, 0
-    );
-    const usedCount = usedQuestions.size;
-    const remainingCount = totalQuestions - usedCount;
-    
-    return { totalQuestions, usedCount, remainingCount };
+    console.log('🔄 تم إعادة تعيين لعبة النرد');
   };
 
   const stats = getQuestionStats();
 
-  // 🆕 عرض حالة عدم وجود أسئلة
-  if (gamePhase === 'no-questions') {
+  // شاشة الإعداد
+  if (gamePhase === 'setup') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
+      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
+        {/* خلفية متحركة */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-violet-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 right-1/2 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        </div>
+
+        {/* المحتوى الرئيسي */}
+        <div className="relative z-10 p-6 md:p-8">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-12">
+            <div className="text-4xl md:text-5xl font-black text-white tracking-wider">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-violet-500">
+                النرد
+              </span>
+            </div>
             <Link 
-              href="/"
-              className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold text-sm md:text-base shadow-lg transition-all duration-300"
+              href="/" 
+              className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all duration-300 hover:scale-105"
             >
               ← العودة للرئيسية
             </Link>
           </div>
 
-          <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 md:p-8 text-center shadow-2xl border border-slate-700">
-            <h1 className="text-3xl md:text-5xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-400">
-              نفدت الأسئلة! 
+          {/* العنوان الرئيسي */}
+          <div className="text-center mb-16">
+            <h1 className="text-4xl md:text-7xl font-black text-white mb-6 tracking-tight">
+              لعبة
+              <span className="block bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600">
+                النرد 
+              </span>
             </h1>
-            
-            <p className="text-lg md:text-xl text-slate-300 mb-8">
-              لقد استخدمتم جميع الأسئلة المتاحة في اللعبة!
+            <p className="text-xl md:text-2xl text-gray-400 font-light max-w-2xl mx-auto">
+              ارمِ النردين واختبر معلوماتك في مختلف المجالات
             </p>
-            
-            <div className="space-y-4">
-              {/* <button
-                onClick={resetUsedQuestions}
-                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-3 rounded-xl font-bold text-lg shadow-lg transition-all duration-300 hover:scale-105 block mx-auto"
-              >
-                🔄 إعادة تعيين الأسئلة والمتابعة
-              </button> */}
+          </div>
+
+          {/* قواعد اللعبة */}
+          <div className="max-w-6xl mx-auto mb-12">
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
+              <h2 className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-violet-400 mb-8">
+                🎲 قواعد اللعبة
+              </h2>
               
-              <button
-                onClick={resetGame}
-                className="bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white px-6 py-3 rounded-xl font-bold text-lg shadow-lg transition-all duration-300 hover:scale-105 block mx-auto"
-              >
-                🎮 لعبة جديدة
-              </button>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="text-center p-6 bg-white/5 rounded-2xl border border-purple-500/30">
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-violet-600 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2a1 1 0 000 2 1 1 0 100-2zm0 5a1 1 0 100 2 1 1 0 000-2zm4-5a1 1 0 100 2 1 1 0 000-2zm0 5a1 1 0 100 2 1 1 0 000-2zm-2 5a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd"/>
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-purple-400 mb-2">رمي النردين</h3>
+                  <p className="text-gray-300">نرد لنوع السؤال ونرد للنقاط</p>
+                </div>
+                
+                <div className="text-center p-6 bg-white/5 rounded-2xl border border-green-500/30">
+                  <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-600 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-green-400 mb-2">إجابة صحيحة</h3>
+                  <p className="text-gray-300">احصل على النقاط المحددة بالنرد</p>
+                </div>
+                
+                <div className="text-center p-6 bg-white/5 rounded-2xl border border-blue-500/30">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd"/>
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-blue-400 mb-2">نظام التناوب</h3>
+                  <p className="text-gray-300">الفرق تتناوب في الرمي والإجابة</p>
+                </div>
+              </div>
+
+              {/* فئات الأسئلة */}
+              <div className="bg-white/5 rounded-2xl p-6 border border-indigo-500/30 mb-6">
+                <h3 className="text-indigo-400 font-bold text-lg mb-4 text-center">📚 فئات الأسئلة (6 فئات)</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-center text-sm">
+                  {stats.categories.map((category) => (
+                    <div key={category.id} className={`bg-gradient-to-br ${category.color}/15 rounded-xl p-3 border ${category.color.replace('from-', 'border-').replace('-500', '-500/25').split(' ')[0]}`}>
+                      <div className="text-2xl mb-2">{category.icon}</div>
+                      <div className="font-bold text-white text-sm">{category.name}</div>
+           
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* إحصائيات الأسئلة */}
+   
+            </div>
+          </div>
+
+          {/* أزرار التحكم */}
+          <div className="text-center space-y-6">
+            {/* زر البدء */}
+            <button
+              onClick={startGame}
+              disabled={!isClient}
+              className="group relative"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-violet-500 rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className={`relative px-12 py-6 rounded-3xl font-bold text-2xl transition-all duration-300 hover:scale-105 border-2 border-purple-400/50 ${
+                isClient 
+                  ? 'bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white'
+                  : 'bg-gray-500 cursor-not-allowed opacity-50 text-gray-300'
+              }`}>
+                <div className="flex items-center gap-3">
+                  <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2a1 1 0 000 2 1 1 0 100-2zm0 5a1 1 0 100 2 1 1 0 000-2zm4-5a1 1 0 100 2 1 1 0 000-2zm0 5a1 1 0 100 2 1 1 0 000-2zm-2 5a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd"/>
+                  </svg>
+                  ابدأ  
+                </div>
+              </div>
+            </button>
+
+            {/* زر إعادة تعيين الأسئلة المستخدمة */}
+      
+          </div>
+
+          {/* معلومات إضافية */}
+          <div className="text-center mt-16">
+            <div className="inline-flex items-center justify-center space-x-8 space-x-reverse bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-8 py-4">
+              <div className="flex items-center space-x-2 space-x-reverse text-gray-300">
+                <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+                <span>10 جولات</span>
+              </div>
+              <div className="w-px h-6 bg-white/20"></div>
+              <div className="flex items-center space-x-2 space-x-reverse text-gray-300">
+                <div className="w-2 h-2 bg-violet-400 rounded-full animate-pulse"></div>
+                <span>6 فئات</span>
+              </div>
+              <div className="w-px h-6 bg-white/20"></div>
+              <div className="flex items-center space-x-2 space-x-reverse text-gray-300">
+                <div className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse"></div>
+                <span>نردين </span>
+              </div>
             </div>
           </div>
         </div>
@@ -283,287 +427,345 @@ export default function DiceGame() {
     );
   }
 
-  // عرض نتائج اللعبة
-  if (gamePhase === 'finished') {
-    const winner = teams[0].score > teams[1].score ? teams[0] : 
-                   teams[1].score > teams[0].score ? teams[1] : null;
-
+  // شاشة الانتظار (اللعب)
+  if (gamePhase === 'waiting' || gamePhase === 'rolling' || gamePhase === 'questioning') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
-        <div className="max-w-4xl mx-auto">
+      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
+        {/* خلفية متحركة */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-500/15 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-violet-500/15 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+
+        <div className="relative z-10 p-6 md:p-8">
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
+            <div className="text-2xl md:text-3xl font-black text-white tracking-wider">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-violet-500">
+                النرد 
+              </span>
+            </div>
             <Link 
-              href="/"
-              className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold text-sm md:text-base shadow-lg transition-all duration-300"
+              href="/" 
+              className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all duration-300 hover:scale-105"
             >
               ← العودة للرئيسية
             </Link>
           </div>
 
-          <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 md:p-8 text-center shadow-2xl border border-slate-700">
-            <h1 className="text-3xl md:text-5xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">
-              انتهت لعبة النرد! 
-            </h1>
-
-            {winner ? (
-              <div className="mb-8">
-                <h2 className="text-2xl md:text-3xl font-bold mb-4 text-slate-100">
-                  🏆 الفائز: {winner.name}
-                </h2>
-                <p className="text-lg text-slate-300">
-                  النتيجة النهائية: {winner.score} نقطة
-                </p>
+          {/* معلومات الجولة */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-6 px-8 py-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl">
+              <div className="text-center">
+                <div className="text-purple-400 font-bold text-lg">الجولة {roundNumber}</div>
+                <div className="text-gray-400 text-sm">من {maxRounds}</div>
               </div>
-            ) : (
-              <div className="mb-8">
-                <h2 className="text-2xl md:text-3xl font-bold mb-4 text-slate-100">
-                  🤝 تعادل!
-                </h2>
-                <p className="text-lg text-slate-300">
-                  كلا الفريقين حصل على {teams[0].score} نقطة
-                </p>
-              </div>
-            )}
-
-            {/* النتائج النهائية */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-              <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-4">
-                <h3 className="text-xl font-bold text-red-400 mb-2">{teams[0].name}</h3>
-                <p className="text-3xl font-bold text-white">{teams[0].score}</p>
-              </div>
-              <div className="bg-blue-500/20 border border-blue-500/30 rounded-xl p-4">
-                <h3 className="text-xl font-bold text-blue-400 mb-2">{teams[1].name}</h3>
-                <p className="text-3xl font-bold text-white">{teams[1].score}</p>
+              <div className="w-px h-12 bg-white/20"></div>
+              <div className="text-center">
+                <div className={`font-bold text-lg ${currentTurn === 'red' ? 'text-red-400' : 'text-blue-400'}`}>
+                  دور {currentTurn === 'red' ? teams[0].name : teams[1].name}
+                </div>
+                <div className="text-gray-400 text-sm">اللاعب الحالي</div>
               </div>
             </div>
-
-            {/* 🆕 إحصائيات الأسئلة */}
-            {/* <div className="bg-slate-700/50 rounded-xl p-4 mb-8">
-              <h3 className="text-lg font-bold text-slate-200 mb-2">📊 إحصائيات الأسئلة</h3>
-              <p className="text-slate-300">
-                تم استخدام {stats.usedCount} من أصل {stats.totalQuestions} سؤال
-              </p>
-              <p className="text-slate-400 text-sm">
-                متبقي {stats.remainingCount} سؤال
-              </p>
-            </div> */}
-
-            <div className="space-y-4">
-              <button
-                onClick={resetGame}
-                className="bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white px-6 py-3 rounded-xl font-bold text-lg shadow-lg transition-all duration-300 hover:scale-105 block mx-auto"
-              >
-                🎮 لعبة جديدة
-              </button>
-              
-              {/* {stats.remainingCount === 0 && (
-                <button
-                  onClick={resetUsedQuestions}
-                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-lg transition-all duration-300 hover:scale-105 block mx-auto"
-                >
-                  🔄 إعادة تعيين جميع الأسئلة
-                </button>
-              )} */}
-            </div>
           </div>
-        </div>
-      </div>
-    );
-  }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8 select-none">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-pink-400">
-            لعبة النرد 
-          </h1>
-          <Link 
-            href="/"
-            className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold text-sm md:text-base shadow-lg transition-all duration-300"
-          >
-            ← العودة للرئيسية
-          </Link>
-        </div>
-
-        {/* Game Info */}
-        <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-4 md:p-6 mb-8 shadow-2xl border border-slate-700">
-             <div className="flex flex-col items-center text-center md:text-right">
-              <h2 className="text-lg md:text-xl font-bold text-slate-200">
-                الجولة {roundNumber} من {maxRounds}
-              </h2>
-              <p className="text-sm text-slate-400">
-                دور: {currentTurn === 'red' ? teams[0].name : teams[1].name}
-              </p>
-            </div>
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-       
-            
-            {/* 🆕 إحصائيات الأسئلة المباشرة */}
-            {/* <div className="text-center">
-              <p className="text-sm text-slate-300">
-                📋 الأسئلة: {stats.usedCount}/{stats.totalQuestions}
-              </p>
-              <p className="text-xs text-slate-400">
-                متبقي: {stats.remainingCount}
-              </p>
-            </div> */}
-
-            {/* <div className="flex gap-2">
-              <button
-                onClick={resetGame}
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-3 py-2 rounded-lg font-bold text-sm shadow-lg transition-all duration-300"
-              >
-                🔄 إعادة تشغيل
-              </button>
-              
-              {stats.usedCount > 0 && (
-                <button
-                  onClick={resetUsedQuestions}
-                  className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-3 py-2 rounded-lg font-bold text-sm shadow-lg transition-all duration-300"
-                  title="إعادة تعيين الأسئلة المستخدمة"
-                >
-                  📝 إعادة الأسئلة
-                </button>
-              )}
-            </div> */}
-          </div>
-        </div>
-
-        {/* نقاط الفرق */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className={`p-6 rounded-2xl text-center transition-all duration-500 ${
-            currentTurn === 'red'
-              ? 'bg-gradient-to-br from-red-500 to-pink-500 shadow-2xl shadow-red-500/25 ring-4 ring-red-400/50'
-              : 'bg-gradient-to-br from-red-500/70 to-pink-500/70 shadow-lg'
-          }`}>
-            <h2 className="text-lg md:text-2xl font-bold text-white mb-2">{teams[0].name}</h2>
-            <p className="text-3xl md:text-4xl font-bold text-white">{teams[0].score}</p>
-          </div>
-          
-          <div className={`p-6 rounded-2xl text-center transition-all duration-500 ${
-            currentTurn === 'blue'
-              ? 'bg-gradient-to-br from-blue-500 to-indigo-500 shadow-2xl shadow-blue-500/25 ring-4 ring-blue-400/50'
-              : 'bg-gradient-to-br from-blue-500/70 to-indigo-500/70 shadow-lg'
-          }`}>
-            <h2 className="text-lg md:text-2xl font-bold text-white mb-2">{teams[1].name}</h2>
-            <p className="text-3xl md:text-4xl font-bold text-white">{teams[1].score}</p>
-          </div>
-        </div>
-
-        {/* منطقة النرد */}
-        <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 md:p-8 mb-8 shadow-2xl border border-slate-700">
-          <h3 className="text-xl md:text-2xl font-bold text-center mb-8 text-slate-100">
-            {gamePhase === 'waiting' && 'اضغط لرمي النردين!'}
-            {gamePhase === 'rolling' && 'جاري رمي النردين...'}
-            {gamePhase === 'questioning' && 'وقت الإجابة!'}
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 mb-8">
-            {/* نرد نوع السؤال */}
-            <div className="text-center">
-              <h4 className="text-lg font-bold text-emerald-400 mb-4">نوع السؤال</h4>
-              <DiceComponent
-                isRolling={isRolling}
-                finalValue={rollResults.questionType}
-                onRollComplete={() => handleDiceComplete('question')}
-                type="question"
-                size="large"
-              />
-            </div>
-            
-            {/* نرد النقاط */}
-            <div className="text-center">
-              <h4 className="text-lg font-bold text-yellow-400 mb-4">عدد النقاط</h4>
-              <DiceComponent
-                isRolling={isRolling}
-                finalValue={rollResults.points}
-                onRollComplete={() => handleDiceComplete('points')}
-                type="points"
-                size="large"
-              />
-            </div>
-          </div>
-          
-          {/* زر الرمي */}
-          {gamePhase === 'waiting' && (
-            <div className="text-center">
-              <button
-                onClick={rollDice}
-                disabled={stats.remainingCount === 0}
-                className={`px-8 py-4 rounded-xl font-bold text-xl shadow-lg transition-all duration-300 hover:scale-105 ${
-                  stats.remainingCount === 0 
-                    ? 'bg-gray-600 cursor-not-allowed opacity-50 text-gray-300' 
-                    : 'bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white'
+          {/* نقاط الفرق */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {teams.map((team, index) => (
+              <div 
+                key={team.color}
+                className={`p-6 bg-white/5 backdrop-blur-xl border rounded-3xl transition-all duration-300 ${
+                  team.color === currentTurn
+                    ? 'border-purple-500/50 shadow-lg shadow-purple-500/25 ring-2 ring-purple-400/50'
+                    : 'border-white/10'
                 }`}
               >
-                {stats.remainingCount === 0 ? '❌ لا توجد أسئلة' : ' ارمِ النردين!'}
-              </button>
+                <div className="text-center">
+                  <h3 className={`text-2xl font-bold mb-2 ${
+                    team.color === 'red' ? 'text-red-400' : 'text-blue-400'
+                  }`}>
+                    {team.name}
+                  </h3>
+                  <p className="text-4xl font-bold text-white mb-2">{team.score}</p>
+                  <p className="text-gray-400">
+                    {team.color === currentTurn ? '🎯 دوره الآن' : '⏳ ينتظر'}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* منطقة النرد */}
+          {gamePhase !== 'questioning' && (
+            <div className="max-w-6xl mx-auto mb-8">
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
+                <h3 className="text-2xl font-bold text-center mb-8 text-white">
+                  {gamePhase === 'waiting' && 'اضغط لرمي النردين! 🎲'}
+                  {gamePhase === 'rolling' && 'جاري رمي النردين... 🎯'}
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-8">
+                  {/* نرد نوع السؤال */}
+                  <div className="text-center">
+                    <h4 className="text-lg font-bold text-emerald-400 mb-4">🎯 نوع السؤال</h4>
+                    <DiceComponent
+                      isRolling={isRolling}
+                      finalValue={rollResults.questionType}
+                      onRollComplete={() => handleDiceComplete('question')}
+                      type="question"
+                      size="large"
+                    />
+                  </div>
+                  
+                  {/* نرد النقاط */}
+                  <div className="text-center">
+                    <h4 className="text-lg font-bold text-yellow-400 mb-4">⭐ عدد النقاط</h4>
+                    <DiceComponent
+                      isRolling={isRolling}
+                      finalValue={rollResults.points}
+                      onRollComplete={() => handleDiceComplete('points')}
+                      type="points"
+                      size="large"
+                    />
+                  </div>
+                </div>
+                
+                {/* زر الرمي */}
+                {gamePhase === 'waiting' && (
+                  <div className="text-center">
+                    <button
+                      onClick={rollDice}
+                      disabled={stats.remainingCount === 0 || isProcessing}
+                      className="group relative"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-violet-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className={`relative px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 ${
+                        stats.remainingCount === 0 || isProcessing
+                          ? 'bg-gray-500 cursor-not-allowed opacity-50 text-gray-300' 
+                          : 'bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white'
+                      }`}>
+                        {stats.remainingCount === 0 ? '❌ لا توجد أسئلة' : '🎲 ارمِ النردين!'}
+                      </div>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* منطقة السؤال */}
+          {gamePhase === 'questioning' && currentQuestion && (
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
+                {/* معلومات السؤال */}
+                <div className="text-center mb-6">
+                  <div className={`inline-block px-6 py-3 rounded-2xl mb-4 bg-gradient-to-r ${currentQuestion.categoryColor}`}>
+                    <span className="text-2xl mr-2">{currentQuestion.categoryIcon}</span>
+                    <span className="text-white font-bold text-lg">{currentQuestion.category}</span>
+                    <span className="text-white font-bold ml-4 bg-white/20 px-3 py-1 rounded-full">
+                      {currentQuestion.points} نقطة
+                    </span>
+                  </div>
+                </div>
+
+                <h3 className="text-2xl md:text-3xl font-bold text-center mb-8 text-white">
+                  {currentQuestion.question}
+                </h3>
+
+                {!showAnswer ? (
+                  <div className="text-center">
+                    <button
+                      onClick={finishAnswering}
+                      className="group relative"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="relative px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105">
+                        ✅ انتهيت من الإجابة
+                      </div>
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    {/* عرض الإجابة */}
+                    <div className="bg-white/10 border border-emerald-500/30 rounded-2xl p-6 mb-8 text-center">
+                      <h4 className="text-emerald-400 font-bold text-xl mb-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                          </svg>
+                        </div>
+                        الإجابة الصحيحة
+                      </h4>
+                      <p className="text-2xl text-white font-bold">{currentQuestion.answer}</p>
+                    </div>
+
+                    {/* أزرار التقييم */}
+                    <div className="space-y-4">
+                      <div className="text-center">
+                        <p className="text-lg text-gray-300 mb-4">من أجاب إجابة صحيحة؟</p>
+                      </div>
+                      
+                      <div className="flex flex-wrap justify-center gap-6">
+                        <button
+                          onClick={() => awardPoints(0)}
+                          disabled={isProcessing}
+                          className="group relative"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                          <div className={`relative px-6 py-3 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 ${
+                            isProcessing 
+                              ? 'bg-gray-500 cursor-not-allowed opacity-50 text-gray-300' 
+                              : 'bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white'
+                          }`}>
+                            🔴 {teams[0].name}
+                          </div>
+                        </button>
+                        
+                        <button
+                          onClick={() => awardPoints(1)}
+                          disabled={isProcessing}
+                          className="group relative"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                          <div className={`relative px-6 py-3 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 ${
+                            isProcessing 
+                              ? 'bg-gray-500 cursor-not-allowed opacity-50 text-gray-300' 
+                              : 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white'
+                          }`}>
+                            🔵 {teams[1].name}
+                          </div>
+                        </button>
+                        
+                        <button
+                          onClick={noCorrectAnswer}
+                          disabled={isProcessing}
+                          className="group relative"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-gray-500 to-gray-600 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                          <div className={`relative px-6 py-3 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 ${
+                            isProcessing 
+                              ? 'bg-gray-500 cursor-not-allowed opacity-50 text-gray-300' 
+                              : 'bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white'
+                          }`}>
+                            ❌ لا أحد
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
+      </div>
+    );
+  }
 
-        {/* منطقة السؤال */}
-        {gamePhase === 'questioning' && currentQuestion && (
-          <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 md:p-8 mb-8 shadow-2xl border border-slate-700">
-            <div className="text-center mb-6">
-              <div className={`inline-block px-4 py-2 rounded-full mb-4 bg-gradient-to-r ${currentQuestion.categoryColor}`}>
-                <span className="text-2xl mr-2">{currentQuestion.categoryIcon}</span>
-                <span className="text-white font-bold">{currentQuestion.category}</span>
-                <span className="text-white font-bold ml-4">{currentQuestion.points} نقطة</span>
+  // شاشة انتهاء اللعبة
+  if (gamePhase === 'finished') {
+    const winner = teams.reduce((prev, current) => (prev.score > current.score) ? prev : current);
+    const loser = teams.find(team => team !== winner);
+    const isTie = teams[0].score === teams[1].score;
+
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
+        {/* خلفية متحركة */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-500/30 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-violet-500/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 right-1/2 w-72 h-72 bg-indigo-500/20 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        </div>
+
+        <div className="relative z-10 p-6 md:p-8 flex items-center justify-center min-h-screen">
+          <div className="max-w-4xl mx-auto text-center">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-12 w-full">
+              <div className="text-2xl md:text-3xl font-black text-white tracking-wider">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-violet-500">
+                  النرد
+                </span>
               </div>
+              <Link 
+                href="/" 
+                className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all duration-300 hover:scale-105"
+              >
+                ← العودة للرئيسية
+              </Link>
             </div>
 
-            <h3 className="text-xl md:text-2xl font-bold text-center mb-8 text-slate-100">
-              {currentQuestion.question}
-            </h3>
-
-            {!showAnswer ? (
-              <div className="text-center">
-                <button
-                  onClick={finishAnswering}
-                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-3 rounded-xl font-bold text-lg shadow-lg transition-all duration-300 hover:scale-105"
-                >
-                  🔍 إظهار الإجابة
-                </button>
-              </div>
-            ) : (
-              <div className="text-center space-y-6">
-                <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-4">
-                  <h4 className="text-lg font-bold text-green-400 mb-2">الإجابة الصحيحة:</h4>
-                  <p className="text-xl text-slate-100">{currentQuestion.answer}</p>
-                </div>
-
-                <div className="flex flex-col md:flex-row gap-4 justify-center">
-                  <button
-                    onClick={() => awardPoints(0)}
-                    className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-300"
-                  >
-                    ✅ {teams[0].name} أجاب صحيح
-                  </button>
-                  <button
-                    onClick={() => awardPoints(1)}
-                    className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-300"
-                  >
-                    ✅ {teams[1].name} أجاب صحيح
-                  </button>
-                  <button
-                    onClick={noCorrectAnswer}
-                    className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-300"
-                  >
-                    ❌ لا إجابة صحيحة
-                  </button>
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-12">
+              {/* تاج النصر */}
+              <div className="mb-8">
+                <div className={`w-32 h-32 rounded-full mx-auto flex items-center justify-center shadow-2xl ${
+                  isTie 
+                    ? 'bg-gradient-to-br from-gray-400 to-gray-600 shadow-gray-500/50'
+                    : 'bg-gradient-to-br from-purple-400 to-violet-500 shadow-purple-500/50'
+                }`}>
+                  <span className="text-6xl">
+                    {isTie ? '🤝' : '🏆'}
+                  </span>
                 </div>
               </div>
-            )}
+
+              <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-violet-500 mb-8">
+                🎲 انتهت اللعبة!
+              </h1>
+
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-8">
+                {isTie ? 'تعادل!' : `الفائز: ${winner.name}! 🎊`}
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className={`rounded-2xl p-6 border ${
+                  isTie 
+                    ? 'bg-white/5 border-gray-500/30'
+                    : winner.color === 'red'
+                      ? 'bg-gradient-to-br from-red-500/20 to-pink-500/20 border-red-500/30'
+                      : 'bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border-blue-500/30'
+                }`}>
+                  <h3 className={`text-2xl font-bold mb-4 ${
+                    isTie ? 'text-gray-400' : teams[0].color === 'red' ? 'text-red-400' : 'text-blue-400'
+                  }`}>
+                    {isTie ? '🏆' : teams[0] === winner ? '🥇' : '🥈'} {teams[0].name}
+                  </h3>
+                  <p className="text-3xl font-bold text-white mb-2">{teams[0].score}</p>
+                  <p className="text-xl text-gray-300">نقطة</p>
+                </div>
+                
+                <div className={`rounded-2xl p-6 border ${
+                  isTie 
+                    ? 'bg-white/5 border-gray-500/30'
+                    : teams[1] === winner
+                      ? 'bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border-blue-500/30'
+                      : 'bg-white/5 border-gray-500/30'
+                }`}>
+                  <h3 className={`text-2xl font-bold mb-4 ${
+                    isTie ? 'text-gray-400' : teams[1] === winner ? 'text-blue-400' : 'text-gray-400'
+                  }`}>
+                    {isTie ? '🏆' : teams[1] === winner ? '🥇' : '🥈'} {teams[1].name}
+                  </h3>
+                  <p className="text-3xl font-bold text-white mb-2">{teams[1].score}</p>
+                  <p className="text-xl text-gray-300">نقطة</p>
+                </div>
+              </div>
+
+              <button
+                onClick={resetGame}
+                className="group relative"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="relative px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-2xl font-bold text-xl transition-all duration-300 hover:scale-105">
+                  🔄 لعبة جديدة
+                </div>
+              </button>
+            </div>
           </div>
-        )}
-
-        {/* تعليمات اللعبة */}
-        {/* <DiceInstructions /> */}
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  return null;
 }

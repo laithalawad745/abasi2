@@ -1,198 +1,94 @@
+// components/VisualTournamentGame.jsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
-
-// بيانات الأسئلة
-const tournamentQuestions = [
-  // دور الـ8 
-  { id: 1, question: 'ما هي عاصمة فرنسا؟', answer: 'باريس', round: 'round8', used: false },
-  { id: 2, question: 'كم عدد الكواكب في المجموعة الشمسية؟', answer: 'ثمانية كواكب', round: 'round8', used: false },
-  { id: 3, question: 'ما هو أكبر محيط في العالم؟', answer: 'المحيط الهادئ', round: 'round8', used: false },
-  { id: 4, question: 'من هو مخترع المصباح الكهربائي؟', answer: 'توماس إديسون', round: 'round8', used: false },
-  { id: 5, question: 'ما هي عملة اليابان؟', answer: 'الين', round: 'round8', used: false },
-  { id: 6, question: 'كم عدد قارات العالم؟', answer: 'سبع قارات', round: 'round8', used: false },
-  { id: 7, question: 'ما هو أطول نهر في العالم؟', answer: 'نهر النيل', round: 'round8', used: false },
-  { id: 8, question: 'في أي عام انتهت الحرب العالمية الثانية؟', answer: '1945', round: 'round8', used: false },
-  { id: 9, question: 'ما هو الكوكب الأحمر؟', answer: 'المريخ', round: 'round8', used: false },
-  { id: 10, question: 'كم عدد ألوان قوس قزح؟', answer: 'سبعة ألوان', round: 'round8', used: false },
-  { id: 11, question: 'ما هي أصغر دولة في العالم؟', answer: 'الفاتيكان', round: 'round8', used: false },
-  { id: 12, question: 'من هو مؤسس شركة مايكروسوفت؟', answer: 'بيل غيتس', round: 'round8', used: false },
-  { id: 13, question: 'ما هو أعمق محيط في العالم؟', answer: 'المحيط الهادئ', round: 'round8', used: false },
-  { id: 14, question: 'كم عدد أيام السنة الكبيسة؟', answer: '366 يوم', round: 'round8', used: false },
-  { id: 15, question: 'ما هي عاصمة أستراليا؟', answer: 'كانبرا', round: 'round8', used: false },
-  { id: 16, question: 'من هو مخترع الهاتف؟', answer: 'ألكسندر غراهام بيل', round: 'round8', used: false },
-
-  // دور الـ4
-  { id: 17, question: 'من هو مؤلف رواية "مئة عام من العزلة"؟', answer: 'غابرييل غارسيا ماركيز', round: 'round4', used: false },
-  { id: 18, question: 'ما هو العنصر الكيميائي الذي رمزه Au؟', answer: 'الذهب', round: 'round4', used: false },
-  { id: 19, question: 'في أي عام تم افتتاح قناة السويس؟', answer: '1869', round: 'round4', used: false },
-  { id: 20, question: 'ما هو اسم أطول نهر في أوروبا؟', answer: 'نهر الفولغا', round: 'round4', used: false },
-  { id: 21, question: 'من هو الرسام الذي قطع أذنه؟', answer: 'فان جوخ', round: 'round4', used: false },
-  { id: 22, question: 'كم عدد العظام في جسم الإنسان البالغ؟', answer: '206 عظمة', round: 'round4', used: false },
-  { id: 23, question: 'ما هي عاصمة كندا؟', answer: 'أوتاوا', round: 'round4', used: false },
-  { id: 24, question: 'في أي عام هبط الإنسان على القمر لأول مرة؟', answer: '1969', round: 'round4', used: false },
-
-  // نصف النهائي
-  { id: 25, question: 'ما هو الاسم العلمي لفيتامين C؟', answer: 'حمض الأسكوربيك', round: 'semi', used: false },
-  { id: 26, question: 'من هو مؤسس الإمبراطورية المغولية؟', answer: 'چنگیز خان', round: 'semi', used: false },
-  { id: 27, question: 'ما هو أعمق نقطة في المحيطات؟', answer: 'خندق ماريانا', round: 'semi', used: false },
-  { id: 28, question: 'في أي عام تم اكتشاف DNA؟', answer: '1953', round: 'semi', used: false },
-
-  // النهائي
-  { id: 29, question: 'ما هو أقل عدد من الألوان المطلوبة لتلوين أي خريطة؟', answer: 'أربعة ألوان', round: 'final', used: false },
-  { id: 30, question: 'من هو مكتشف قانون الجاذبية؟', answer: 'إسحاق نيوتن', round: 'final', used: false }
-];
+import Link from 'next/link';
+import { sampleTopics } from '../app/data/gameData';
 
 export default function VisualTournamentGame() {
-  // حالة اللعبة
+  // State management
   const [gamePhase, setGamePhase] = useState('setup'); // 'setup', 'playing', 'finished'
-  const [currentTeam, setCurrentTeam] = useState('red'); // 'red', 'blue'
+  const [currentTeam, setCurrentTeam] = useState('red');
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [showAnswer, setShowAnswer] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [showingDecision, setShowingDecision] = useState(true);
   const [isClient, setIsClient] = useState(false);
-  const [showingDecision, setShowingDecision] = useState(false);
 
-  // التأكد من أننا في المتصفح
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  // Tournament configuration
+  const roundConfig = {
+    round8: { name: 'دور الـ8', points: 10, questionsNeeded: 8 },
+    round4: { name: 'دور الـ4', points: 20, questionsNeeded: 4 },
+    semi: { name: 'نصف النهائي', points: 40, questionsNeeded: 2 },
+    final: { name: 'النهائي', points: 80, questionsNeeded: 1 }
+  };
 
-  // حالة الفرق
+  // Teams data
   const [teams, setTeams] = useState({
     red: {
       name: 'الفريق الأحمر',
       score: 0,
       currentRound: 'round8',
       questionsAnswered: 0,
-      active: true,
       withdrawn: false,
       eliminated: false,
-      finishedFinal: false // 🔥 جديد: هل أنهى النهائي
+      finishedFinal: false,
+      active: false
     },
     blue: {
       name: 'الفريق الأزرق', 
       score: 0,
       currentRound: 'round8',
       questionsAnswered: 0,
-      active: true,
       withdrawn: false,
       eliminated: false,
-      finishedFinal: false // 🔥 جديد: هل أنهى النهائي
-    }
+      finishedFinal: false,
+      active: false
+    },
+    tie: false
   });
 
-  // إعدادات الأدوار
-  const roundConfig = {
-    round8: { name: 'دور الـ8', questionsNeeded: 8, points: 20 },
-    round4: { name: 'دور الـ4', questionsNeeded: 4, points: 40 },
-    semi: { name: 'نصف النهائي', questionsNeeded: 2, points: 80 },
-    final: { name: 'النهائي', questionsNeeded: 1, points: 160 }
-  };
+  // Client-side mounting
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
-  // التأكد من أننا في المتصفح قبل العرض
-  if (!isClient) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-white text-xl">جاري التحميل...</div>
-      </div>
-    );
-  }
-
-  // بدء اللعبة
+  // Game functions
   const startGame = () => {
     if (!isClient) return;
+
     setGamePhase('playing');
-    setIsProcessing(false);
-    tournamentQuestions.forEach(q => q.used = false);
-    startNewTurn();
-  };
-
-  // بدء دور جديد (عرض خيار الانسحاب أو المتابعة)
-  const startNewTurn = () => {
-    if (!isClient) return;
-    
-    const currentTeamData = teams[currentTeam];
-    
-    // التحقق من أن الفريق الحالي لا يزال نشطاً
-    if (!currentTeamData.active || currentTeamData.eliminated || currentTeamData.withdrawn) {
-      switchToNextActiveTeam();
-      return;
-    }
-
-    // إظهار خيار الانسحاب أو المتابعة
+    setCurrentTeam('red');
     setShowingDecision(true);
-    setCurrentQuestion(null);
-    setShowAnswer(false);
-    setIsProcessing(false);
+    setTeams(prev => ({
+      ...prev,
+      red: { ...prev.red, active: true },
+      blue: { ...prev.blue, active: true }
+    }));
   };
 
-  // قرار المتابعة - عرض السؤال
   const continueGame = () => {
-    setShowingDecision(false);
-    startNewQuestion();
-  };
+    const questions = sampleTopics.find(t => t.id === 'absi')?.questions || [];
+    if (questions.length === 0) return;
 
-  // بدء سؤال جديد (بعد اختيار المتابعة)
-  const startNewQuestion = () => {
-    if (!isClient) return;
-    
-    const currentTeamData = teams[currentTeam];
-
-    // الحصول على الأسئلة المتاحة للدور الحالي
-    const availableQuestions = tournamentQuestions.filter(q => 
-      q.round === currentTeamData.currentRound && !q.used
-    );
-    
-    if (availableQuestions.length === 0) {
-      console.error('No questions available for round', currentTeamData.currentRound);
-      return;
-    }
-
-    const randomQuestion = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
-    randomQuestion.used = true;
-    
+    const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
     setCurrentQuestion(randomQuestion);
     setShowAnswer(false);
-    setIsProcessing(false);
+    setShowingDecision(false);
   };
 
-  // تبديل للفريق النشط التالي
-  const switchToNextActiveTeam = () => {
-    if (!isClient) return;
+  const withdrawTeam = () => {
+    setTeams(prev => ({
+      ...prev,
+      [currentTeam]: { ...prev[currentTeam], withdrawn: true, active: false }
+    }));
     
-    const nextTeam = currentTeam === 'red' ? 'blue' : 'red';
-    const nextTeamData = teams[nextTeam];
-    
-    // إذا كان الفريق التالي نشطاً
-    if (nextTeamData.active && !nextTeamData.eliminated && !nextTeamData.withdrawn) {
-      setCurrentTeam(nextTeam);
-      setIsProcessing(false);
-      setTimeout(() => startNewTurn(), 500);
-    } else {
-      // 🔥 تحقق خاص: إذا كان أحد الفريقين أنهى النهائي
-      if (teams.red.finishedFinal || teams.blue.finishedFinal) {
-        // أحد الفريقين أنهى النهائي والآخر متوقف
-        endGame();
-      } else {
-        // لا يوجد فرق نشطة، انتهت اللعبة
-        endGame();
-      }
-    }
+    if (checkGameEnd()) return;
+    switchTeam();
   };
 
-  // إظهار الإجابة
-  const showQuestionAnswer = () => {
-    setShowAnswer(true);
-  };
-
-  // إجابة صحيحة
   const correctAnswer = () => {
-    if (isProcessing) return;
-    setIsProcessing(true);
-
     const currentTeamData = teams[currentTeam];
-    const roundPoints = roundConfig[currentTeamData.currentRound].points;
+    const roundPoints = roundConfig[currentTeamData.currentRound]?.points || 0;
     
     setTeams(prev => ({
       ...prev,
@@ -203,154 +99,108 @@ export default function VisualTournamentGame() {
       }
     }));
 
-    // التحقق من انتهاء الدور
-    checkRoundCompletion();
-  };
+    const newQuestionsAnswered = currentTeamData.questionsAnswered + 1;
+    const questionsNeeded = roundConfig[currentTeamData.currentRound]?.questionsNeeded || 0;
 
-  // إجابة خاطئة
-  const wrongAnswer = () => {
-    if (isProcessing) return;
-    setIsProcessing(true);
-
-    setTeams(prev => ({
-      ...prev,
-      [currentTeam]: {
-        ...prev[currentTeam],
-        score: 0,
-        active: false,
-        eliminated: true
-      }
-    }));
-
-    setShowingDecision(false);
-    setTimeout(() => switchToNextActiveTeam(), 1500);
-  };
-
-  // انسحاب الفريق
-  const withdrawTeam = () => {
-    if (isProcessing) return;
-    setIsProcessing(true);
-
-    setTeams(prev => ({
-      ...prev,
-      [currentTeam]: {
-        ...prev[currentTeam],
-        active: false,
-        withdrawn: true
-      }
-    }));
-
-    setShowingDecision(false);
-    setTimeout(() => switchToNextActiveTeam(), 1500);
-  };
-
-  // 🔥 التحقق من انتهاء الدور - مُعدّل لحل مشكلة النهائي
-  const checkRoundCompletion = () => {
-    const currentTeamData = teams[currentTeam];
-    const roundNeeded = roundConfig[currentTeamData.currentRound].questionsNeeded;
-    
-    if (currentTeamData.questionsAnswered + 1 >= roundNeeded) {
-      const nextRound = getNextRound(currentTeamData.currentRound);
-      
-      // إذا أنهى النهائي
-      if (currentTeamData.currentRound === 'final') {
-        setTeams(prev => ({
-          ...prev,
-          [currentTeam]: {
-            ...prev[currentTeam],
-            currentRound: 'completed',
-            questionsAnswered: 0,
-            finishedFinal: true // 🔥 وضع علامة أنه أنهى النهائي
-          }
-        }));
-        
-        // 🔥 تحقق من الفريق الآخر
-        const otherTeam = currentTeam === 'red' ? 'blue' : 'red';
-        const otherTeamData = teams[otherTeam];
-        
-        if (otherTeamData.finishedFinal) {
-          // كلا الفريقين أنهى النهائي = تعادل
-          setTimeout(() => endGameWithTie(), 1500);
-          return;
-        } else {
-          // الفريق الحالي أنهى النهائي، ننتظر الآخر
-          console.log(`${currentTeam} أنهى النهائي، ننتظر ${otherTeam}`);
-        }
-      } else {
-        // دور عادي (ليس النهائي)
-        setTeams(prev => ({
-          ...prev,
-          [currentTeam]: {
-            ...prev[currentTeam],
-            currentRound: nextRound,
-            questionsAnswered: 0
-          }
-        }));
-      }
+    if (newQuestionsAnswered >= questionsNeeded) {
+      advanceToNextRound();
+    } else {
+      switchTeam();
     }
-
-    // الانتقال للفريق التالي
-    setTimeout(() => {
-      setIsProcessing(false);
-      switchToNextActiveTeam();
-    }, 1000);
   };
 
-  // الحصول على الدور التالي
-  const getNextRound = (currentRound) => {
-    const roundOrder = ['round8', 'round4', 'semi', 'final', 'completed'];
-    const currentIndex = roundOrder.indexOf(currentRound);
-    return roundOrder[currentIndex + 1] || 'completed';
-  };
-
-  // انتهاء اللعبة
-  const endGame = () => {
-    setGamePhase('finished');
-  };
-
-  // انتهاء اللعبة بالتعادل
-  const endGameWithTie = () => {
+  const wrongAnswer = () => {
     setTeams(prev => ({
       ...prev,
-      tie: true
+      [currentTeam]: {
+        ...prev[currentTeam],
+        eliminated: true,
+        active: false,
+        score: 0
+      }
     }));
-    setGamePhase('finished');
+    
+    if (checkGameEnd()) return;
+    switchTeam();
   };
 
-  // إعادة تعيين اللعبة
+  const advanceToNextRound = () => {
+    const roundOrder = ['round8', 'round4', 'semi', 'final'];
+    const currentRoundIndex = roundOrder.indexOf(teams[currentTeam].currentRound);
+    
+    if (currentRoundIndex === roundOrder.length - 1) {
+      setTeams(prev => ({
+        ...prev,
+        [currentTeam]: { ...prev[currentTeam], finishedFinal: true, active: false }
+      }));
+      
+      if (checkGameEnd()) return;
+    } else {
+      const nextRound = roundOrder[currentRoundIndex + 1];
+      setTeams(prev => ({
+        ...prev,
+        [currentTeam]: {
+          ...prev[currentTeam],
+          currentRound: nextRound,
+          questionsAnswered: 0
+        }
+      }));
+    }
+    
+    switchTeam();
+  };
+
+  const switchTeam = () => {
+    const nextTeam = currentTeam === 'red' ? 'blue' : 'red';
+    setCurrentTeam(nextTeam);
+    setCurrentQuestion(null);
+    setShowAnswer(false);
+    setShowingDecision(true);
+  };
+
+  const checkGameEnd = () => {
+    const activeTeams = Object.values(teams).filter(t => t.active && !t.eliminated && !t.withdrawn);
+    
+    if (activeTeams.length <= 1 || (teams.red.finishedFinal && teams.blue.finishedFinal)) {
+      setGamePhase('finished');
+      return true;
+    }
+    
+    return false;
+  };
+
   const resetGame = () => {
     setGamePhase('setup');
     setCurrentTeam('red');
     setCurrentQuestion(null);
     setShowAnswer(false);
-    setIsProcessing(false);
-    setShowingDecision(false);
+    setShowingDecision(true);
     setTeams({
       red: {
         name: 'الفريق الأحمر',
         score: 0,
         currentRound: 'round8',
         questionsAnswered: 0,
-        active: true,
         withdrawn: false,
         eliminated: false,
-        finishedFinal: false
+        finishedFinal: false,
+        active: false
       },
       blue: {
         name: 'الفريق الأزرق',
         score: 0,
-        currentRound: 'round8',
+        currentRound: 'round8', 
         questionsAnswered: 0,
-        active: true,
         withdrawn: false,
         eliminated: false,
-        finishedFinal: false
-      }
+        finishedFinal: false,
+        active: false
+      },
+      tie: false
     });
-    tournamentQuestions.forEach(q => q.used = false);
   };
 
-  // مكون الدائرة للشجرة
+  // Tournament bracket components
   const PlayerCircle = ({ position, team, isActive, size = 'normal' }) => {
     const sizeClasses = {
       small: 'w-8 h-8 text-xs',
@@ -359,18 +209,17 @@ export default function VisualTournamentGame() {
     };
 
     const teamColors = {
-      red: isActive ? 'bg-red-500 border-red-300' : position.reached ? 'bg-red-600 border-red-400' : 'bg-gray-600 border-gray-500',
-      blue: isActive ? 'bg-blue-500 border-blue-300' : position.reached ? 'bg-blue-600 border-blue-400' : 'bg-gray-600 border-gray-500'
+      red: isActive ? 'bg-red-500 border-red-300 ring-2 ring-yellow-400' : position.reached ? 'bg-red-600 border-red-400' : 'bg-gray-600 border-gray-500',
+      blue: isActive ? 'bg-blue-500 border-blue-300 ring-2 ring-yellow-400' : position.reached ? 'bg-blue-600 border-blue-400' : 'bg-gray-600 border-gray-500'
     };
 
     return (
-      <div className={`${sizeClasses[size]} ${teamColors[team]} border-2 rounded-full flex items-center justify-center font-bold text-white transition-all duration-300 ${isActive ? 'ring-2 ring-yellow-400 scale-110' : ''}`}>
+      <div className={`${sizeClasses[size]} ${teamColors[team]} border-2 rounded-full flex items-center justify-center font-bold text-white transition-all duration-300 ${isActive ? 'scale-110 animate-pulse' : ''}`}>
         {position.name}
       </div>
     );
   };
 
-  // مكون الخط الواصل
   const ConnectingLine = ({ direction = 'horizontal', length = 'normal' }) => {
     const lengthClasses = {
       short: direction === 'horizontal' ? 'w-6' : 'h-6',
@@ -387,7 +236,6 @@ export default function VisualTournamentGame() {
     );
   };
 
-  // 🔥 مكون الشجرة للفريق - مُعدّل لحل مشكلة الدوائر
   const TeamBracket = ({ team }) => {
     const teamData = teams[team];
     const teamColors = {
@@ -395,24 +243,21 @@ export default function VisualTournamentGame() {
       blue: 'border-blue-500/50 bg-blue-500/10'
     };
 
-    // 🔥 دالة محسّنة لإنشاء مواضع الدوائر
+    // Create positions for bracket visualization
     const createPositions = (count, round) => {
       return Array(count).fill(null).map((_, i) => {
-        // ترتيب الأدوار
         const roundOrder = ['round8', 'round4', 'semi', 'final'];
         const currentRoundIndex = roundOrder.indexOf(teamData.currentRound);
         const thisRoundIndex = roundOrder.indexOf(round);
         
-        // إذا تجاوز الفريق هذا الدور (أدوار سابقة مكتملة)
         if (currentRoundIndex > thisRoundIndex || teamData.currentRound === 'completed') {
           return {
             id: `${team}_${round}_${i + 1}`,
-            name: '✓', // 🔥 إظهار كل الدوائر كمكتملة
+            name: '✓',
             reached: true
           };
         }
         
-        // إذا كان في نفس الدور الحالي
         if (teamData.currentRound === round) {
           return {
             id: `${team}_${round}_${i + 1}`,
@@ -422,7 +267,6 @@ export default function VisualTournamentGame() {
           };
         }
         
-        // دور مستقبلي
         return {
           id: `${team}_${round}_${i + 1}`,
           name: '',
@@ -439,7 +283,7 @@ export default function VisualTournamentGame() {
     };
 
     return (
-      <div className={`border-2 rounded-2xl p-6 ${teamColors[team]} ${teamData.active && currentTeam === team ? 'ring-2 ring-yellow-400 shadow-2xl' : ''} ${teamData.withdrawn ? 'opacity-50' : ''} ${teamData.eliminated ? 'opacity-30' : ''}`}>
+      <div className={`bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 transition-all duration-300 ${teamData.active && currentTeam === team ? 'ring-2 ring-yellow-400 shadow-lg shadow-yellow-500/25' : ''} ${teamData.withdrawn ? 'opacity-50' : ''} ${teamData.eliminated ? 'opacity-30' : ''}`}>
         <h2 className={`text-center text-2xl font-bold mb-6 ${team === 'red' ? 'text-red-400' : 'text-blue-400'}`}>
           {teamData.name}
           {teamData.withdrawn && <span className="text-yellow-400 text-sm mr-2">(منسحب)</span>}
@@ -447,8 +291,8 @@ export default function VisualTournamentGame() {
           {teamData.finishedFinal && <span className="text-green-400 text-sm mr-2">(أنهى النهائي)</span>}
         </h2>
         
-        <div className="text-center mb-4">
-          <div className="text-xl font-bold text-white">النقاط: {teamData.score}</div>
+        <div className="text-center mb-6">
+          <div className="text-3xl font-bold text-white mb-2">{teamData.score}</div>
           <div className="text-sm text-gray-300">
             {teamData.currentRound === 'completed' ? 'مكتمل' : roundConfig[teamData.currentRound]?.name}
           </div>
@@ -492,7 +336,7 @@ export default function VisualTournamentGame() {
 
               {/* نصف النهائي */}
               <div className="flex flex-col space-y-12">
-                <h4 className="text-center text-green-400 font-bold mb-2 text-sm">نصف النهائي</h4>
+                <h4 className="text-center text-orange-400 font-bold mb-2 text-sm">نصف النهائي</h4>
                 {positions.semi.map((position, index) => (
                   <div key={position.id} className={`flex items-center space-x-2 ${team === 'blue' ? 'flex-row-reverse space-x-reverse' : ''}`}>
                     <PlayerCircle 
@@ -509,12 +353,14 @@ export default function VisualTournamentGame() {
               {/* النهائي */}
               <div className="flex flex-col">
                 <h4 className="text-center text-yellow-400 font-bold mb-2 text-sm">النهائي</h4>
-                <PlayerCircle 
-                  position={positions.final[0]} 
-                  team={team}
-                  isActive={teamData.currentRound === 'final' && teamData.questionsAnswered === 0}
-                  size="large"
-                />
+                <div className="flex justify-center">
+                  <PlayerCircle 
+                    position={positions.final[0]} 
+                    team={team}
+                    isActive={teamData.currentRound === 'final' && teamData.questionsAnswered === 0}
+                    size="large"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -523,231 +369,347 @@ export default function VisualTournamentGame() {
     );
   };
 
-  // صفحة الإعدادات
+  // Setup phase
   if (gamePhase === 'setup') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-pink-400">
-                 الإقصاء
-            </h1>
-            <button
-              onClick={() => window.location.href = '/'}
-              className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold text-sm md:text-base shadow-lg transition-all duration-300"
+      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
+        {/* خلفية متحركة */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-orange-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 right-1/2 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        </div>
+
+        {/* المحتوى الرئيسي */}
+        <div className="relative z-10 p-6 md:p-8">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-12">
+            <div className="text-4xl md:text-5xl font-black text-white tracking-wider">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
+                الإقصاء
+              </span>
+            </div>
+            <Link 
+              href="/" 
+              className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all duration-300 hover:scale-105"
             >
               ← العودة للرئيسية
-            </button>
+            </Link>
           </div>
 
-          <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 md:p-8 mb-8 shadow-2xl border border-slate-700 text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400 mb-6">
-           الإقصاء
-            </h2>
-            
-            <div className="text-lg text-slate-300 mb-8 text-right">
-              <p className="mb-4">: قواعد اللعبة </p>
-              <ul className="list-disc list-inside space-y-2">
-   
-                <li className="text-red-400"> إجابة خاطئة = خسارة كل النقاط وإيقاف اللعب</li>
-                <li className="text-yellow-400"> يمكن الانسحاب قبل رؤية السؤال والاحتفاظ بالنقاط</li>
-                <li className="text-blue-400"> سؤال لكل فريق بالتناوب</li>
-              </ul>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              {Object.entries(roundConfig).map(([round, config]) => (
-                <div key={round} className="bg-slate-700/50 rounded-xl p-4">
-                  <h3 className="font-bold text-yellow-400 mb-2">{config.name}</h3>
-                  <p className="text-2xl font-bold text-white">{config.points} نقطة</p>
-                  <p className="text-sm text-gray-400">لكل سؤال</p>
-                </div>
-              ))}
-            </div>
+          {/* العنوان الرئيسي */}
+          <div className="text-center mb-16">
+            <h1 className="text-4xl md:text-7xl font-black text-white mb-6 tracking-tight">
+              بطولة
+              <span className="block bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600">
+                الإقصاء 
+              </span>
+            </h1>
+            {/* <p className="text-xl md:text-2xl text-gray-400 font-light max-w-2xl mx-auto">
+              شجرة بطولة بصرية مثل البطولات الحقيقية
+            </p> */}
+          </div>
 
+          {/* قواعد اللعبة */}
+          <div className="max-w-6xl mx-auto mb-12">
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
+              <h2 className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400 mb-8">
+                 قواعد البطولة 
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="text-center p-6 bg-white/5 rounded-2xl border border-green-500/30">
+                  <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-600 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-green-400 mb-2">إجابة صحيحة</h3>
+                  <p className="text-gray-300">تتقدم في الشجرة وتحصل على النقاط</p>
+                </div>
+                
+                <div className="text-center p-6 bg-white/5 rounded-2xl border border-red-500/30">
+                  <div className="w-16 h-16 bg-gradient-to-br from-red-400 to-red-600 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/>
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-red-400 mb-2">إجابة خاطئة</h3>
+                  <p className="text-gray-300">إقصاء فوري وخسارة كل النقاط</p>
+                </div>
+                
+                <div className="text-center p-6 bg-white/5 rounded-2xl border border-yellow-500/30">
+                  <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-600 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd"/>
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-yellow-400 mb-2">انسحاب ذكي</h3>
+                  <p className="text-gray-300">يمكن الانسحاب والاحتفاظ بالنقاط</p>
+                </div>
+              </div>
+
+              {/* نظام النقاط */}
+              <div className="bg-white/5 rounded-2xl p-6 border border-purple-500/30">
+                <h3 className="text-purple-400 font-bold text-lg mb-4 text-center">💎 نظام النقاط لكل مرحلة</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-sm">
+                  <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-xl p-4 border border-blue-500/30">
+                    <div className="font-bold text-blue-400 text-lg">دور الـ8</div>
+                    <div className="text-white text-2xl font-bold">10</div>
+                    <div className="text-gray-300">نقاط/سؤال</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-xl p-4 border border-purple-500/30">
+                    <div className="font-bold text-purple-400 text-lg">دور الـ4</div>
+                    <div className="text-white text-2xl font-bold">20</div>
+                    <div className="text-gray-300">نقطة/سؤال</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-xl p-4 border border-orange-500/30">
+                    <div className="font-bold text-orange-400 text-lg">نصف النهائي</div>
+                    <div className="text-white text-2xl font-bold">40</div>
+                    <div className="text-gray-300">نقطة/سؤال</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 rounded-xl p-4 border border-yellow-500/30">
+                    <div className="font-bold text-yellow-400 text-lg">النهائي</div>
+                    <div className="text-white text-2xl font-bold">80</div>
+                    <div className="text-gray-300">نقطة/سؤال</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* زر البدء */}
+          <div className="text-center">
             <button
               onClick={startGame}
               disabled={!isClient}
-              className={`px-8 md:px-12 py-4 md:py-6 rounded-2xl font-bold text-xl md:text-2xl shadow-2xl transition-all duration-300 hover:scale-105 ${
+              className="group relative"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className={`relative px-12 py-6 rounded-3xl font-bold text-2xl transition-all duration-300 hover:scale-105 border-2 border-yellow-400/50 ${
                 isClient 
                   ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white'
                   : 'bg-gray-500 cursor-not-allowed opacity-50 text-gray-300'
-              }`}
-            >
-               ابدأ !
+              }`}>
+                <div className="flex items-center gap-3">
+                  <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                  </svg>
+                  ابدأ البطولة البصرية!
+                </div>
+              </div>
             </button>
+          </div>
+
+          {/* معلومات إضافية */}
+          <div className="text-center mt-16">
+            <div className="inline-flex items-center justify-center space-x-8 space-x-reverse bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-8 py-4">
+              <div className="flex items-center space-x-2 space-x-reverse text-gray-300">
+                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                <span>شجرة بصرية</span>
+              </div>
+              <div className="w-px h-6 bg-white/20"></div>
+              <div className="flex items-center space-x-2 space-x-reverse text-gray-300">
+                <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
+                <span>4 مراحل</span>
+              </div>
+              <div className="w-px h-6 bg-white/20"></div>
+              <div className="flex items-center space-x-2 space-x-reverse text-gray-300">
+                <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+                <span>إقصاء مباشر</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  // صفحة اللعب
+  // Playing phase
   if (gamePhase === 'playing') {
     const currentTeamData = teams[currentTeam];
     
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
-        <div className="max-w-full mx-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-pink-400">
-              الإقصاء
-            </h1>
-            {/* <button
-              onClick={resetGame}
-              className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-lg transition-all duration-300"
+      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
+        {/* خلفية متحركة */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/15 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-orange-500/15 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 right-1/2 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        </div>
+
+        <div className="relative z-10 p-6 md:p-8">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
+            <div className="text-2xl md:text-3xl font-black text-white tracking-wider">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
+                الإقصاء 
+              </span>
+            </div>
+            <Link 
+              href="/" 
+              className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all duration-300 hover:scale-105"
             >
-              إعادة تعيين
-            </button> */}
+              ← العودة للرئيسية
+            </Link>
           </div>
 
           {/* معلومات الدور الحالي */}
-          <div className="text-center mb-6">
-            <div className="inline-flex items-center gap-4 px-6 py-3 bg-slate-800/50 backdrop-blur-lg rounded-2xl border border-slate-600 shadow-xl">
-              <div className={`text-xl font-bold ${currentTeam === 'red' ? 'text-red-400' : 'text-blue-400'}`}>
-                دور {currentTeamData.name}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-6 px-8 py-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl">
+              <div className="text-center">
+                <div className={`text-xl font-bold ${currentTeam === 'red' ? 'text-red-400' : 'text-blue-400'}`}>
+                  دور {currentTeamData.name}
+                </div>
               </div>
-              <div className="w-px h-6 bg-slate-600"></div>
-              <div className="text-yellow-400 font-bold">
-                {currentTeamData.currentRound === 'completed' ? 'مكتمل' : roundConfig[currentTeamData.currentRound]?.name}
+              <div className="w-px h-12 bg-white/20"></div>
+              <div className="text-center">
+                <div className="text-yellow-400 font-bold text-lg">
+                  {currentTeamData.currentRound === 'completed' ? 'مكتمل' : roundConfig[currentTeamData.currentRound]?.name}
+                </div>
               </div>
-              <div className="w-px h-6 bg-slate-600"></div>
-              <div className="text-green-400 font-bold">
-                {currentTeamData.currentRound !== 'completed' ? roundConfig[currentTeamData.currentRound]?.points : 0} نقطة/سؤال
+              <div className="w-px h-12 bg-white/20"></div>
+              <div className="text-center">
+                <div className="text-green-400 font-bold text-lg">
+                  {currentTeamData.currentRound !== 'completed' ? roundConfig[currentTeamData.currentRound]?.points : 0} نقطة/سؤال
+                </div>
               </div>
             </div>
           </div>
 
           {/* شجرة البطولة */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <TeamBracket team="red" />
             <TeamBracket team="blue" />
           </div>
 
           {/* منطقة السؤال */}
-          <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 md:p-8 shadow-2xl border border-slate-600">
-            {showingDecision ? (
-              // مرحلة القرار: انسحاب أو متابعة
-              <div className="text-center">
-                <h3 className="text-2xl md:text-3xl font-bold text-white mb-6">
-                  دور {teams[currentTeam].name}
-                </h3>
-                <p className="text-lg text-gray-300 mb-8">
-                  اختر ما تريد فعله:
-                </p>
-                
-                <div className="flex flex-wrap justify-center gap-6">
-                  <button
-                    onClick={withdrawTeam}
-                    disabled={isProcessing}
-                    className={`px-8 py-4 rounded-xl font-bold text-xl shadow-lg transition-all duration-300 ${
-                      isProcessing 
-                        ? 'bg-gray-500 cursor-not-allowed opacity-50' 
-                        : 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white hover:scale-105'
-                    }`}
-                  >
-                     انسحاب والاحتفاظ بالنقاط
-                  </button>
-                  <button
-                    onClick={continueGame}
-                    disabled={isProcessing}
-                    className={`px-8 py-4 rounded-xl font-bold text-xl shadow-lg transition-all duration-300 ${
-                      isProcessing 
-                        ? 'bg-gray-500 cursor-not-allowed opacity-50' 
-                        : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white hover:scale-105'
-                    }`}
-                  >
-                     متابعة  
-                  </button>
-                </div>
-              </div>
-            ) : currentQuestion ? (
-              // مرحلة السؤال
-              <div className="text-center">
-                <h3 className="text-2xl md:text-3xl font-bold text-white mb-6">
-                  {currentQuestion.question}
-                </h3>
-                
-                {showAnswer && (
-                  <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-4 mb-6">
-                    <p className="text-xl text-green-400 font-bold">
-                      الإجابة: {currentQuestion.answer}
-                    </p>
-                  </div>
-                )}
-
-                {isProcessing && (
-                  <div className="bg-blue-500/20 border border-blue-500/30 rounded-xl p-4 mb-6">
-                    <p className="text-lg text-blue-400 font-bold">
-                      ⏳ جاري المعالجة...
-                    </p>
-                  </div>
-                )}
-
-                <div className="flex flex-wrap justify-center gap-4">
-                  {!showAnswer ? (
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
+              {showingDecision ? (
+                // مرحلة القرار: انسحاب أو متابعة
+                <div className="text-center">
+                  <h3 className="text-3xl font-bold text-white mb-6">
+                    دور {teams[currentTeam].name}
+                  </h3>
+                  <p className="text-xl text-gray-300 mb-8">
+                    اختر ما تريد فعله:
+                  </p>
+                  
+                  <div className="flex flex-wrap justify-center gap-6">
                     <button
-                      onClick={showQuestionAnswer}
-                      disabled={isProcessing}
-                      className={`px-6 py-3 rounded-xl font-bold text-lg shadow-lg transition-all duration-300 ${
-                        isProcessing 
-                          ? 'bg-gray-500 cursor-not-allowed opacity-50' 
-                          : 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white'
-                      }`}
+                      onClick={withdrawTeam}
+                      className="group relative"
                     >
-                      إظهار الإجابة
+                      <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="relative px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105">
+                        🏃‍♂️ انسحاب والاحتفاظ بالنقاط
+                      </div>
                     </button>
+                    
+                    <button
+                      onClick={continueGame}
+                      className="group relative"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="relative px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105">
+                        ⚔️ متابعة اللعب
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              ) : currentQuestion ? (
+                // عرض السؤال
+                <div>
+                  <h3 className="text-2xl md:text-3xl font-bold text-center text-white mb-8">
+                    {currentQuestion.question}
+                  </h3>
+
+                  {!showAnswer ? (
+                    <div className="text-center">
+                      <button
+                        onClick={() => setShowAnswer(true)}
+                        className="group relative"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div className="relative px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105">
+                          ✅ انتهيت من الإجابة
+                        </div>
+                      </button>
+                    </div>
                   ) : (
-                    <>
-                      <button
-                        onClick={correctAnswer}
-                        disabled={isProcessing}
-                        className={`px-6 py-3 rounded-xl font-bold text-lg shadow-lg transition-all duration-300 ${
-                          isProcessing 
-                            ? 'bg-gray-500 cursor-not-allowed opacity-50' 
-                            : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white'
-                        }`}
-                      >
-                        ✅ إجابة صحيحة
-                      </button>
-                      <button
-                        onClick={wrongAnswer}
-                        disabled={isProcessing}
-                        className={`px-6 py-3 rounded-xl font-bold text-lg shadow-lg transition-all duration-300 ${
-                          isProcessing 
-                            ? 'bg-gray-500 cursor-not-allowed opacity-50' 
-                            : 'bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white'
-                        }`}
-                      >
-                        ❌ إجابة خاطئة
-                      </button>
-                    </>
+                    <div>
+                      {/* عرض الإجابة */}
+                      <div className="bg-white/10 border border-emerald-500/30 rounded-2xl p-6 mb-8 text-center">
+                        <h4 className="text-emerald-400 font-bold text-xl mb-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                            </svg>
+                          </div>
+                          الإجابة الصحيحة
+                        </h4>
+                        <p className="text-2xl text-white font-bold">{currentQuestion.answer}</p>
+                      </div>
+
+                      {/* أزرار التقييم */}
+                      <div className="flex flex-wrap justify-center gap-6">
+                        <button
+                          onClick={correctAnswer}
+                          className="group relative"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                          <div className="relative px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105">
+                            ✅ إجابة صحيحة
+                          </div>
+                        </button>
+                        
+                        <button
+                          onClick={wrongAnswer}
+                          className="group relative"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-red-600 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                          <div className="relative px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105">
+                            ❌ إجابة خاطئة
+                          </div>
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
-              </div>
-            ) : (
-              <div className="text-center">
-                <p className="text-xl text-slate-300">جاري تحضير الدور التالي...</p>
-              </div>
-            )}
+              ) : (
+                <div className="text-center">
+                  <p className="text-xl text-slate-300">جاري تحضير الدور التالي...</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  // صفحة النهاية
+  // Finished phase
   if (gamePhase === 'finished') {
     // التحقق من التعادل
     const isTie = teams.tie || (teams.red.finishedFinal && teams.blue.finishedFinal);
     
     if (isTie) {
-      // حالة التعادل
       return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8 flex items-center justify-center">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="bg-gradient-to-br from-gray-400 to-gray-600 rounded-3xl p-8 md:p-12 shadow-2xl">
-              <h1 className="text-4xl md:text-6xl font-bold text-white mb-8">
+        <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden flex items-center justify-center">
+          {/* خلفية متحركة */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+            <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gray-500/30 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-gray-600/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          </div>
+
+          <div className="relative z-10 max-w-4xl mx-auto text-center p-8">
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-12">
+              <div className="w-32 h-32 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full mx-auto flex items-center justify-center mb-8 shadow-2xl">
+                <span className="text-6xl">🤝</span>
+              </div>
+              
+              <h1 className="text-4xl md:text-6xl font-black text-white mb-8">
                 🤝 تعادل!
               </h1>
               
@@ -756,13 +718,13 @@ export default function VisualTournamentGame() {
               </h2>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-                <div className="bg-white/20 rounded-xl p-6">
+                <div className="bg-white/10 rounded-2xl p-6">
                   <h3 className="text-xl font-bold text-red-300 mb-2">🥇 فريق</h3>
                   <p className="text-2xl font-bold text-white">{teams.red.name}</p>
                   <p className="text-xl text-white">{teams.red.score} نقطة</p>
                 </div>
                 
-                <div className="bg-white/20 rounded-xl p-6">
+                <div className="bg-white/10 rounded-2xl p-6">
                   <h3 className="text-xl font-bold text-blue-300 mb-2">🥇 فريق</h3>
                   <p className="text-2xl font-bold text-white">{teams.blue.name}</p>
                   <p className="text-xl text-white">{teams.blue.score} نقطة</p>
@@ -771,9 +733,12 @@ export default function VisualTournamentGame() {
               
               <button
                 onClick={resetGame}
-                className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-8 py-3 rounded-xl font-bold text-lg shadow-lg transition-all duration-300"
+                className="group relative"
               >
-                بطولة جديدة 🏆
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="relative px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105">
+                  🔄 بطولة جديدة
+                </div>
               </button>
             </div>
           </div>
@@ -792,41 +757,77 @@ export default function VisualTournamentGame() {
       loser = teams.red;
     } else {
       winner = teams.red.score > teams.blue.score ? teams.red : teams.blue;
-      loser = teams.red.score <= teams.blue.score ? teams.red : teams.blue;
+      loser = teams.red.score > teams.blue.score ? teams.blue : teams.red;
     }
-    
+
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8 flex items-center justify-center">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-3xl p-8 md:p-12 shadow-2xl">
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-8">
-              🏆 انتهت البطولة!
-            </h1>
-            
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
-              {winner.name} هو بطل المعرفة! 🎉
-            </h2>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-              <div className="bg-white/20 rounded-xl p-6">
-                <h3 className="text-xl font-bold text-white mb-2">🥇 البطل</h3>
-                <p className="text-2xl font-bold text-yellow-200">{winner.name}</p>
-                <p className="text-xl text-white">{winner.score} نقطة</p>
+      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
+        {/* خلفية متحركة */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/30 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-orange-500/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 right-1/2 w-72 h-72 bg-amber-500/20 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        </div>
+
+        <div className="relative z-10 p-6 md:p-8 flex items-center justify-center min-h-screen">
+          <div className="max-w-4xl mx-auto text-center">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-12 w-full">
+              <div className="text-2xl md:text-3xl font-black text-white tracking-wider">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
+                  الإقصاء البصري
+                </span>
               </div>
-              
-              <div className="bg-white/10 rounded-xl p-6">
-                <h3 className="text-xl font-bold text-white mb-2">🥈 الوصيف</h3>
-                <p className="text-2xl font-bold text-gray-200">{loser.name}</p>
-                <p className="text-xl text-white">{loser.score} نقطة</p>
-              </div>
+              <Link 
+                href="/" 
+                className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all duration-300 hover:scale-105"
+              >
+                ← العودة للرئيسية
+              </Link>
             </div>
-            
-            <button
-              onClick={resetGame}
-              className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-8 py-3 rounded-xl font-bold text-lg shadow-lg transition-all duration-300"
-            >
-              بطولة جديدة 🏆
-            </button>
+
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-12">
+              {/* تاج النصر */}
+              <div className="mb-8">
+                <div className="w-32 h-32 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full mx-auto flex items-center justify-center shadow-2xl shadow-yellow-500/50">
+                  <svg className="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                  </svg>
+                </div>
+              </div>
+
+              <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-8">
+                🏆 انتهت البطولة!
+              </h1>
+
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-8">
+                البطل: {winner.name}! 🎊
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-2xl p-6 border border-yellow-500/30">
+                  <h3 className="text-2xl font-bold text-yellow-400 mb-4">🥇 البطل</h3>
+                  <p className="text-3xl font-bold text-white mb-2">{winner.name}</p>
+                  <p className="text-2xl text-yellow-300">{winner.score} نقطة</p>
+                </div>
+                
+                <div className="bg-white/5 rounded-2xl p-6 border border-gray-500/30">
+                  <h3 className="text-2xl font-bold text-gray-400 mb-4">🥈 الوصيف</h3>
+                  <p className="text-3xl font-bold text-white mb-2">{loser.name}</p>
+                  <p className="text-2xl text-gray-300">{loser.score} نقطة</p>
+                </div>
+              </div>
+
+              <button
+                onClick={resetGame}
+                className="group relative"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="relative px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-2xl font-bold text-xl transition-all duration-300 hover:scale-105">
+                  🔄 بطولة جديدة
+                </div>
+              </button>
+            </div>
           </div>
         </div>
       </div>
