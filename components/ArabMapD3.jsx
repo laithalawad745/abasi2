@@ -1,4 +1,4 @@
-
+// components/ArabMapD3.jsx - بدون tooltip النقاط
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -267,22 +267,7 @@ export default function ArabMapD3({
           }
         }
       })
-      .on("mouseover", (event, d) => {
-        const countryName = d.properties.NAME || d.properties.name;
-        const countryId = getCountryId(countryName);
-        
-        if (isArabCountryAvailable(countryName)) {
-          const country = arabTopic.countries.find(c => c.id === countryId);
-          if (country) {
-            setTooltip({
-              show: true,
-              x: event.pageX + 10,
-              y: event.pageY - 10,
-              content: `${country.name} - ${country.points} نقطة`
-            });
-          }
-        }
-      })
+      // 🔥 تم حذف .on("mouseover") للتخلص من tooltip النقاط
       .on("mouseout", () => {
         setTooltip({ show: false, x: 0, y: 0, content: '' });
       });
@@ -323,7 +308,7 @@ export default function ArabMapD3({
     }
   };
 
-  // 🔧 دالة لإضافة نقاط للدول المفقودة من الخريطة
+  // 🔧 دالة لإضافة نقاط للدول المفقودة من الخريطة (بدون tooltip النقاط)
   const addMissingCountryPoints = (g, projection) => {
     const missingCountryPositions = {
       'البحرين': [50.5577, 26.0667], // إحداثيات البحرين
@@ -359,14 +344,7 @@ export default function ArabMapD3({
                 selectCountry(country);
               }
             })
-            .on("mouseover", (event) => {
-              setTooltip({
-                show: true,
-                x: event.pageX + 10,
-                y: event.pageY - 10,
-                content: `${country.name} - ${country.points} نقطة`
-              });
-            })
+            // 🔥 تم حذف .on("mouseover") للتخلص من tooltip النقاط
             .on("mouseout", () => {
               setTooltip({ show: false, x: 0, y: 0, content: '' });
             });
@@ -435,7 +413,7 @@ export default function ArabMapD3({
       {missingCountries.length > 0 && (
         <div className="bg-amber-500/20 border border-amber-500/50 rounded-lg p-3 mb-4 text-center">
           <p className="text-amber-200 text-sm">
-            📍 بعض الدول تظهر كنقاط صغيرة: {missingCountries.join(', ')} (لا تشمل البحرين بعد الآن)
+            📍 بعض الدول تظهر كنقاط صغيرة: {missingCountries.join(', ')}
           </p>
         </div>
       )}
@@ -447,14 +425,11 @@ export default function ArabMapD3({
           width={width}
           height={height}
           viewBox={`0 0 ${width} ${height}`}
-          className="w-full  sl:h-[200px] border-2  border-slate-600 rounded-xl bg-gradient-to-b from-sky-400 to-blue-500"
+          className="w-full border-2 border-slate-600 rounded-xl bg-gradient-to-b from-sky-400 to-blue-500"
         />
-        
-        {/* نصائح التنقل */}
-   
       </div>
 
-      {/* Tooltip */}
+      {/* Tooltip - مُبسط (لا يظهر النقاط) */}
       {tooltip.show && (
         <div
           className="fixed z-50 bg-slate-800 text-white px-3 py-2 rounded-lg shadow-xl border border-slate-600 pointer-events-none"

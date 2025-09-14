@@ -47,9 +47,7 @@ export default function WorldQuestion({
               <h2 className="text-xl md:text-3xl font-bold text-white mb-2">
                 {currentWorldQuestion.country.name}
               </h2>
-              <span className="inline-block px-3 md:px-6 py-1 md:py-3 rounded-full text-white font-bold text-sm md:text-lg bg-gradient-to-r from-green-500 to-emerald-500">
-                {currentWorldQuestion.country.points} نقطة
-              </span>
+       
             </div>
           </div>
         </div>

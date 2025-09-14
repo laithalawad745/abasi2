@@ -17,5 +17,17 @@ export { default as GuessWhoRouter } from './GuessWhoRouter';
 export { ImageModal, ConfirmModal } from './Modals';
 export { default as GuessWhoSetup } from './GuessWhoSetup';
 
+// خرائط تفاعلية بـ D3.js
+export { default as ArabMapD3 } from './ArabMapD3';
+export { default as EuropeMapD3 } from './EuropeMapD3'; // 🆕 إضافة خريطة أوروبا
+
+// لعبة أوروبا
+export { default as EuropeGame } from './EuropeGame';
+export { default as ArabGame } from './ArabGame';
+
+// مكونات أخرى
+export { default as WorldMap } from './WorldMap'; // احتفظ بالقديم للمشاريع الأخرى
+export { default as WorldQuestion } from './WorldQuestion';
+
 // 🆕 إضافة Toast Component
 export { default as ToastNotification, showSuccessToast, showErrorToast, showWarningToast, showInfoToast } from './ToastNotification';
