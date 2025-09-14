@@ -1,4 +1,4 @@
-// components/FastestGame.jsx
+// components/FastestGame.jsx - الكود الأصلي بالضبط مع التصميم الجديد فقط
 import React, { useState, useEffect } from 'react';
 import { fastestQuestions } from '../app/data/fastestGameData';
 
@@ -27,6 +27,7 @@ export default function FastestGame({
   const currentQuestion = fastestQuestions[currentQuestionIndex];
   const amIFirst = firstAnswerer === playerId;
 
+  // الكود الأصلي بالضبط - useEffect for Pusher
   useEffect(() => {
     if (pusher && roomId) {
       const gameChannel = pusher.subscribe(`room-${roomId}`);
@@ -102,7 +103,7 @@ export default function FastestGame({
     }
   }, [pusher, roomId, firstAnswerer, playerId, isHost, currentQuestionIndex]);
 
-  // العد التنازلي
+  // الكود الأصلي بالضبط - العد التنازلي
   useEffect(() => {
     let timer;
     if (countdown > 0) {
@@ -138,7 +139,7 @@ export default function FastestGame({
     return () => clearTimeout(timer);
   }, [countdown, gamePhase, isHost, roomId, currentQuestionIndex]);
 
-  // الضغط على زر الإجابة الأولى
+  // الكود الأصلي بالضبط - الضغط على زر الإجابة الأولى
   const answerFirst = () => {
     if (!canAnswer || firstAnswerer || gamePhase !== 'question') return;
 
@@ -157,7 +158,7 @@ export default function FastestGame({
     }).catch(console.error);
   };
 
-  // قرار الإجابة الثانية
+  // الكود الأصلي بالضبط - قرار الإجابة الثانية
   const wantToAnswer = () => {
     if (!canAnswer || gamePhase !== 'decision-time') return;
 
@@ -176,7 +177,7 @@ export default function FastestGame({
     }).catch(console.error);
   };
 
-  // إعطاء النقاط (للمضيف فقط)
+  // الكود الأصلي بالضبط - إعطاء النقاط (للمضيف فقط)
   const awardPoints = (winnerId) => {
     if (!isHost) return;
 
@@ -200,7 +201,7 @@ export default function FastestGame({
     }).catch(console.error);
   };
 
-  // الانتقال للسؤال التالي
+  // الكود الأصلي بالضبط - الانتقال للسؤال التالي
   const goToNextQuestion = () => {
     if (!isHost) return;
 
@@ -222,6 +223,7 @@ export default function FastestGame({
     setZoomedImage(imageUrl);
   };
 
+  // شاشة انتهاء اللعبة - التصميم الجديد فقط
   if (gameFinished) {
     const myScore = gameScores[playerId];
     const opponentScore = gameScores[opponentId];
@@ -229,32 +231,47 @@ export default function FastestGame({
     const isTie = myScore === opponentScore;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 select-none flex flex-col items-center justify-center p-4">
-        <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 max-w-md w-full text-center shadow-2xl border border-slate-700">
-          <h1 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">
-            انتهت اللعبة!
-          </h1>
-          
-          <div className={`w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center ${
-            isWinner ? 'bg-green-500' : isTie ? 'bg-yellow-500' : 'bg-red-500'
-          }`}>
-            <span className="text-3xl">
-              {isWinner ? '🏆' : isTie ? '🤝' : '😢'}
-            </span>
-          </div>
+      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden select-none">
+        {/* خلفية متحركة */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/15 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-orange-500/15 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
 
-          <p className="text-2xl font-bold mb-4 text-white">
-            {isWinner ? 'مبروك! أنت الفائز!' : isTie ? 'تعادل!' : 'للأسف خسرت'}
-          </p>
+        <div className="relative z-10 flex items-center justify-center min-h-screen p-6">
+          <div className="max-w-md w-full">
+            <div className="p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl text-center">
+              
+              <h1 className="text-3xl font-bold mb-6">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
+                  انتهت اللعبة!
+                </span>
+              </h1>
+              
+              <div className={`w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center ${
+                isWinner ? 'bg-green-500/20 border-2 border-green-400/50' : 
+                isTie ? 'bg-yellow-500/20 border-2 border-yellow-400/50' : 
+                'bg-red-500/20 border-2 border-red-400/50'
+              }`}>
+                <span className="text-3xl">
+                  {isWinner ? '🏆' : isTie ? '🤝' : '😢'}
+                </span>
+              </div>
 
-          <div className="space-y-2 mb-6">
-            <div className="flex justify-between items-center p-3 bg-slate-700/50 rounded-lg">
-              <span className="text-slate-300">نقاطك:</span>
-              <span className="text-white font-bold text-xl">{myScore}</span>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-slate-700/50 rounded-lg">
-              <span className="text-slate-300">نقاط الخصم:</span>
-              <span className="text-white font-bold text-xl">{opponentScore}</span>
+              <p className="text-2xl font-bold mb-4 text-white">
+                {isWinner ? 'مبروك! أنت الفائز!' : isTie ? 'تعادل!' : 'للأسف خسرت'}
+              </p>
+
+              <div className="space-y-3 mb-6">
+                <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg border border-white/10">
+                  <span className="text-gray-300">نقاطك:</span>
+                  <span className="text-white font-bold text-xl">{myScore}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg border border-white/10">
+                  <span className="text-gray-300">نقاط الخصم:</span>
+                  <span className="text-white font-bold text-xl">{opponentScore}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -264,15 +281,22 @@ export default function FastestGame({
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 select-none p-4">
-        {/* Header */}
-        <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-lg border-b border-slate-700 p-3">
+      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden select-none">
+        {/* خلفية متحركة - التصميم الجديد */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-orange-500/15 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-red-500/15 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 right-1/2 w-72 h-72 bg-yellow-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        </div>
+
+        {/* Header ثابت - التصميم الجديد */}
+        <div className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-white/10 p-4">
           <div className="flex justify-between items-center max-w-4xl mx-auto">
             <div className="text-center">
               <p className="text-white font-bold">نقاطك: {gameScores[playerId]}</p>
             </div>
             <div className="text-center">
-              <p className="text-yellow-400 font-bold">
+              <p className="text-orange-400 font-bold">
                 سؤال {currentQuestionIndex + 1} / {fastestQuestions.length}
               </p>
               {countdown > 0 && (
@@ -280,7 +304,6 @@ export default function FastestGame({
                   الوقت: {countdown}s
                 </p>
               )}
-              {/* <p className="text-slate-400 text-xs">الطور: {gamePhase}</p> */}
             </div>
             <div className="text-center">
               <p className="text-white font-bold">نقاط الخصم: {gameScores[opponentId]}</p>
@@ -288,14 +311,16 @@ export default function FastestGame({
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="max-w-4xl mx-auto pt-24">
-          <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 mb-6 shadow-2xl border border-slate-700">
-            <h3 className="text-xl font-bold text-center mb-6 text-slate-100">
+        {/* المحتوى الرئيسي */}
+        <div className="relative z-10 max-w-4xl mx-auto pt-24 p-6">
+          <div className="p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl mb-8">
+            
+            {/* السؤال */}
+            <h3 className="text-2xl md:text-3xl font-bold text-center mb-8 text-white leading-relaxed">
               {currentQuestion.question}
             </h3>
             
-            {/* Image */}
+            {/* صورة السؤال - الكود الأصلي */}
             {currentQuestion.hasImage && (
               <div className="flex justify-center mb-6">
                 <img 
@@ -310,7 +335,7 @@ export default function FastestGame({
               </div>
             )}
 
-            {/* Game Phases */}
+            {/* مراحل اللعبة - الكود الأصلي بالضبط مع التصميم الجديد */}
             <div className="text-center">
               
               {/* Phase 1: بداية السؤال */}
@@ -335,7 +360,7 @@ export default function FastestGame({
                     <div>
                       <p className="text-green-400 font-bold text-xl mb-4">✅ أنت تجيب الآن!</p>
                       <p className="text-yellow-400 font-bold text-lg mb-4">وقتك للإجابة: {countdown} ثانية</p>
-                      <p className="text-slate-300">اعطِ إجابتك  الآن...</p>
+                      <p className="text-slate-300">اعطِ إجابتك الآن...</p>
                     </div>
                   ) : (
                     <div>
@@ -356,34 +381,24 @@ export default function FastestGame({
                 <div>
                   {!amIFirst ? (
                     <div>
-                      <p className="text-orange-400 font-bold text-xl mb-4">⚡ الآن دورك! هل تريد الإجابة؟</p>
-                      <p className="text-red-400 font-bold text-2xl mb-4">
-                        قرر خلال: {countdown} ثواني فقط!
-                      </p>
-                      <p className="text-slate-300 text-sm mb-4">إذا لم تضغط، ستنتهي المرحلة</p>
-                      {countdown > 0 && canAnswer ? (
+                      <p className="text-orange-400 font-bold text-xl mb-4">⚡ الآن دورك!</p>
+                      <p className="text-yellow-400 font-bold text-lg mb-4">وقت القرار: {countdown} ثانية</p>
+                      <p className="text-slate-300 mb-4">هل تريد المحاولة؟</p>
+                      
+                      {canAnswer && (
                         <button
                           onClick={wantToAnswer}
-                          className="px-8 py-4 rounded-xl font-bold text-xl bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg transition-all duration-300 animate-pulse"
+                          className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-300"
                         >
-                          نعم، أريد الإجابة! 🔥
+                          نعم، أريد الإجابة!
                         </button>
-                      ) : (
-                        <div className="p-3 bg-gray-700/50 rounded-lg">
-                          <p className="text-gray-400">انتهى الوقت للقرار</p>
-                        </div>
                       )}
                     </div>
                   ) : (
                     <div>
-                      <p className="text-blue-400 font-bold text-xl mb-4">⏳ الخصم يقرر الآن</p>
-                      <p className="text-yellow-400 font-bold text-lg mb-4">
-                        وقته للقرار: {countdown} ثواني
-                      </p>
-                      <p className="text-slate-300">هل سيقرر الإجابة؟</p>
-                      <div className="mt-4 p-3 bg-blue-700/20 rounded-lg">
-                        <p className="text-blue-300 text-sm">إذا لم يضغط، ستنتهي المرحلة</p>
-                      </div>
+                      <p className="text-blue-400 font-bold text-xl mb-4">⏳ الخصم يقرر...</p>
+                      <p className="text-yellow-400 font-bold text-lg mb-4">وقت القرار: {countdown} ثانية</p>
+                      <p className="text-slate-300">انتظر قرار الخصم...</p>
                     </div>
                   )}
                 </div>
@@ -394,71 +409,65 @@ export default function FastestGame({
                 <div>
                   {secondAnswerer === playerId ? (
                     <div>
-                      <p className="text-green-400 font-bold text-xl mb-4">✅ أنت تجيب الآن!</p>
-                      <p className="text-yellow-400 font-bold text-lg mb-4">وقتك للإجابة: {countdown} ثانية</p>
-                      <p className="text-slate-300">اعطِ إجابتك  الآن...</p>
+                      <p className="text-orange-400 font-bold text-xl mb-4">🔥 دورك للإجابة!</p>
+                      <p className="text-yellow-400 font-bold text-lg mb-4">وقتك: {countdown} ثانية</p>
+                      <p className="text-slate-300">اعطِ إجابتك الآن...</p>
                     </div>
                   ) : (
                     <div>
-                      <p className="text-blue-400 font-bold text-xl mb-4">🎤 الخصم يجيب الآن</p>
-                      <p className="text-yellow-400 font-bold text-lg mb-4">وقته للإجابة: {countdown} ثانية</p>
-                      <p className="text-slate-300">استمع لإجابته...</p>
+                      <p className="text-purple-400 font-bold text-xl mb-4">🎯 الخصم يجيب...</p>
+                      <p className="text-yellow-400 font-bold text-lg mb-4">وقته: {countdown} ثانية</p>
+                      <p className="text-slate-300">استمع لإجابة الخصم...</p>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Phase 5: المضيف يختار الفائز */}
-              {gamePhase === 'scoring' && isHost && (
+              {/* Phase 5: تسجيل النقاط */}
+              {gamePhase === 'scoring' && (
                 <div>
                   <div className="bg-emerald-500/20 border border-emerald-400/50 rounded-xl p-6 mb-6">
                     <h4 className="text-lg font-bold text-emerald-400 mb-3">الإجابة الصحيحة:</h4>
                     <p className="text-xl text-white font-semibold">{currentQuestion.answer}</p>
                   </div>
 
-                  <p className="text-yellow-400 font-bold text-lg mb-4">من أجاب صح؟</p>
-                  
-                  <div className="grid grid-cols-1 gap-3">
-                    {firstAnswerer && (
-                      <button
-                        onClick={() => awardPoints(firstAnswerer)}
-                        className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-300"
-                      >
-                        {firstAnswerer === playerId ? 'أنت' : 'الخصم'} 
-                      </button>
-                    )}
-                    
-                    {secondAnswerer && (
-                      <button
-                        onClick={() => awardPoints(secondAnswerer)}
-                        className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-300"
-                      >
-                        {secondAnswerer === playerId ? 'أنت' : 'الخصم'} 
-                      </button>
-                    )}
-                    
-                    <button
-                      onClick={() => awardPoints(null)}
-                      className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-300"
-                    >
-                      لا أحد أجاب صح ❌
-                    </button>
-                  </div>
+                  {isHost ? (
+                    <div>
+                      <p className="text-white font-bold text-lg mb-4">من أجاب صحيحاً؟</p>
+                      <div className="flex flex-col gap-3">
+                        {firstAnswerer && (
+                          <button
+                            onClick={() => awardPoints(firstAnswerer)}
+                            className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-300"
+                          >
+                            {firstAnswerer === playerId ? 'أنت' : 'الخصم'} 
+                          </button>
+                        )}
+                        
+                        {secondAnswerer && (
+                          <button
+                            onClick={() => awardPoints(secondAnswerer)}
+                            className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-300"
+                          >
+                            {secondAnswerer === playerId ? 'أنت' : 'الخصم'} 
+                          </button>
+                        )}
+                        
+                        <button
+                          onClick={() => awardPoints(null)}
+                          className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-300"
+                        >
+                          لا أحد أجاب صح ❌
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-slate-300">في انتظار المضيف لاختيار الفائز...</p>
+                  )}
                 </div>
               )}
 
-              {/* Phase 6: الضيف ينتظر المضيف */}
-              {gamePhase === 'scoring' && !isHost && (
-                <div>
-                  <div className="bg-emerald-500/20 border border-emerald-400/50 rounded-xl p-6 mb-6">
-                    <h4 className="text-lg font-bold text-emerald-400 mb-3">الإجابة الصحيحة:</h4>
-                    <p className="text-xl text-white font-semibold">{currentQuestion.answer}</p>
-                  </div>
-                  <p className="text-slate-300">في انتظار المضيف لاختيار الفائز...</p>
-                </div>
-              )}
-
-              {/* Phase 7: عرض النتائج */}
+              {/* Phase 6: عرض النتائج */}
               {gamePhase === 'results' && (
                 <div>
                   <div className="bg-emerald-500/20 border border-emerald-400/50 rounded-xl p-6 mb-6">
@@ -469,7 +478,7 @@ export default function FastestGame({
                 </div>
               )}
 
-              {/* Phase 8: زر السؤال التالي */}
+              {/* Phase 7: زر السؤال التالي */}
               {gamePhase === 'next-ready' && isHost && (
                 <div>
                   <div className="bg-emerald-500/20 border border-emerald-400/50 rounded-xl p-6 mb-6">
@@ -486,36 +495,35 @@ export default function FastestGame({
                 </div>
               )}
 
-              {/* للضيف - انتظار السؤال التالي */}
-              {gamePhase === 'next-ready' && !isHost && (
-                <div>
-                  <div className="bg-emerald-500/20 border border-emerald-400/50 rounded-xl p-6 mb-6">
-                    <h4 className="text-lg font-bold text-emerald-400 mb-3">الإجابة الصحيحة:</h4>
-                    <p className="text-xl text-white font-semibold">{currentQuestion.answer}</p>
-                  </div>
-                  <p className="text-slate-300">في انتظار المضيف للسؤال التالي...</p>
-                </div>
-              )}
-
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Image Modal */}
-      {zoomedImage && (
-        <div 
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={() => setZoomedImage(null)}
-        >
-          <img 
-            src={zoomedImage}
-            alt="صورة مكبرة"
-            className="max-w-full max-h-full object-contain rounded-xl shadow-2xl cursor-pointer"
+        {/* مودال الصورة المكبرة */}
+        {zoomedImage && (
+          <div 
+            className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
             onClick={() => setZoomedImage(null)}
-          />
-        </div>
-      )}
+          >
+            <div className="relative max-w-full max-h-full">
+              <img 
+                src={zoomedImage}
+                alt="صورة مكبرة"
+                className="max-w-full max-h-full object-contain rounded-2xl"
+                onClick={() => setZoomedImage(null)} 
+              />
+              <button
+                onClick={() => setZoomedImage(null)}
+                className="absolute -top-2 -right-2 w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-all duration-300"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </>
   );
 }
