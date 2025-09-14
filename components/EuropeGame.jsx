@@ -1,4 +1,4 @@
-// components/EuropeGame.jsx - مُصحح تماماً بدون أخطاء
+// components/EuropeGame.jsx - التصميم الجديد مع الحفاظ على الوظائف الأصلية
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -29,6 +29,26 @@ export default function EuropeGame() {
   // حالة أخرى
   const [zoomedImage, setZoomedImage] = useState(null);
   const [europeTopic, setEuropeTopic] = useState(null);
+
+  // تحديث تعداد الدول المحتلة لكل فريق
+  useEffect(() => {
+    setTeams(prevTeams => 
+      prevTeams.map(team => ({
+        ...team,
+        conqueredCount: teamCountries[team.color]?.length || 0
+      }))
+    );
+  }, [teamCountries]);
+
+  // تحديد انتهاء اللعبة
+  useEffect(() => {
+    if (gamePhase === 'playing' && europeTopic && occupiedCountries.length >= europeTopic.countries.length) {
+      if (europeTopic.countries.length > 0) {
+        console.log('🏆 الانتقال لصفحة النتائج...');
+        setGamePhase('finished');
+      }
+    }
+  }, [occupiedCountries, europeTopic, gamePhase]);
 
   // تحميل بيانات الدول الأوروبية عند بدء المكون
   useEffect(() => {
@@ -95,7 +115,7 @@ export default function EuropeGame() {
     setGamePhase('playing');
   };
 
-  // اختيار دولة
+  // اختيار دولة - الكود الأصلي بالضبط
   const selectCountry = (country) => {
     console.log('🎯 محاولة اختيار دولة:', country.name, '(ID:', country.id, ')');
     
@@ -128,7 +148,7 @@ export default function EuropeGame() {
     setShowWorldAnswer(true);
   };
 
-  // 🔥 منح النقاط - مُصحح ليقبل string (red/blue) من WorldQuestion
+  // منح النقاط - الكود الأصلي بالضبط
   const awardWorldPoints = (team) => {
     console.log('🔥 awardWorldPoints استُدعيت مع:', team, typeof team);
     
@@ -195,7 +215,7 @@ export default function EuropeGame() {
     }
   };
 
-  // عدم وجود إجابة صحيحة
+  // عدم وجود إجابة صحيحة - الكود الأصلي بالضبط  
   const noCorrectWorldAnswer = () => {
     console.log('❌ تم الضغط على "لا أحد أجاب صح"');
     
@@ -207,33 +227,26 @@ export default function EuropeGame() {
     console.log('🔄 تغيير الدور فقط بدون احتلال أي دولة');
     console.log('الدور الحالي:', currentTurn, '→ الدور التالي:', currentTurn === 'red' ? 'blue' : 'red');
 
-    // ✅ فقط تغيير الدور بدون احتلال الدولة
+    // فقط تغيير الدور بدون احتلال الدولة
     const nextTurn = currentTurn === 'red' ? 'blue' : 'red';
     setCurrentTurn(nextTurn);
     setCurrentWorldQuestion(null);
     setShowWorldAnswer(false);
-
-    console.log('✅ تم إغلاق السؤال بدون احتلال');
   };
 
-  // إعادة تشغيل اللعبة
   const resetGame = () => {
-    console.log('🔄 إعادة تشغيل اللعبة');
     setGamePhase('setup');
     setTeams([
       { name: 'الفريق الأحمر', color: 'red', conqueredCount: 0 },
       { name: 'الفريق الأزرق', color: 'blue', conqueredCount: 0 }
     ]);
     setCurrentTurn('red');
-    setOccupiedCountries([]);
-    setTeamCountries({
-      red: [],
-      blue: []
-    });
     setCurrentWorldQuestion(null);
     setShowWorldAnswer(false);
+    setOccupiedCountries([]);
+    setTeamCountries({ red: [], blue: [] });
     
-    // حذف البيانات المحفوظة
+    // مسح localStorage
     try {
       localStorage.removeItem('europe-teams');
       localStorage.removeItem('europe-occupied-countries');
@@ -243,216 +256,412 @@ export default function EuropeGame() {
     } catch (error) {}
   };
 
-  // صفحة الإعداد
+  // صفحة البداية - التصميم الجديد
   if (gamePhase === 'setup') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 select-none flex flex-col">
-        <div className="flex justify-between p-4 md:p-8">
-          <h1 className="text-2xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-pink-400">
-             أوروبا
-          </h1>
-          <Link 
-            href="/"
-            className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold text-sm md:text-base shadow-lg transition-all duration-300"
-          >
-            ← العودة للرئيسية
-          </Link>
+      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden select-none">
+        {/* خلفية متحركة */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 right-1/2 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center px-4 md:px-8">
-          <div className="text-center space-y-8 max-w-2xl">
-            <h1 className="text-3xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
+        {/* المحتوى الرئيسي */}
+        <div className="relative z-10 p-6 md:p-8">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-12">
+            <div className="text-2xl md:text-3xl font-black text-white tracking-wider">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
                 أوروبا
-            </h1>
-          
-            <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 md:p-8 border border-slate-700">
-              <h2 className="text-xl md:text-2xl font-bold text-white mb-4">قواعد اللعبة الجديدة:</h2>
-              <ul className="text-left text-slate-300 space-y-3">
-                <li className="flex items-center gap-3">
-                  <span className="text-green-400">🎯</span>
-                  <span>اختر دولة أوروبية للإجابة على سؤال عشوائي عنها</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-blue-400">⚔️</span>
-                  <span>إجابة صحيحة = تحتل الدولة</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-red-400">❌</span>
-                  <span>إجابة خاطئة = الدور للفريق الآخر</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-purple-400">🏆</span>
-                  <span>الفريق الذي يحتل دول أكثر يفوز!</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-yellow-400">🌍</span>
-                  <span>{europeTopic ? europeTopic.countries.length : 25} دولة أوروبية متاحة للاحتلال</span>
-                </li>
-              </ul>
+              </span>
             </div>
-
-            <button
-              onClick={startGame}
-              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-12 py-6 rounded-2xl font-bold text-2xl shadow-2xl shadow-green-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-green-400/50"
-            >
-              🚀 ابدأ الغزو الأوروبي!
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // صفحة انتهاء اللعبة
-  if (gamePhase === 'finished') {
-    // الفائز هو من لديه دول أكثر
-    const winner = teams[0].conqueredCount > teams[1].conqueredCount ? teams[0] : 
-                   teams[1].conqueredCount > teams[0].conqueredCount ? teams[1] : null;
-
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
             <Link 
-              href="/"
-              className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold text-sm md:text-base shadow-lg transition-all duration-300"
+              href="/" 
+              className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all duration-300 hover:scale-105"
             >
               ← العودة للرئيسية
             </Link>
           </div>
 
-          <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 md:p-8 text-center shadow-2xl border border-slate-700">
-            <h1 className="text-3xl md:text-5xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">
-              انتهت المعركة الأوروبية!
+          {/* العنوان الرئيسي */}
+          <div className="text-center mb-16">
+            <h1 className="text-4xl md:text-7xl font-black text-white mb-6 tracking-tight">
+              معركة
+              <span className="block bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-600">
+                أوروبا
+              </span>
             </h1>
+            <p className="text-xl md:text-2xl text-gray-400 font-light max-w-2xl mx-auto">
+              اكتشف القارة الأوروبية واحتل دولها
+            </p>
+          </div>
 
-            {winner ? (
-              <div className={`p-6 rounded-xl mb-6 ${
-                winner.color === 'red' 
-                  ? 'bg-gradient-to-r from-red-500/20 to-pink-500/20 border-2 border-red-400/50'
-                  : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-2 border-blue-400/50'
-              }`}>
-                <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                  🏆 الفائز: {winner.name}
-                </h2>
-                <p className="text-xl text-white/80">
-                  احتل {winner.conqueredCount} دولة أوروبية
-                </p>
-              </div>
-            ) : (
-              <div className="p-6 rounded-xl mb-6 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border-2 border-purple-400/50">
-                <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                  🤝 تعادل!
-                </h2>
-                <p className="text-xl text-white/80">
-                  كلا الفريقين احتل {teams[0].conqueredCount} دولة
-                </p>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-red-500/20 to-pink-500/20 rounded-xl p-6 border-2 border-red-400/50">
-                <h3 className="text-xl font-bold text-white mb-2">{teams[0].name}</h3>
-                <p className="text-3xl font-bold text-white">{teams[0].conqueredCount}</p>
-                <p className="text-red-300 mt-2">دولة محتلة</p>
-              </div>
+          {/* قواعد اللعبة */}
+          <div className="max-w-4xl mx-auto mb-16">
+            <div className="p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-8 text-center">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+                  🌍 قواعد اللعبة
+                </span>
+              </h2>
               
-              <div className="bg-gradient-to-br from-blue-500/20 to-indigo-500/20 rounded-xl p-6 border-2 border-blue-400/50">
-                <h3 className="text-xl font-bold text-white mb-2">{teams[1].name}</h3>
-                <p className="text-3xl font-bold text-white">{teams[1].conqueredCount}</p>
-                <p className="text-blue-300 mt-2">دولة محتلة</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="flex items-start gap-4 p-4 bg-green-500/10 rounded-2xl border border-green-500/20">
+                    <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <span className="text-2xl">🎯</span>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-green-400 mb-2">اختيار الدولة</h3>
+                      <p className="text-gray-300">اختر دولة أوروبية للإجابة على سؤال عشوائي عنها</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4 p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+                    <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <span className="text-2xl">⚔️</span>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-blue-400 mb-2">الاحتلال</h3>
+                      <p className="text-gray-300">إجابة صحيحة = تحتل الدولة وتضاف لمملكتك</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-start gap-4 p-4 bg-red-500/10 rounded-2xl border border-red-500/20">
+                    <div className="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <span className="text-2xl">❌</span>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-red-400 mb-2">الخطأ</h3>
+                      <p className="text-gray-300">إجابة خاطئة = الدور للفريق الآخر بدون نقاط</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4 p-4 bg-purple-500/10 rounded-2xl border border-purple-500/20">
+                    <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <span className="text-2xl">🏆</span>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-purple-400 mb-2">الفوز</h3>
+                      <p className="text-gray-300">الفريق الذي يحتل دول أكثر يفوز بالمعركة!</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* إحصائيات */}
+              {/* <div className="mt-8 text-center">
+                <div className="inline-flex items-center gap-6 px-8 py-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl">
+                  <div className="text-center">
+                    <div className="text-yellow-400 font-bold text-2xl">{europeTopic ? europeTopic.countries.length : 25}</div>
+                    <div className="text-gray-400 text-sm">دولة أوروبية</div>
+                  </div>
+                  <div className="w-px h-12 bg-white/20"></div>
+                  <div className="text-center">
+                    <div className="text-cyan-400 font-bold text-2xl">2</div>
+                    <div className="text-gray-400 text-sm">فريق متنافس</div>
+                  </div>
+                  <div className="w-px h-12 bg-white/20"></div>
+                  <div className="text-center">
+                    <div className="text-purple-400 font-bold text-2xl">10</div>
+                    <div className="text-gray-400 text-sm">نقطة لكل دولة</div>
+                  </div>
+                </div>
+              </div> */}
+            </div>
+          </div>
+
+          {/* زر البدء */}
+          <div className="text-center">
+            <button
+              onClick={startGame}
+              className="group relative"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="relative px-12 py-6 rounded-3xl font-bold text-2xl transition-all duration-300 hover:scale-105 border-2 border-blue-400/50 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white">
+                <div className="flex items-center gap-3">
+                  <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                  </svg>
+                  ابدأ الغزو الأوروبي!
+                </div>
+              </div>
+            </button>
+          </div>
+
+          {/* معلومات إضافية */}
+          <div className="text-center mt-16">
+            <div className="inline-flex items-center justify-center space-x-8 space-x-reverse bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-8 py-4">
+              <div className="flex items-center space-x-2 space-x-reverse text-gray-300">
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                <span>خريطة تفاعلية</span>
+              </div>
+              <div className="w-px h-6 bg-white/20"></div>
+              <div className="flex items-center space-x-2 space-x-reverse text-gray-300">
+                <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+                <span>أسئلة متنوعة</span>
+              </div>
+              <div className="w-px h-6 bg-white/20"></div>
+              <div className="flex items-center space-x-2 space-x-reverse text-gray-300">
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+                <span>تحديات </span>
               </div>
             </div>
-
-            <button
-              onClick={resetGame}
-              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all duration-300 hover:scale-105"
-            >
-              🔄 معركة جديدة
-            </button>
           </div>
         </div>
       </div>
     );
   }
 
-  // صفحة اللعب الرئيسية
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
-            🌍 الغزو الأوروبي
-          </h1>
-          <Link 
-            href="/"
-            className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold text-sm md:text-base shadow-lg transition-all duration-300"
-          >
-            ← العودة للرئيسية
-          </Link>
+  // صفحة انتهاء اللعبة - التصميم الجديد
+  if (gamePhase === 'finished') {
+    const winner = teams[0].conqueredCount > teams[1].conqueredCount ? teams[0] : 
+                   teams[1].conqueredCount > teams[0].conqueredCount ? teams[1] : null;
+
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden select-none">
+        {/* خلفية متحركة */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/15 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-orange-500/15 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 right-1/2 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
         </div>
 
-        {/* النتائج - عدد الدول المحتلة */}
-<div className="grid grid-cols-2 gap-3 md:gap-6 mb-6">          <div className={`p-4 md:p-6 rounded-2xl transition-all duration-300 ${
+        <div className="relative z-10 p-6 md:p-8">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
+            <div className="text-2xl md:text-3xl font-black text-white tracking-wider">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
+                النتائج
+              </span>
+            </div>
+            <Link 
+              href="/" 
+              className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all duration-300 hover:scale-105"
+            >
+              ← العودة للرئيسية
+            </Link>
+          </div>
+
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl">
+              
+              {/* عنوان النتيجة */}
+              <div className="mb-8">
+                <h1 className="text-4xl md:text-6xl font-black mb-4">
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
+                    🏆 انتهت المعركة الأوروبية!
+                  </span>
+                </h1>
+
+                {winner ? (
+                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-8">
+                    الفائز: {winner.name}! 🎊
+                  </h2>
+                ) : (
+                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-8">
+                    تعادل مثير! 🤝
+                  </h2>
+                )}
+              </div>
+
+              {/* نتائج الفرق */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className={`p-6 rounded-3xl border transition-all duration-300 ${
+                  winner?.color === 'red' 
+                    ? 'bg-gradient-to-br from-red-500/20 to-pink-500/20 border-red-500/30 ring-2 ring-red-400/50'
+                    : winner?.color === 'blue' && teams[0].color === 'red'
+                      ? 'bg-white/5 border-gray-500/30'
+                      : 'bg-gradient-to-br from-red-500/20 to-pink-500/20 border-red-500/30'
+                }`}>
+                  <div className="text-center">
+                    <h3 className={`text-2xl font-bold mb-4 ${
+                      winner?.color === 'red' ? 'text-red-400' : 'text-red-400'
+                    }`}>
+                      {winner?.color === 'red' ? '🥇' : winner ? '🥈' : '🏆'} {teams[0].name}
+                    </h3>
+                    <p className="text-4xl font-bold text-white mb-2">{teams[0].conqueredCount}</p>
+                    <p className="text-xl text-gray-300">دولة محتلة</p>
+                  </div>
+                </div>
+                
+                <div className={`p-6 rounded-3xl border transition-all duration-300 ${
+                  winner?.color === 'blue' 
+                    ? 'bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border-blue-500/30 ring-2 ring-blue-400/50'
+                    : winner?.color === 'red' && teams[1].color === 'blue'
+                      ? 'bg-white/5 border-gray-500/30'
+                      : 'bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border-blue-500/30'
+                }`}>
+                  <div className="text-center">
+                    <h3 className={`text-2xl font-bold mb-4 ${
+                      winner?.color === 'blue' ? 'text-blue-400' : 'text-blue-400'
+                    }`}>
+                      {winner?.color === 'blue' ? '🥇' : winner ? '🥈' : '🏆'} {teams[1].name}
+                    </h3>
+                    <p className="text-4xl font-bold text-white mb-2">{teams[1].conqueredCount}</p>
+                    <p className="text-xl text-gray-300">دولة محتلة</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* زر إعادة اللعب */}
+              <button
+                onClick={resetGame}
+                className="group relative"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="relative px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-2xl font-bold text-xl transition-all duration-300 hover:scale-105">
+                  🔄 معركة جديدة
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // صفحة اللعب الرئيسية - التصميم الجديد مع الوظائف الأصلية
+  return (
+    <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
+      {/* خلفية متحركة */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/15 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-purple-500/15 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 right-1/2 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
+      </div>
+
+      <div className="relative z-10 p-6 md:p-8">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div className="text-2xl md:text-3xl font-black text-white tracking-wider">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+               أوروبا
+            </span>
+          </div>
+          <div className="flex gap-3">
+            {/* زر إنهاء يدوي للحالات الطارئة */}
+            {europeTopic && occupiedCountries.length >= europeTopic.countries.length * 0.8 && (
+              <button
+                onClick={() => setGamePhase('finished')}
+                className="px-4 py-2 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/50 text-orange-300 rounded-xl font-semibold transition-all duration-300"
+              >
+                🏁 إنهاء اللعبة
+              </button>
+            )}
+            
+            <Link 
+              href="/" 
+              className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all duration-300 hover:scale-105"
+            >
+              ← العودة للرئيسية
+            </Link>
+          </div>
+        </div>
+
+        {/* معلومات الدور الحالي */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-6 px-8 py-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl">
+            <div className="text-center">
+              <div className={`font-bold text-xl ${currentTurn === 'red' ? 'text-red-400' : 'text-blue-400'}`}>
+                دور {currentTurn === 'red' ? teams[0].name : teams[1].name}
+              </div>
+              <div className="text-gray-400 text-sm">اختر دولة للاحتلال</div>
+            </div>
+            <div className="w-px h-12 bg-white/20"></div>
+            <div className="text-center">
+              <div className="text-cyan-400 font-bold text-lg">الهدف</div>
+              <div className="text-gray-400 text-sm">احتلال أكبر عدد من الدول</div>
+            </div>
+          </div>
+        </div>
+
+        {/* نقاط الفرق */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className={`p-6 bg-white/5 backdrop-blur-xl border rounded-3xl transition-all duration-300 ${
             currentTurn === 'red' 
-              ? 'bg-gradient-to-br from-red-500 to-pink-500 shadow-2xl shadow-red-500/25 ring-4 ring-red-400/50'
-              : 'bg-gradient-to-br from-red-500/70 to-pink-500/70 shadow-lg'
+              ? 'border-red-500/50 shadow-lg shadow-red-500/25 ring-2 ring-red-400/50'
+              : 'border-white/10'
           }`}>
-<h2 className="text-lg md:text-2xl font-bold text-white mb-2 text-right">{teams[0].name}</h2>
-            <p className="text-3xl md:text-4xl font-bold text-white text-right">{teams[0].conqueredCount}</p>
-<p className="text-sm text-white/80 mt-2 text-right">دولة محتلة</p>
+            <div className="text-center">
+              <h3 className="text-2xl font-bold text-red-400 mb-2">{teams[0].name}</h3>
+              <p className="text-4xl font-bold text-white mb-2">{teams[0].conqueredCount}</p>
+              <p className="text-gray-400">دولة محتلة</p>
+              {currentTurn === 'red' && (
+                <div className="mt-3 text-red-300 text-sm animate-pulse">← دورك الآن</div>
+              )}
+            </div>
           </div>
           
-          <div className={`p-4 md:p-6 rounded-2xl transition-all duration-300 ${
+          <div className={`p-6 bg-white/5 backdrop-blur-xl border rounded-3xl transition-all duration-300 ${
             currentTurn === 'blue' 
-              ? 'bg-gradient-to-br from-blue-500 to-indigo-500 shadow-2xl shadow-blue-500/25 ring-4 ring-blue-400/50'
-              : 'bg-gradient-to-br from-blue-500/70 to-indigo-500/70 shadow-lg'
+              ? 'border-blue-500/50 shadow-lg shadow-blue-500/25 ring-2 ring-blue-400/50'
+              : 'border-white/10'
           }`}>
-<h2 className="text-lg md:text-2xl font-bold text-white mb-2 text-right">{teams[0].name}</h2>
-            <p className="text-3xl md:text-4xl font-bold text-white text-right">{teams[1].conqueredCount}</p>
-<p className="text-sm text-white/80 mt-2 text-right">دولة محتلة</p>
+            <div className="text-center">
+              <h3 className="text-2xl font-bold text-blue-400 mb-2">{teams[1].name}</h3>
+              <p className="text-4xl font-bold text-white mb-2">{teams[1].conqueredCount}</p>
+              <p className="text-gray-400">دولة محتلة</p>
+              {currentTurn === 'blue' && (
+                <div className="mt-3 text-blue-300 text-sm animate-pulse">← دورك الآن</div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* 🔥 مؤشر تقدم اللعبة */}
+        {/* مؤشر تقدم اللعبة */}
         {europeTopic && (
-          <div className="bg-slate-800/50 backdrop-blur-lg rounded-xl p-4 mb-6 shadow-lg border border-slate-700">
+          <div className="p-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl mb-8">
             <div className="text-center">
-              <h3 className="text-lg font-bold text-white mb-2">تقدم المعركة</h3>
-              <div className="flex justify-center items-center gap-4 text-sm mb-3">
-                <span className="text-green-400">محتلة: {occupiedCountries.length}</span>
-                <span className="text-yellow-400">متبقية: {europeTopic.countries.length - occupiedCountries.length}</span>
-                <span className="text-blue-400">المجموع: {europeTopic.countries.length}</span>
+              <h3 className="text-xl font-bold text-white mb-4">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
+                   تقدم المعركة
+                </span>
+              </h3>
+              <div className="flex justify-center items-center gap-6 text-lg mb-4">
+                <span className="text-green-400 font-semibold">محتلة: {occupiedCountries.length}</span>
+                <span className="text-yellow-400 font-semibold">متبقية: {europeTopic.countries.length - occupiedCountries.length}</span>
+                <span className="text-blue-400 font-semibold">المجموع: {europeTopic.countries.length}</span>
               </div>
-              <div className="w-full bg-slate-700 rounded-full h-3">
+              <div className="w-full bg-white/10 rounded-full h-4">
                 <div 
-                  className="bg-gradient-to-r from-green-400 to-emerald-400 h-3 rounded-full transition-all duration-500"
+                  className="bg-gradient-to-r from-green-400 to-emerald-400 h-4 rounded-full transition-all duration-500 shadow-lg shadow-green-400/25"
                   style={{ width: `${(occupiedCountries.length / europeTopic.countries.length) * 100}%` }}
                 ></div>
               </div>
-              <p className="text-xs text-slate-400 mt-2">
+              <p className="text-sm text-gray-400 mt-3">
                 {occupiedCountries.length >= europeTopic.countries.length ? 
-                  '🎊 كل الدول محتلة! انتظر إعلان النتائج...' : 
-                  `${Math.round((occupiedCountries.length / europeTopic.countries.length) * 100)}% مكتمل`
+                  '🎊 كل الدول محتلة! المعركة انتهت!' : 
+                  `${Math.round((occupiedCountries.length / europeTopic.countries.length) * 100)}% من أوروبا تم احتلالها`
                 }
               </p>
             </div>
           </div>
         )}
 
-        {/* خريطة أوروبا التفاعلية */}
-        {europeTopic && (
-          <EuropeMapD3 
-            europeTopic={europeTopic}
-            currentTurn={currentTurn}
-            occupiedCountries={occupiedCountries}
-            selectCountry={selectCountry}
-            teamCountries={teamCountries}
-          />
-        )}
+        {/* الخريطة - نفس الكود الأصلي بالضبط */}
+        <div className="mb-8">
+          <div className="p-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl">
+   
+            <div className="flex justify-center">
+              {europeTopic && (
+                <EuropeMapD3 
+                  europeTopic={europeTopic}
+                  currentTurn={currentTurn}
+                  occupiedCountries={occupiedCountries}
+                  selectCountry={selectCountry}
+                  teamCountries={teamCountries}
+                />
+              )}
+            </div>
+    
+          </div>
+        </div>
 
-        {/* سؤال العالم */}
+        {/* السؤال الحالي - نفس الكود الأصلي بالضبط */}
         <WorldQuestion 
           currentWorldQuestion={currentWorldQuestion}
           showWorldAnswer={showWorldAnswer}
@@ -461,7 +670,7 @@ export default function EuropeGame() {
           noCorrectWorldAnswer={noCorrectWorldAnswer}
         />
 
-        {/* Image Modal */}
+        {/* مودال الصورة */}
         <ImageModal 
           zoomedImage={zoomedImage} 
           closeZoomedImage={() => setZoomedImage(null)} 
