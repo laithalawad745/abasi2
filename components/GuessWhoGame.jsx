@@ -1,4 +1,4 @@
-// components/GuessWhoGame.jsx - نسخة محدثة مع قائمة التخمين في الشريط الجانبي
+// components/GuessWhoGame.jsx - تصميم جديد مع نفس اللوجيك
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -70,75 +70,75 @@ export default function GuessWhoGame({ roomId, onGoBack }) {
     }
   }, []);
 
+  // تحديث الشخصيات المتاحة حسب المباراة
+  useEffect(() => {
+    let characters = [];
+    switch(currentMatch) {
+      case 1:
+        characters = getMatch1Characters();
+        break;
+      case 2:
+        characters = getMatch2Characters();
+        break;
+      case 3:
+        characters = getMatch3Characters();
+        break;
+      case 4:
+        characters = getMatch4Characters();
+        break;
+      default:
+        characters = getMatch1Characters();
+    }
+    setAvailableCharacters(characters);
+  }, [currentMatch]);
+
   // حفظ البيانات في localStorage
   useEffect(() => {
     try {
       localStorage.setItem('guess-who-used-matches', JSON.stringify(usedMatches));
-    } catch (error) {}
-  }, [usedMatches]);
-
-  useEffect(() => {
-    try {
       localStorage.setItem('guess-who-current-match', JSON.stringify(currentMatch));
     } catch (error) {}
-  }, [currentMatch]);
+  }, [usedMatches, currentMatch]);
 
-  // تحديد الشخصيات المتاحة حسب المباراة الحالية (4 مباريات)
+  // Pusher connection
   useEffect(() => {
-    if (currentMatch === 1) {
-      setAvailableCharacters(getMatch1Characters());
-    } else if (currentMatch === 2) {
-      setAvailableCharacters(getMatch2Characters());
-    } else if (currentMatch === 3) {
-      setAvailableCharacters(getMatch3Characters());
-    } else if (currentMatch === 4) {
-      setAvailableCharacters(getMatch4Characters());
-    }
-  }, [currentMatch]);
+    if (!roomId) return;
 
-  // Initialize Pusher connection
-  useEffect(() => {
     const pusher = new Pusher('39e929ae966aeeea6ca3', {
-      cluster: 'us2'
+      cluster: 'us2',
     });
 
     const channel = pusher.subscribe(`guess-who-${roomId}`);
     channelRef.current = channel;
 
-    // Event listeners
+    // Player joined
     channel.bind('player-joined', (data) => {
       if (data.playerId !== playerId) {
         setOpponentId(data.playerId);
         setOpponentJoined(true);
-        setIsHost(!data.isHost);
-        console.log('Opponent joined. I am host:', !data.isHost);
+        
+        if (data.isHost) {
+          setIsHost(false);
+        } else {
+          setIsHost(true);
+        }
       }
     });
 
+    // Character selection
     channel.bind('character-selected', (data) => {
       if (data.playerId !== playerId) {
-        console.log('Opponent selected character:', data.character.name);
         setOpponentCharacter(data.character);
       }
     });
 
-    // بدء اللعبة
-    channel.bind('game-started', (data) => {
-      console.log('Game started! Moving to playing phase');
-      setGamePhase('playing');
-      setCurrentTurn(data.hostId); // المضيف يبدأ
-      setTurnTimeLeft(30);
-      startTurnTimer();
-    });
-
-    // تغيير الدور
+    // Turn management
     channel.bind('turn-changed', (data) => {
       setCurrentTurn(data.nextPlayerId);
       setTurnTimeLeft(30);
-      startTurnTimer();
     });
 
-    // رسائل اللعبة
+    // Game messages
     channel.bind('game-message', (data) => {
       if (data.playerId !== playerId) {
         setGameMessages(prev => [...prev, {
@@ -149,8 +149,9 @@ export default function GuessWhoGame({ roomId, onGoBack }) {
       }
     });
 
-    // فوز في اللعبة
+    // Game won
     channel.bind('game-won', (data) => {
+      console.log('Game won event received:', data);
       setWinner(data.winnerId === playerId ? 'me' : 'opponent');
       setGamePhase('finished');
       stopTurnTimer();
@@ -334,36 +335,44 @@ export default function GuessWhoGame({ roomId, onGoBack }) {
     } else {
       // تخمين خاطئ - تستمر اللعبة!
       console.log('❌ Wrong guess, but game continues!');
-      sendGameMessage(`خمن ${character.name} - خطأ!`, 'wrong');
+      sendGameMessage(`خمن ${character.name} بشكل خاطئ!`, 'wrong');
       
-      // تغيير الدور
+      // تبديل الدور
       changeTurn();
     }
   };
 
-  // بدء مباراة جديدة - مُصحح للمباريات الأربع
+  // Timer للدور - بدء عند تغيير الدور
+  useEffect(() => {
+    if (currentTurn && gamePhase === 'playing') {
+      startTurnTimer();
+    } else {
+      stopTurnTimer();
+    }
+    
+    return () => stopTurnTimer();
+  }, [currentTurn, gamePhase]);
+
+  // بدء المباراة التالية
   const startNewMatch = () => {
-    // إضافة المباراة الحالية للمستخدمة أولاً
     const updatedUsedMatches = [...usedMatches, currentMatch];
     
     // تحديد المباراة التالية
-    let nextMatch;
-    if (!updatedUsedMatches.includes(1)) {
-      nextMatch = 1;
-    } else if (!updatedUsedMatches.includes(2)) {
-      nextMatch = 2;
-    } else if (!updatedUsedMatches.includes(3)) {
-      nextMatch = 3;
-    } else if (!updatedUsedMatches.includes(4)) {
-      nextMatch = 4;
-    } else {
-      // تمت جميع المباريات الأربع - إعادة تعيين للبداية
-      nextMatch = 1;
+    let nextMatch = 1;
+    for (let i = 1; i <= 4; i++) {
+      if (!updatedUsedMatches.includes(i)) {
+        nextMatch = i;
+        break;
+      }
+    }
+    
+    // إذا انتهت جميع المباريات الأربع، إعادة تعيين
+    if (updatedUsedMatches.length >= 4) {
       setUsedMatches([]);
-      localStorage.removeItem('guess-who-used-matches');
-      localStorage.setItem('guess-who-current-match', JSON.stringify(1));
-      
       setCurrentMatch(1);
+      localStorage.removeItem('guess-who-used-matches');
+      
+      // إعادة تعيين كل شيء
       setGamePhase('waiting');
       setMyCharacter(null);
       setOpponentCharacter(null);
@@ -407,69 +416,86 @@ export default function GuessWhoGame({ roomId, onGoBack }) {
   // Character selection screen
   if (gamePhase === 'waiting') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
-        <div className="max-w-6xl mx-auto">
-          {/* Header مع معلومات المباراة */}
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-pink-400">
-                من هو - {getMatchName(currentMatch)}
-              </h1>
-            </div>
-            
-            {usedMatches.length > 0 && (
-              <button
-                onClick={startNewMatch}
-                className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-sm"
-              >
-                مباراة جديدة
-              </button>
-            )}
-          </div>
+      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
+        {/* خلفية متحركة */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 right-1/2 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        </div>
 
-          <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 md:p-8 text-center">
-            {!myCharacter ? (
-              <>
-                <h2 className="text-2xl font-bold text-center text-white mb-4">اختر شخصيتك السرية</h2>
-                <p className="text-center text-slate-300 mb-6">اختر الشخصية التي سيحاول خصمك تخمينها</p>
-              </>
-            ) : !opponentCharacter ? (
-              <>
-                <h2 className="text-2xl font-bold text-center text-white mb-4">انتظار اختيار الخصم...</h2>
-                <p className="text-center text-slate-300">لقد اخترت: <span className="text-green-400 font-bold">{myCharacter.name}</span></p>
-              </>
-            ) : (
-              <>
-                <h2 className="text-2xl font-bold text-center text-white mb-4">جاري بدء اللعبة...</h2>
-                <p className="text-center text-slate-300">شخصيتك: <span className="text-green-400 font-bold">{myCharacter.name}</span></p>
-                <div className="flex justify-center mt-4">
-                  <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
-                </div>
-              </>
-            )}
-          </div>
-
-          {!myCharacter && (
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
-              {availableCharacters.map(character => (
+        <div className="relative z-10 p-6 md:p-8">
+          <div className="max-w-6xl mx-auto">
+            {/* Header مع معلومات المباراة */}
+            <div className="flex justify-between items-center mb-12">
+              <div>
+                <h1 className="text-4xl md:text-5xl font-black text-white tracking-wider">
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-cyan-500">
+                    من هو؟
+                  </span>
+                </h1>
+                {/* <p className="text-xl md:text-2xl text-gray-400 font-light mt-2">
+                  {getMatchName(currentMatch)} - المباراة {currentMatch}
+                </p> */}
+              </div>
+              
+              {usedMatches.length > 0 && (
                 <button
-                  key={character.id}
-                  onClick={() => selectCharacter(character)}
-                  className="bg-slate-800/50 backdrop-blur-lg rounded-xl p-4 hover:bg-slate-700/50 transition-all duration-300 border border-slate-600 hover:border-blue-400"
+                  onClick={startNewMatch}
+                  className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all duration-300 hover:scale-105"
                 >
-                  <img
-                    src={character.image}
-                    alt={character.name}
-                    className="w-full h-32 object-cover object-top rounded-lg mb-2"
-                    onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/150x150/6366F1/FFFFFF?text=' + character.name;
-                    }}
-                  />
-                  <p className="text-white font-bold text-center">{character.name}</p>
+                  مباراة جديدة
                 </button>
-              ))}
+              )}
             </div>
-          )}
+
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 text-center">
+              {!myCharacter ? (
+                <>
+                  <h2 className="text-3xl font-bold text-white mb-6">اختر شخصيتك السرية</h2>
+                  <p className="text-xl text-gray-300 mb-8">اختر الشخصية التي سيحاول خصمك تخمينها</p>
+                </>
+              ) : !opponentCharacter ? (
+                <>
+                  <h2 className="text-3xl font-bold text-white mb-6">انتظار اختيار الخصم...</h2>
+                  <p className="text-xl text-gray-300">لقد اخترت: <span className="text-green-400 font-bold">{myCharacter.name}</span></p>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-3xl font-bold text-white mb-6">جاري بدء اللعبة...</h2>
+                  <p className="text-xl text-gray-300">شخصيتك: <span className="text-green-400 font-bold">{myCharacter.name}</span></p>
+                  <div className="flex justify-center mt-6">
+                    <div className="animate-spin w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full"></div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {!myCharacter && (
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-6 mt-8">
+                {availableCharacters.map(character => (
+                  <button
+                    key={character.id}
+                    onClick={() => selectCharacter(character)}
+                    className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:border-cyan-500/50 group"
+                  >
+                    <div className="relative">
+                      <img
+                        src={character.image}
+                        alt={character.name}
+                        className="w-full h-32 object-cover object-top rounded-xl mb-4 group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          e.target.src = 'https://via.placeholder.com/150x150/6366F1/FFFFFF?text=' + character.name;
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-teal-600/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    </div>
+                    <p className="text-white font-bold text-center">{character.name}</p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -478,59 +504,68 @@ export default function GuessWhoGame({ roomId, onGoBack }) {
   // Game finished screen
   if (gamePhase === 'finished') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 flex items-center justify-center">
-        <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-8 text-center max-w-md">
-          <h2 className="text-2xl font-bold mb-4 text-white">
-            {winner === 'me' ? 'أنت الفائز' : ' خسرت'}
-          </h2>
+      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
+        {/* خلفية متحركة */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-green-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 right-1/2 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        </div>
 
-          <div className="space-y-4 mb-6">
-            <div className="bg-slate-700/50 rounded-lg p-4">
-              <p className="text-slate-300 mb-2">{getMatchName(currentMatch)} انتهت</p>
-              <p className="text-slate-300 mb-2">شخصيتك كانت:</p>
-              <div className="flex items-center gap-3 justify-center">
-                <img
-                  src={myCharacter?.image}
-                  alt={myCharacter?.name}
-                  className="w-12 h-12 rounded-lg object-cover"
-                  onError={(e) => {
-                    e.target.src = 'https://via.placeholder.com/50x50/6366F1/FFFFFF?text=' + myCharacter?.name;
-                  }}
-                />
-                <span className="text-white font-bold">{myCharacter?.name}</span>
+        <div className="relative z-10 p-6 md:p-8 flex items-center justify-center min-h-screen">
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 text-center max-w-md">
+            <h2 className="text-4xl font-bold mb-8 text-white">
+              {winner === 'me' ? '🏆 أنت الفائز!' : '😔 خسرت'}
+            </h2>
+
+            <div className="space-y-6 mb-8">
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                <p className="text-gray-300 mb-4">{getMatchName(currentMatch)} انتهت</p>
+                <p className="text-gray-300 mb-4">شخصيتك كانت:</p>
+                <div className="flex items-center gap-4 justify-center">
+                  <img
+                    src={myCharacter?.image}
+                    alt={myCharacter?.name}
+                    className="w-16 h-16 rounded-xl object-cover"
+                    onError={(e) => {
+                      e.target.src = 'https://via.placeholder.com/50x50/6366F1/FFFFFF?text=' + myCharacter?.name;
+                    }}
+                  />
+                  <span className="text-white font-bold text-lg">{myCharacter?.name}</span>
+                </div>
+              </div>
+              
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                <p className="text-gray-300 mb-4">شخصية الخصم كانت:</p>
+                <div className="flex items-center gap-4 justify-center">
+                  <img
+                    src={opponentCharacter?.image}
+                    alt={opponentCharacter?.name}
+                    className="w-16 h-16 rounded-xl object-cover"
+                    onError={(e) => {
+                      e.target.src = 'https://via.placeholder.com/50x50/6366F1/FFFFFF?text=' + opponentCharacter?.name;
+                    }}
+                  />
+                  <span className="text-white font-bold text-lg">{opponentCharacter?.name}</span>
+                </div>
               </div>
             </div>
-            
-            <div className="bg-slate-700/50 rounded-lg p-4">
-              <p className="text-slate-300 mb-2">شخصية الخصم كانت:</p>
-              <div className="flex items-center gap-3 justify-center">
-                <img
-                  src={opponentCharacter?.image}
-                  alt={opponentCharacter?.name}
-                  className="w-12 h-12 rounded-lg object-cover"
-                  onError={(e) => {
-                    e.target.src = 'https://via.placeholder.com/50x50/6366F1/FFFFFF?text=' + opponentCharacter?.name;
-                  }}
-                />
-                <span className="text-white font-bold">{opponentCharacter?.name}</span>
-              </div>
-            </div>
-          </div>
 
-          <div className="space-y-3">
-            <button
-              onClick={startNewMatch}
-              className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-3 rounded-xl font-bold"
-            >
-              {usedMatches.length + 1 < 4 ? 'المباراة التالية' : 'مباراة جديدة'}
-            </button>
-            
-            <button
-              onClick={onGoBack}
-              className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-6 py-3 rounded-xl font-bold"
-            >
-              العودة للقائمة
-            </button>
+            <div className="space-y-4">
+              <button
+                onClick={startNewMatch}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105"
+              >
+                {usedMatches.length + 1 < 4 ? 'المباراة التالية' : 'مباراة جديدة'}
+              </button>
+              
+              <button
+                onClick={onGoBack}
+                className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105"
+              >
+                العودة للقائمة
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -539,194 +574,219 @@ export default function GuessWhoGame({ roomId, onGoBack }) {
 
   // Main game screen
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-4">
-        {/* معلومات الدور */}
-        <div className="text-center">
-          <div className={`px-4 py-2 rounded-lg font-bold text-lg ${
-            currentTurn === playerId 
-              ? 'bg-green-500 text-white animate-pulse' 
-              : 'bg-gray-600 text-gray-300'
-          }`}>
-            {currentTurn === playerId ? '✅ دورك' : '❌ دور الخصم'}
-          </div>
-          
-          <div className="flex gap-2 mt-2">
-            {/* زر تغيير الدور */}
-            {currentTurn === playerId && (
-              <button
-                onClick={changeTurn}
-                className="bg-yellow-500 hover:bg-yellow-600 text-black px-3 py-2 rounded-lg font-bold text-sm"
-              >
-                إنهاء الدور
-              </button>
-            )}
-          </div>
-        </div>
+    <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
+      {/* خلفية متحركة */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 right-1/2 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 max-w-7xl mx-auto">
-        
-        {/* Characters Grid */}
-        <div className="lg:col-span-3">
-          <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6">
-            <h3 className="text-white font-bold text-2xl mb-6 text-center">
-              {getMatchName(currentMatch)} - المباراة {currentMatch}
-            </h3>
-            
-            {/* تعليمات */}
-            <div className="mb-6 text-center">
-              <div className={`text-lg font-bold mb-2 p-3 rounded-lg ${
-                currentTurn === playerId 
-                  ? 'text-green-400 bg-green-500/20' 
-                  : 'text-red-400 bg-red-500/20'
-              }`}>
-                {currentTurn === playerId 
-                  ? '✅ دورك: اضغط الشخصية لاستبعادها • استخدم قائمة التخمين ←' 
-                  : '❌ دور الخصم: انتظر دورك'
-                }
-              </div>
+      <div className="relative z-10 p-6 md:p-8">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          {/* معلومات الدور */}
+          <div className="text-center">
+            <div className={`px-6 py-3 rounded-2xl font-bold text-xl transition-all duration-300 ${
+              currentTurn === playerId 
+                ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white animate-pulse shadow-lg shadow-green-500/30' 
+                : 'bg-white/10 backdrop-blur-md border border-white/20 text-gray-300'
+            }`}>
+              {currentTurn === playerId ? '✅ دورك' : '❌ دور الخصم'}
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              {availableCharacters.map(character => {
-                const isEliminated = eliminatedCharacters.includes(character.id);
-                const canInteract = currentTurn === playerId;
-                
-                return (
-                  <div
-                    key={character.id}
-                    className={`relative transition-all duration-300 ${
-                      isEliminated ? 'opacity-30 grayscale' : ''
-                    } ${canInteract ? '' : 'opacity-60'}`}
-                  >
-                    <img
-                      src={character.image}
-                      alt={character.name}
-                      className={`w-full h-32 object-cover object-top rounded-lg border border-slate-600 ${
-                        canInteract && !isEliminated ?
-                        'cursor-pointer hover:border-red-400 hover:opacity-80' : 
-                        'cursor-not-allowed'
-                      }`}
-                      onClick={() => canInteract && !isEliminated && eliminateCharacter(character.id)}
-                      onError={(e) => {
-                        e.target.src = 'https://via.placeholder.com/150x150/6366F1/FFFFFF?text=' + character.name;
-                      }}
-                    />
-                    
-                    {/* X للمستبعدة */}
-                    {isEliminated && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="bg-red-500 text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl font-bold">
-                          ✕
-                        </div>
-                      </div>
-                    )}
-                    
-                    <p className="text-white font-bold text-center mt-2">{character.name}</p>
-                  </div>
-                );
-              })}
+            <div className="flex gap-3 mt-4">
+              {/* زر تغيير الدور */}
+              {currentTurn === playerId && (
+                <button
+                  onClick={changeTurn}
+                  className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black px-6 py-3 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105"
+                >
+                  إنهاء الدور
+                </button>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Right Sidebar - قائمة التخمين */}
-        <div className="lg:col-span-1">
-          <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-4">
-            <h3 className="text-white font-bold text-lg mb-4 text-center">🎯 قائمة التخمين</h3>
-            
-            {/* العداد الزمني */}
-            <div className="mb-4 text-center">
-              <div className={`text-2xl font-bold ${
-                turnTimeLeft <= 10 ? 'text-red-400' : 'text-green-400'
-              }`}>
-                {turnTimeLeft}s
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+          
+          {/* Characters Grid */}
+          <div className="lg:col-span-3">
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
+              <h3 className="text-white font-bold text-3xl mb-8 text-center">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-cyan-500">
+                  {getMatchName(currentMatch)} - المباراة {currentMatch}
+                </span>
+              </h3>
+              
+              {/* تعليمات */}
+              <div className="mb-8 text-center">
+                <div className={`text-xl font-bold mb-4 p-4 rounded-2xl transition-all duration-300 ${
+                  currentTurn === playerId 
+                    ? 'text-green-400 bg-green-500/20 border border-green-500/30' 
+                    : 'text-red-400 bg-red-500/20 border border-red-500/30'
+                }`}>
+                  {currentTurn === playerId 
+                    ? '✅ دورك: اضغط الشخصية لاستبعادها • استخدم قائمة التخمين ←' 
+                    : '❌ دور الخصم: انتظر دورك'
+                  }
+                </div>
               </div>
-            </div>
-            
-            {/* رسالة إرشادية */}
-            {currentTurn !== playerId && (
-              <div className="bg-red-500/20 text-red-300 p-3 rounded-lg mb-4 text-center text-sm">
-                انتظر دورك للتخمين
-              </div>
-            )}
-            
-            {/* قائمة الأسماء مع أزرار التخمين */}
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {availableCharacters.map(character => {
-                const isEliminated = eliminatedCharacters.includes(character.id);
-                const canGuess = currentTurn === playerId && !isEliminated;
-                
-                return (
-                  <div
-                    key={character.id}
-                    className={`flex items-center justify-between p-2 rounded-lg border transition-all duration-200 ${
-                      isEliminated 
-                        ? 'bg-red-500/10 border-red-500/30 opacity-50' 
-                        : 'bg-slate-700/50 border-slate-600 hover:border-blue-400'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 flex-1">
-                      <img
-                        src={character.image}
-                        alt={character.name}
-                        className="w-8 h-8 rounded object-cover"
-                        onError={(e) => {
-                          e.target.src = 'https://via.placeholder.com/32x32/6366F1/FFFFFF?text=' + character.name.slice(0,1);
-                        }}
-                      />
-                      <span className={`text-sm font-medium ${
-                        isEliminated ? 'text-red-400 line-through' : 'text-white'
-                      }`}>
-                        {character.name}
-                      </span>
-                    </div>
-                    
-                    {!isEliminated && (
-                      <button
-                        onClick={() => makeGuess(character)}
-                        disabled={!canGuess}
-                        className={`px-3 py-1 rounded text-xs font-bold transition-all duration-200 ${
-                          canGuess
-                            ? 'bg-green-500 hover:bg-green-600 text-white'
-                            : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                        }`}
-                      >
-                        تخمين
-                      </button>
-                    )}
-                    
-                    {isEliminated && (
-                      <div className="text-red-400 text-lg">✕</div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* رسائل اللعبة */}
-            {gameMessages.length > 0 && (
-              <>
-                <hr className="border-slate-600 my-4" />
-                <h4 className="text-white font-medium text-sm mb-2">آخر الأحداث:</h4>
-                <div className="space-y-1 max-h-32 overflow-y-auto">
-                  {gameMessages.slice(-5).map((msg, index) => (
+              
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+                {availableCharacters.map(character => {
+                  const isEliminated = eliminatedCharacters.includes(character.id);
+                  const canInteract = currentTurn === playerId;
+                  
+                  return (
                     <div
-                      key={index}
-                      className={`p-2 rounded text-xs ${
-                        msg.type === 'correct' ? 'bg-green-500/20 text-green-300' :
-                        msg.type === 'wrong' ? 'bg-red-500/20 text-red-300' :
-                        'bg-slate-700/50 text-slate-300'
+                      key={character.id}
+                      className={`relative transition-all duration-300 group ${
+                        isEliminated ? 'opacity-30 grayscale' : ''
+                      } ${canInteract ? '' : 'opacity-60'}`}
+                    >
+                      <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:border-red-500/50">
+                        <img
+                          src={character.image}
+                          alt={character.name}
+                          className={`w-full h-32 object-cover object-top rounded-xl mb-3 ${
+                            canInteract && !isEliminated ?
+                            'cursor-pointer hover:scale-105 transition-transform duration-300' : 
+                            'cursor-not-allowed'
+                          }`}
+                          onClick={() => canInteract && !isEliminated && eliminateCharacter(character.id)}
+                          onError={(e) => {
+                            e.target.src = 'https://via.placeholder.com/150x150/6366F1/FFFFFF?text=' + character.name;
+                          }}
+                        />
+                        
+                        {/* X للمستبعدة */}
+                        {isEliminated && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-3xl font-bold shadow-lg">
+                              ✕
+                            </div>
+                          </div>
+                        )}
+                        
+                        <p className="text-white font-bold text-center">{character.name}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Sidebar - قائمة التخمين */}
+          <div className="lg:col-span-1">
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6">
+              <h3 className="text-white font-bold text-2xl mb-6 text-center">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
+                  🎯 قائمة التخمين
+                </span>
+              </h3>
+              
+              {/* العداد الزمني */}
+              <div className="mb-6 text-center">
+                <div className={`text-4xl font-bold transition-all duration-300 ${
+                  turnTimeLeft <= 10 ? 'text-red-400 animate-pulse' : 'text-green-400'
+                }`}>
+                  {turnTimeLeft}s
+                </div>
+                <div className="w-full bg-white/10 rounded-full h-2 mt-3">
+                  <div 
+                    className={`h-2 rounded-full transition-all duration-1000 ${
+                      turnTimeLeft <= 10 ? 'bg-gradient-to-r from-red-500 to-red-600' : 'bg-gradient-to-r from-green-500 to-emerald-500'
+                    }`}
+                    style={{ width: `${(turnTimeLeft / 30) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+              
+              {/* رسالة إرشادية */}
+              {currentTurn !== playerId && (
+                <div className="bg-red-500/20 border border-red-500/30 text-red-300 p-4 rounded-2xl mb-6 text-center">
+                  انتظر دورك للتخمين
+                </div>
+              )}
+              
+              {/* قائمة الأسماء مع أزرار التخمين */}
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {availableCharacters.map(character => {
+                  const isEliminated = eliminatedCharacters.includes(character.id);
+                  const canGuess = currentTurn === playerId && !isEliminated;
+                  
+                  return (
+                    <div
+                      key={character.id}
+                      className={`flex items-center justify-between p-3 rounded-2xl border transition-all duration-200 ${
+                        isEliminated 
+                          ? 'bg-red-500/10 border-red-500/30 opacity-50' 
+                          : 'bg-white/5 border-white/10 hover:border-cyan-500/50'
                       }`}
                     >
-                      {msg.text}
+                      <div className="flex items-center gap-3 flex-1">
+                        <img
+                          src={character.image}
+                          alt={character.name}
+                          className="w-10 h-10 rounded-xl object-cover"
+                          onError={(e) => {
+                            e.target.src = 'https://via.placeholder.com/32x32/6366F1/FFFFFF?text=' + character.name.slice(0,1);
+                          }}
+                        />
+                        <span className={`font-medium ${
+                          isEliminated ? 'text-red-400 line-through' : 'text-white'
+                        }`}>
+                          {character.name}
+                        </span>
+                      </div>
+                      
+                      {!isEliminated && (
+                        <button
+                          onClick={() => makeGuess(character)}
+                          disabled={!canGuess}
+                          className={`px-4 py-2 rounded-xl font-bold transition-all duration-200 ${
+                            canGuess
+                              ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white hover:scale-105'
+                              : 'bg-white/10 text-gray-400 cursor-not-allowed'
+                          }`}
+                        >
+                          تخمين
+                        </button>
+                      )}
+                      
+                      {isEliminated && (
+                        <div className="text-red-400 text-2xl">✕</div>
+                      )}
                     </div>
-                  ))}
-                </div>
-              </>
-            )}
+                  );
+                })}
+              </div>
+
+              {/* رسائل اللعبة */}
+              {gameMessages.length > 0 && (
+                <>
+                  <hr className="border-white/20 my-6" />
+                  <h4 className="text-white font-medium mb-4">آخر الأحداث:</h4>
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {gameMessages.slice(-5).map((msg, index) => (
+                      <div
+                        key={index}
+                        className={`p-3 rounded-xl text-sm ${
+                          msg.type === 'correct' ? 'bg-green-500/20 border border-green-500/30 text-green-300' :
+                          msg.type === 'wrong' ? 'bg-red-500/20 border border-red-500/30 text-red-300' :
+                          'bg-white/5 border border-white/10 text-gray-300'
+                        }`}
+                      >
+                        {msg.text}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

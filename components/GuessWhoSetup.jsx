@@ -1,5 +1,5 @@
 //================================================================================
-// 1️⃣ components/GuessWhoSetup.jsx - ملف جديد
+// 1️⃣ components/GuessWhoSetup.jsx - بالتصميم الجديد
 //================================================================================
 
 'use client';
@@ -112,11 +112,14 @@ export default function GuessWhoSetup({ onStartGame, roomIdFromUrl = null }) {
   };
 
   // Copy room ID
-  const copyRoomId = () => {
-    const fullUrl = `${window.location.origin}/guess-who/join/${roomId}`;
-    navigator.clipboard.writeText(fullUrl);
-  };
-
+  // const copyRoomId = () => {
+  //   const fullUrl = `${window.location.origin}/guess-who/join/${roomId}`;
+  //   navigator.clipboard.writeText(fullUrl);
+  // };
+// Copy room ID
+const copyRoomId = () => {
+  navigator.clipboard.writeText(roomId);  // ← نسخ رقم الغرفة فقط
+};
   // Start game
   const startGame = () => {
     if (opponentJoined && channelRef.current) {
@@ -148,132 +151,153 @@ export default function GuessWhoSetup({ onStartGame, roomIdFromUrl = null }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 flex flex-col">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-pink-400">
-           من هو؟
-        </h1>
-        <button
-          onClick={() => window.location.href = '/'}
-          className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-4 py-2 rounded-xl font-bold"
-        >
-          ← العودة للرئيسية
-        </button>
+    <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
+      {/* خلفية متحركة */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 right-1/2 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center">
-        <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-8 max-w-md w-full text-center shadow-2xl border border-slate-700">
-          
-          {mode === 'choice' && (
-            <>
-              <h2 className="text-2xl font-bold text-white mb-4">لعبة من هو؟</h2>
-              <p className="text-slate-300 mb-8">خمن الشخصية المختارة من خصمك!</p>
-              
-              {joinError && (
-                <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 mb-4">
-                  <p className="text-red-300 text-sm">{joinError}</p>
+      <div className="relative z-10 p-6 md:p-8 flex flex-col min-h-screen">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-12">
+          <div className="text-4xl md:text-5xl font-black text-white tracking-wider">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-cyan-500">
+              من هو؟
+            </span>
+          </div>
+          <button
+            onClick={() => window.location.href = '/'}
+            className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all duration-300 hover:scale-105"
+          >
+            ← العودة للرئيسية
+          </button>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl">
+            
+            {mode === 'choice' && (
+              <>
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold text-white mb-4">لعبة من هو؟</h2>
+                  <p className="text-xl text-gray-300">خمن الشخصية المختارة من خصمك!</p>
                 </div>
-              )}
-
-              <div className="space-y-4">
-                <button
-                  onClick={createRoom}
-                  className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white py-3 rounded-xl font-bold text-lg transition-all duration-300"
-                >
-                  إنشاء غرفة جديدة
-                </button>
-
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-slate-600"></div>
+                
+                {joinError && (
+                  <div className="bg-red-500/20 border border-red-500/30 rounded-2xl p-4 mb-6">
+                    <p className="text-red-300">{joinError}</p>
                   </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-slate-800 text-slate-400">أو</span>
-                  </div>
-                </div>
+                )}
 
-                <div>
-                  <input
-                    type="text"
-                    value={joinRoomId}
-                    onChange={(e) => setJoinRoomId(e.target.value.toUpperCase())}
-                    placeholder="رقم الغرفة"
-                    className="w-full bg-slate-700 text-white rounded-lg px-4 py-3 mb-3 text-center text-lg font-bold"
-                    onKeyPress={(e) => e.key === 'Enter' && joinRoom()}
-                  />
+                <div className="space-y-6">
                   <button
-                    onClick={() => joinRoom()}
-                    disabled={!joinRoomId.trim()}
-                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold text-lg transition-all duration-300"
+                    onClick={createRoom}
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white py-4 rounded-2xl font-bold text-xl transition-all duration-300 hover:scale-105 shadow-lg shadow-green-500/30"
                   >
-                    الانضمام للغرفة
+                    إنشاء غرفة جديدة
                   </button>
-                </div>
-              </div>
-            </>
-          )}
 
-          {mode === 'creating' && (
-            <>
-              <h2 className="text-2xl font-bold text-white mb-4">غرفة جديدة</h2>
-              <div className="bg-slate-700/50 rounded-xl p-4 mb-6">
-                <p className="text-slate-300 mb-2">رقم الغرفة:</p>
-                <p className="text-2xl font-bold text-white mb-4">{roomId}</p>
-       
-              </div>
-
-              {!opponentJoined ? (
-                <>
-                  <div className="animate-pulse mb-4">
-                    <div className="w-16 h-16 bg-blue-500/50 rounded-full mx-auto mb-4"></div>
-                  </div>
-                  <p className="text-slate-300 mb-6">انتظار انضمام لاعب آخر...</p>
-                </>
-              ) : (
-                <>
-                  <div className="text-green-500 mb-4">
-                    <div className="w-16 h-16 bg-green-500 rounded-full mx-auto mb-4 flex items-center justify-center">
-                      <span className="text-2xl">✓</span>
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-white/20"></div>
+                    </div>
+                    <div className="relative flex justify-center text-lg">
+                      <span className="px-4 bg-[#0a0a0f] text-gray-400">أو</span>
                     </div>
                   </div>
-                  <p className="text-green-400 mb-6">انضم لاعب! يمكنك بدء اللعبة الآن</p>
+
+                  <div className="space-y-4">
+                    <input
+                      type="text"
+                      value={joinRoomId}
+                      onChange={(e) => setJoinRoomId(e.target.value.toUpperCase())}
+                      placeholder="رقم الغرفة"
+                      className="w-full bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-2xl px-6 py-4 text-center text-xl font-bold placeholder-gray-400 focus:border-cyan-500/50 focus:outline-none transition-all duration-300"
+                      onKeyPress={(e) => e.key === 'Enter' && joinRoom()}
+                    />
+                    <button
+                      onClick={() => joinRoom()}
+                      disabled={!joinRoomId.trim()}
+                      className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 rounded-2xl font-bold text-xl transition-all duration-300 hover:scale-105 shadow-lg shadow-blue-500/30"
+                    >
+                      الانضمام للغرفة
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {mode === 'creating' && (
+              <>
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold text-white mb-4">غرفة جديدة</h2>
+                </div>
+                
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 mb-8">
+                  <p className="text-gray-300 mb-4 text-lg">رقم الغرفة:</p>
+                  <p className="text-4xl font-bold text-white mb-6">{roomId}</p>
                   <button
-                    onClick={startGame}
-                    className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white py-3 rounded-xl font-bold text-lg transition-all duration-300"
+                    onClick={copyRoomId}
+                    className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105"
                   >
-                    بدء اللعبة
+                    📋 نسخ الرابط
                   </button>
-                </>
-              )}
+                </div>
 
-              <button
-                onClick={goBack}
-                className="w-full mt-4 bg-slate-600 hover:bg-slate-700 text-white py-2 rounded-lg font-bold transition-all duration-300"
-              >
-                إلغاء
-              </button>
-            </>
-          )}
+                {!opponentJoined ? (
+                  <>
+                    <div className="animate-pulse mb-6">
+                      <div className="w-20 h-20 bg-cyan-500/30 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <div className="w-12 h-12 bg-cyan-500/50 rounded-full animate-ping"></div>
+                      </div>
+                    </div>
+                    <p className="text-gray-300 mb-8 text-lg">انتظار انضمام لاعب آخر...</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-green-400 mb-6">
+                      <div className="w-20 h-20 bg-green-500/20 border border-green-500/30 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <span className="text-4xl">✓</span>
+                      </div>
+                    </div>
+                    <p className="text-green-400 mb-8 text-lg">انضم لاعب! يمكنك بدء اللعبة الآن</p>
+                    <button
+                      onClick={startGame}
+                      className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white py-4 rounded-2xl font-bold text-xl transition-all duration-300 hover:scale-105 shadow-lg shadow-green-500/30"
+                    >
+                      🚀 بدء اللعبة
+                    </button>
+                  </>
+                )}
 
-          {mode === 'joining' && (
-            <>
-              <div className="animate-spin w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-              <h2 className="text-xl font-bold text-white mb-4">جاري الانضمام...</h2>
-              <p className="text-slate-300 mb-6">انتظار موافقة صاحب الغرفة</p>
-              <button
-                onClick={goBack}
-                className="w-full bg-slate-600 hover:bg-slate-700 text-white py-2 rounded-lg font-bold transition-all duration-300"
-              >
-                إلغاء
-              </button>
-            </>
-          )}
+                <button
+                  onClick={goBack}
+                  className="w-full mt-6 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-white py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-105"
+                >
+                  إلغاء
+                </button>
+              </>
+            )}
+
+            {mode === 'joining' && (
+              <>
+                <div className="animate-spin w-20 h-20 border-4 border-cyan-500 border-t-transparent rounded-full mx-auto mb-6"></div>
+                <h2 className="text-2xl font-bold text-white mb-4">جاري الانضمام...</h2>
+                <p className="text-gray-300 mb-8 text-lg">انتظار موافقة صاحب الغرفة</p>
+                <button
+                  onClick={goBack}
+                  className="w-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-white py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-105"
+                >
+                  إلغاء
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 }
-
-
