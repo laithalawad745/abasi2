@@ -19,15 +19,18 @@ export { default as GuessWhoSetup } from './GuessWhoSetup';
 
 // خرائط تفاعلية بـ D3.js
 export { default as ArabMapD3 } from './ArabMapD3';
-export { default as EuropeMapD3 } from './EuropeMapD3'; // 🆕 إضافة خريطة أوروبا
+export { default as EuropeMapD3 } from './EuropeMapD3';
 
-// لعبة أوروبا
+// ألعاب الخرائط
 export { default as EuropeGame } from './EuropeGame';
 export { default as ArabGame } from './ArabGame';
 
 // مكونات أخرى
-export { default as WorldMap } from './WorldMap'; // احتفظ بالقديم للمشاريع الأخرى
+export { default as WorldMap } from './WorldMap';
 export { default as WorldQuestion } from './WorldQuestion';
 
-// 🆕 إضافة Toast Component
+// Toast Component
 export { default as ToastNotification, showSuccessToast, showErrorToast, showWarningToast, showInfoToast } from './ToastNotification';
+
+// 🆕 لعبة المزاد الجديدة
+export { default as AuctionGame } from './AuctionGame';

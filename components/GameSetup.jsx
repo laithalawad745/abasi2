@@ -1,6 +1,6 @@
 // components/GameSetup.jsx
 import React from 'react';
-import Link from 'next/link'; // ✅ إضافة الـ import المفقود
+import Link from 'next/link';
 
 export default function GameSetup({ startAbsiMatch }) {
   return (
@@ -28,6 +28,7 @@ export default function GameSetup({ startAbsiMatch }) {
           
           {/* أزرار الألعاب - Grid Layout */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            
             {/* المباراة الكاملة */}
             <button
               onClick={startAbsiMatch}
@@ -44,12 +45,20 @@ export default function GameSetup({ startAbsiMatch }) {
              من أسرع
             </button>
 
-            {/* بطولة المعرفة - الجديدة */}
+            {/* بطولة المعرفة */}
             <button
               onClick={() => window.location.href = '/tournament'}
               className="bg-gradient-to-r cursor-pointer from-yellow-600 via-orange-500 to-red-500 hover:from-yellow-700 hover:via-orange-600 hover:to-red-600 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-yellow-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-yellow-400/50 hover:border-orange-400/70"
             >
                الإقصاء
+            </button>
+
+            {/* لعبة المزاد - جديد */}
+            <button
+              onClick={() => window.location.href = '/auction'}
+              className="bg-gradient-to-r cursor-pointer from-yellow-500 via-amber-500 to-orange-500 hover:from-yellow-600 hover:via-amber-600 hover:to-orange-600 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-yellow-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-yellow-400/50 hover:border-amber-400/70"
+            >
+               المزاد
             </button>
 
             {/* لعبة النرد */}
@@ -73,23 +82,25 @@ export default function GameSetup({ startAbsiMatch }) {
               onClick={() => window.location.href = '/arab'}
               className="bg-gradient-to-r cursor-pointer from-amber-600 via-yellow-600 to-orange-600 hover:from-amber-700 hover:via-yellow-700 hover:to-orange-700 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-amber-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-amber-400/50 hover:border-yellow-400/70"
             >
-               الوطن العربي
+             الوطن العربي
             </button>
 
             {/* من هو؟ */}
             <button
               onClick={() => window.location.href = '/guess-who'}
-              className="bg-gradient-to-r cursor-pointer from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-indigo-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-indigo-400/50 hover:border-purple-400/70"
+              className="bg-gradient-to-r cursor-pointer from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-700 hover:via-blue-700 hover:to-indigo-700 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-cyan-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-cyan-400/50 hover:border-blue-400/70"
             >
-               من هو؟
+              من هو؟
             </button>
 
-            {/* 🔥 الهيمنة العالمية - داخل الـ Grid */}
-            <Link href="/risk" className="block">
-              <button className="w-full bg-gradient-to-r cursor-pointer from-red-600 via-orange-500 to-yellow-500 hover:from-red-700 hover:via-orange-600 hover:to-yellow-600 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-red-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-red-400/50 hover:border-orange-400/70">
-                 الهيمنة 
-              </button>
-            </Link>
+            {/* الهيمنة (Risk) */}
+            <button
+              onClick={() => window.location.href = '/risk'}
+              className="bg-gradient-to-r cursor-pointer from-red-600 via-rose-600 to-pink-600 hover:from-red-700 hover:via-rose-700 hover:to-pink-700 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-red-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-red-400/50 hover:border-rose-400/70"
+            >
+              الهيمنة
+            </button>
+
           </div>
         </div>
       </div>
