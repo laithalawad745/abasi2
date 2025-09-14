@@ -5,7 +5,6 @@ import React, { useState, useEffect } from 'react';
 import { sampleTopics } from '../app/data/gameData';
 
 // Import components
-import GameSetup from './GameSetup';
 import NavBar from './NavBar';
 import TeamScoresOnly from './TeamScoresOnly';
 import TeamHelpers from './TeamHelpers';
@@ -17,7 +16,7 @@ import { ImageModal, ConfirmModal } from './Modals';
 
 export default function QuizGame() {
   // State Management
-  const [gameState, setGameState] = useState('setup');
+  const [gameState, setGameState] = useState('playing'); // بدء اللعبة مباشرة
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [showAnswer, setShowAnswer] = useState(false);
@@ -46,70 +45,119 @@ export default function QuizGame() {
   const [timerActive, setTimerActive] = useState(false);
   const [timerInterval, setTimerInterval] = useState(null);
   
+  // Question tracking
+  const [usedQuestions, setUsedQuestions] = useState(new Set());
+  const [teamQuestionMap, setTeamQuestionMap] = useState({});
+  const [isAbsiMode, setIsAbsiMode] = useState(true); // دائماً في وضع Absi
+  
+  // Helpers
   const [helpers, setHelpers] = useState({
     red: { number2: true, pit: true },
     blue: { number2: true, pit: true }
   });
   const [usingPitHelper, setUsingPitHelper] = useState(null);
-  const [teamQuestionMap, setTeamQuestionMap] = useState({});
-  const [usedQuestions, setUsedQuestions] = useState(new Set());
-  const [isAbsiMode, setIsAbsiMode] = useState(false);
 
-  // Image Functions
-  const zoomImage = (imageUrl) => {
-    setZoomedImage(imageUrl);
+  // Local Storage Keys
+  const STORAGE_KEYS = {
+    usedQuestions: 'quiz-used-questions',
+    teamQuestionMap: 'quiz-team-question-map',
+    teams: 'quiz-teams',
+    helpers: 'quiz-helpers',
+    usedChoiceQuestions: 'quiz-used-choice-questions'
   };
 
-  const closeZoomedImage = () => {
-    setZoomedImage(null);
-  };
-
-  // LocalStorage Effects
+  // تحميل البيانات من localStorage
   useEffect(() => {
     try {
-      const savedUsedQuestions = localStorage.getItem('quiz-used-questions');
-      const savedTeamQuestionMap = localStorage.getItem('quiz-team-question-map');
-      const savedTeams = localStorage.getItem('quiz-teams');
-      const savedHelpers = localStorage.getItem('quiz-helpers');
-      const savedUsedChoiceQuestions = localStorage.getItem('quiz-used-choice-questions');
-      
-      if (savedUsedQuestions) setUsedQuestions(new Set(JSON.parse(savedUsedQuestions)));
-      if (savedTeamQuestionMap) setTeamQuestionMap(JSON.parse(savedTeamQuestionMap));
-      if (savedTeams) setTeams(JSON.parse(savedTeams));
-      if (savedHelpers) setHelpers(JSON.parse(savedHelpers));
-      if (savedUsedChoiceQuestions) setUsedChoiceQuestions(JSON.parse(savedUsedChoiceQuestions));
-    } catch (error) {
-      console.log('localStorage error');
-    }
+      const savedUsedQuestions = localStorage.getItem(STORAGE_KEYS.usedQuestions);
+      if (savedUsedQuestions) {
+        setUsedQuestions(new Set(JSON.parse(savedUsedQuestions)));
+      }
+    } catch (error) {}
+
+    try {
+      const savedTeamQuestionMap = localStorage.getItem(STORAGE_KEYS.teamQuestionMap);
+      if (savedTeamQuestionMap) {
+        setTeamQuestionMap(JSON.parse(savedTeamQuestionMap));
+      }
+    } catch (error) {}
+
+    try {
+      const savedTeams = localStorage.getItem(STORAGE_KEYS.teams);
+      if (savedTeams) {
+        setTeams(JSON.parse(savedTeams));
+      }
+    } catch (error) {}
+
+    try {
+      const savedHelpers = localStorage.getItem(STORAGE_KEYS.helpers);
+      if (savedHelpers) {
+        setHelpers(JSON.parse(savedHelpers));
+      }
+    } catch (error) {}
+
+    try {
+      const savedUsedChoiceQuestions = localStorage.getItem(STORAGE_KEYS.usedChoiceQuestions);
+      if (savedUsedChoiceQuestions) {
+        setUsedChoiceQuestions(JSON.parse(savedUsedChoiceQuestions));
+      }
+    } catch (error) {}
   }, []);
 
+  // إعداد المباراة الكاملة تلقائياً
+  useEffect(() => {
+    const absiTopic = sampleTopics.find(topic => topic.id === 'absi');
+    const choicesTopic = sampleTopics.find(topic => topic.id === 'choices');
+    const qrTopic = sampleTopics.find(topic => topic.id === 'qr_game');
+    
+    if (absiTopic && choicesTopic && qrTopic) {
+      setSelectedTopics([absiTopic, choicesTopic, qrTopic]);
+      
+      // إعداد خريطة الأسئلة إذا لم تكن موجودة
+      if (!teamQuestionMap[absiTopic.id]) {
+        const questionMap = {};
+        questionMap[absiTopic.id] = {
+          red: { easy: false, medium: false, hard: false },
+          blue: { easy: false, medium: false, hard: false }
+        };
+        questionMap[qrTopic.id] = {
+          red: { easy: false, medium: false, hard: false },
+          blue: { easy: false, medium: false, hard: false }
+        };
+        
+        setTeamQuestionMap(questionMap);
+      }
+    }
+  }, [teamQuestionMap]);
+
+  // حفظ البيانات في localStorage
   useEffect(() => {
     try {
-      localStorage.setItem('quiz-used-questions', JSON.stringify([...usedQuestions]));
+      localStorage.setItem(STORAGE_KEYS.usedQuestions, JSON.stringify([...usedQuestions]));
     } catch (error) {}
   }, [usedQuestions]);
 
   useEffect(() => {
     try {
-      localStorage.setItem('quiz-team-question-map', JSON.stringify(teamQuestionMap));
+      localStorage.setItem(STORAGE_KEYS.teamQuestionMap, JSON.stringify(teamQuestionMap));
     } catch (error) {}
   }, [teamQuestionMap]);
 
   useEffect(() => {
     try {
-      localStorage.setItem('quiz-teams', JSON.stringify(teams));
+      localStorage.setItem(STORAGE_KEYS.teams, JSON.stringify(teams));
     } catch (error) {}
   }, [teams]);
 
   useEffect(() => {
     try {
-      localStorage.setItem('quiz-helpers', JSON.stringify(helpers));
+      localStorage.setItem(STORAGE_KEYS.helpers, JSON.stringify(helpers));
     } catch (error) {}
   }, [helpers]);
 
   useEffect(() => {
     try {
-      localStorage.setItem('quiz-used-choice-questions', JSON.stringify(usedChoiceQuestions));
+      localStorage.setItem(STORAGE_KEYS.usedChoiceQuestions, JSON.stringify(usedChoiceQuestions));
     } catch (error) {}
   }, [usedChoiceQuestions]);
 
@@ -152,31 +200,6 @@ export default function QuizGame() {
       }
     };
   }, [timerInterval]);
-
-  // Game Setup Functions
-  const startAbsiMatch = () => {
-    const absiTopic = sampleTopics.find(topic => topic.id === 'absi');
-    const choicesTopic = sampleTopics.find(topic => topic.id === 'choices');
-    const qrTopic = sampleTopics.find(topic => topic.id === 'qr_game');
-    
-    if (absiTopic && choicesTopic && qrTopic) {
-      setSelectedTopics([absiTopic, choicesTopic, qrTopic]);
-      setIsAbsiMode(true);
-      
-      const questionMap = {};
-      questionMap[absiTopic.id] = {
-        red: { easy: false, medium: false, hard: false },
-        blue: { easy: false, medium: false, hard: false }
-      };
-      questionMap[qrTopic.id] = {
-        red: { easy: false, medium: false, hard: false },
-        blue: { easy: false, medium: false, hard: false }
-      };
-      
-      setTeamQuestionMap(questionMap);
-      setGameState('playing');
-    }
-  };
 
   // Choice Question Functions
   const selectChoiceQuestion = (order) => {
@@ -432,61 +455,47 @@ export default function QuizGame() {
     return teamQuestionMap[topicId]?.[team]?.[difficulty] === true;
   };
 
-  const resetGame = (clearUsedQuestions = false) => {
-    setGameState('setup');
-    setSelectedTopics([]);
+  const resetGame = (fullReset = true) => {
+    setGameState('playing');
     setCurrentQuestion(null);
-    setShowAnswer(false);
-    setCurrentTurn('red');
-    setTeamQuestionMap({});
-    setUsingPitHelper(null);
-    setZoomedImage(null);
-    setIsAbsiMode(false);
     setCurrentChoiceQuestion(null);
+    setShowAnswer(false);
     setShowChoiceAnswers(false);
-    setUsedChoiceQuestions([]);
     setSelectedAnswers({});
+    setCurrentTurn('red');
+    setUsedChoiceQuestions([]);
+    
+    if (fullReset) {
+      setTeams([
+        { name: 'الفريق الأحمر', color: 'red', score: 0 },
+        { name: 'الفريق الأزرق', color: 'blue', score: 0 }
+      ]);
+      setUsedQuestions(new Set());
+      setTeamQuestionMap({});
+      setHelpers({
+        red: { number2: true, pit: true },
+        blue: { number2: true, pit: true }
+      });
+      setUsingPitHelper(null);
+      
+      // مسح localStorage
+      Object.values(STORAGE_KEYS).forEach(key => {
+        try {
+          localStorage.removeItem(key);
+        } catch (error) {}
+      });
+    }
     
     resetTimer();
-    
-    setHelpers({
-      red: { number2: true, pit: true },
-      blue: { number2: true, pit: true }
-    });
-    setTeams([
-      { name: 'الفريق الأحمر', color: 'red', score: 0 },
-      { name: 'الفريق الأزرق', color: 'blue', score: 0 }
-    ]);
-
-    if (clearUsedQuestions) {
-      setUsedQuestions(new Set());
-      setUsedChoiceQuestions([]);
-      try {
-        localStorage.removeItem('quiz-used-questions');
-        localStorage.removeItem('quiz-used-choice-questions');
-      } catch (error) {}
-    }
-
-    try {
-      localStorage.removeItem('quiz-team-question-map');
-      localStorage.removeItem('quiz-teams');
-      localStorage.removeItem('quiz-helpers');
-    } catch (error) {}
   };
 
-  // إدارة الـ overflow
-  useEffect(() => {
-    if (showConfirmReset || zoomedImage || currentChoiceQuestion) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-  }, [showConfirmReset, zoomedImage, currentChoiceQuestion]);
+  const zoomImage = (imageUrl) => {
+    setZoomedImage(imageUrl);
+  };
 
-  // Render Different Game States
-  if (gameState === 'setup') {
-    return <GameSetup startAbsiMatch={startAbsiMatch} />;
-  }
+  const closeZoomedImage = () => {
+    setZoomedImage(null);
+  };
 
   if (gameState === 'finished') {
     return <GameFinished teams={teams} isAbsiMode={isAbsiMode} resetGame={resetGame} />;

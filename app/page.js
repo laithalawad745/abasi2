@@ -1,13 +1,9 @@
-import Image from "next/image";
-import QuizGame from "../components/QuizGame";
+import GameSetup from "../components/GameSetup";
 
 export default function Home() {
   return (
     <div> 
-      <QuizGame/>
+      <GameSetup />
     </div>
   );
 }
-
-
-// اذا خسر كل مناطقو ما بخسرو  ؟؟؟ نشوف موضوع الخريطة هل بجملها بعد كل عملية ؟؟؟؟  الدول المجاورة ؟؟؟ اخذ النظر ب عدد الجنود 

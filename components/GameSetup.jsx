@@ -1,8 +1,10 @@
 // components/GameSetup.jsx
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 
-export default function GameSetup({ startAbsiMatch }) {
+export default function GameSetup() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 select-none flex flex-col">
       {/* Header */}
@@ -30,12 +32,12 @@ export default function GameSetup({ startAbsiMatch }) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             
             {/* المباراة الكاملة */}
-            <button
-              onClick={startAbsiMatch}
-              className="bg-gradient-to-r cursor-pointer from-purple-600 via-pink-500 to-blue-500 hover:from-purple-700 hover:via-pink-600 hover:to-blue-600 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-purple-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-purple-400/50 hover:border-pink-400/70"
+            <Link
+              href="/full-match"
+              className="bg-gradient-to-r cursor-pointer from-purple-600 via-pink-500 to-blue-500 hover:from-purple-700 hover:via-pink-600 hover:to-blue-600 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-purple-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-purple-400/50 hover:border-pink-400/70 flex items-center justify-center text-center"
             >
                المباراة الكاملة
-            </button>
+            </Link>
 
             {/* فقرة من أسرع */}
             <button
@@ -56,51 +58,64 @@ export default function GameSetup({ startAbsiMatch }) {
             {/* لعبة المزاد - جديد */}
             <button
               onClick={() => window.location.href = '/auction'}
-              className="bg-gradient-to-r cursor-pointer from-yellow-500 via-amber-500 to-orange-500 hover:from-yellow-600 hover:via-amber-600 hover:to-orange-600 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-yellow-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-yellow-400/50 hover:border-amber-400/70"
+              className="bg-gradient-to-r cursor-pointer from-yellow-500 via-amber-500 to-orange-500 hover:from-yellow-600 hover:via-amber-600 hover:to-orange-600 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-amber-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-amber-400/50 hover:border-orange-400/70"
             >
-               المزاد
+              🏆 لعبة المزاد
             </button>
 
             {/* لعبة النرد */}
             <button
               onClick={() => window.location.href = '/dice'}
-              className="bg-gradient-to-r cursor-pointer from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-600 hover:via-teal-600 hover:to-cyan-600 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-emerald-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-emerald-400/50 hover:border-teal-400/70"
+              className="bg-gradient-to-r cursor-pointer from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-indigo-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-indigo-400/50 hover:border-purple-400/70"
             >
-              النرد
-            </button>
-
-            {/* حول أوروبا */}
-            <button
-              onClick={() => window.location.href = '/europe'}
-              className="bg-gradient-to-r cursor-pointer from-green-600 via-emerald-600 to-teal-600 hover:from-green-700 hover:via-emerald-700 hover:to-teal-700 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-green-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-green-400/50 hover:border-emerald-400/70"
-            >
-               أوروبا
-            </button>
-
-            {/* حول الوطن العربي */}
-            <button
-              onClick={() => window.location.href = '/arab'}
-              className="bg-gradient-to-r cursor-pointer from-amber-600 via-yellow-600 to-orange-600 hover:from-amber-700 hover:via-yellow-700 hover:to-orange-700 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-amber-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-amber-400/50 hover:border-yellow-400/70"
-            >
-             الوطن العربي
+              🎲 لعبة النرد
             </button>
 
             {/* من هو؟ */}
             <button
               onClick={() => window.location.href = '/guess-who'}
-              className="bg-gradient-to-r cursor-pointer from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-700 hover:via-blue-700 hover:to-indigo-700 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-cyan-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-cyan-400/50 hover:border-blue-400/70"
+              className="bg-gradient-to-r cursor-pointer from-teal-500 via-cyan-500 to-blue-500 hover:from-teal-600 hover:via-cyan-600 hover:to-blue-600 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-teal-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-teal-400/50 hover:border-cyan-400/70"
             >
-              من هو؟
+              🕵️ من هو؟
             </button>
 
-            {/* الهيمنة (Risk) */}
+            {/* الهيمنة (Risk Game) */}
             <button
               onClick={() => window.location.href = '/risk'}
-              className="bg-gradient-to-r cursor-pointer from-red-600 via-rose-600 to-pink-600 hover:from-red-700 hover:via-rose-700 hover:to-pink-700 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-red-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-red-400/50 hover:border-rose-400/70"
+              className="bg-gradient-to-r cursor-pointer from-green-600 via-emerald-500 to-teal-500 hover:from-green-700 hover:via-emerald-600 hover:to-teal-600 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-green-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-green-400/50 hover:border-emerald-400/70"
             >
-              الهيمنة
+              🌍 الهيمنة
             </button>
 
+            {/* الخرائط - Europe */}
+            <button
+              onClick={() => window.location.href = '/europe'}
+              className="bg-gradient-to-r cursor-pointer from-blue-600 via-indigo-500 to-purple-500 hover:from-blue-700 hover:via-indigo-600 hover:to-purple-600 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-blue-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-blue-400/50 hover:border-indigo-400/70"
+            >
+              🗺️ خريطة أوروبا
+            </button>
+
+            {/* الخرائط - Arab */}
+            <button
+              onClick={() => window.location.href = '/arab'}
+              className="bg-gradient-to-r cursor-pointer from-emerald-600 via-green-500 to-lime-500 hover:from-emerald-700 hover:via-green-600 hover:to-lime-600 text-white px-8 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 rounded-2xl font-bold text-xl md:text-2xl lg:text-3xl shadow-2xl shadow-emerald-500/30 transition-all duration-300 hover:scale-105 transform border-2 border-emerald-400/50 hover:border-green-400/70"
+            >
+              🕌 خريطة العرب
+            </button>
+
+          </div>
+          
+          {/* معلومات إضافية */}
+          <div className="mt-12 text-center">
+            <p className="text-lg md:text-xl text-slate-300 mb-4">
+              منصة ألعاب تفاعلية باللغة العربية
+            </p>
+            <div className="flex flex-wrap justify-center gap-4 text-slate-400 text-sm md:text-base">
+              <span>🎮 ألعاب متعددة اللاعبين</span>
+              <span>🧠 أسئلة ثقافية متنوعة</span>
+              <span>🏆 تحديات مثيرة</span>
+              <span>📱 متجاوب مع جميع الأجهزة</span>
+            </div>
           </div>
         </div>
       </div>
