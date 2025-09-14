@@ -1,4 +1,4 @@
-// components/RiskGame/QuestionModal.jsx
+// components/RiskGame/QuestionModal.jsx - بالتصميم الجديد
 import React, { useState } from 'react';
 
 export default function QuestionModal({ 
@@ -38,9 +38,9 @@ export default function QuestionModal({
     switch (actionType) {
       case 'occupy':
         return (
-          <div className="bg-blue-900/30 rounded-lg p-3 mb-4">
-            <div className="text-blue-300 font-bold mb-2">مكافآت الاحتلال:</div>
-            <div className="text-sm text-blue-200">
+          <div className="bg-blue-500/20 border border-blue-500/30 rounded-2xl p-4 mb-6">
+            <div className="text-blue-300 font-bold mb-2 text-lg">🎯 مكافآت الاحتلال:</div>
+            <div className="text-blue-200">
               ✅ إجابة صحيحة: احتلال الدولة بـ {reward}<br/>
               ❌ إجابة خاطئة: فشل الاحتلال
             </div>
@@ -48,9 +48,9 @@ export default function QuestionModal({
         );
       case 'attack':
         return (
-          <div className="bg-red-900/30 rounded-lg p-3 mb-4">
-            <div className="text-red-300 font-bold mb-2">نتائج الهجوم:</div>
-            <div className="text-sm text-red-200">
+          <div className="bg-red-500/20 border border-red-500/30 rounded-2xl p-4 mb-6">
+            <div className="text-red-300 font-bold mb-2 text-lg">⚔️ نتائج الهجوم:</div>
+            <div className="text-red-200">
               ✅ إجابة صحيحة: احتلال {targetCountry} + 15 جندي<br/>
               ❌ إجابة خاطئة: خسارة نصف جيش {selectedCountry}
             </div>
@@ -58,11 +58,11 @@ export default function QuestionModal({
         );
       case 'reinforce':
         return (
-          <div className="bg-green-900/30 rounded-lg p-3 mb-4">
-            <div className="text-green-300 font-bold mb-2">نتائج التقوية:</div>
-            <div className="text-sm text-green-200">
-              ✅ إجابة صحيحة: إضافة {reward} لـ {selectedCountry}<br/>
-              ❌ إجابة خاطئة: خسارة 25% من جيش {selectedCountry}
+          <div className="bg-green-500/20 border border-green-500/30 rounded-2xl p-4 mb-6">
+            <div className="text-green-300 font-bold mb-2 text-lg">🛡️ مكافآت التقوية:</div>
+            <div className="text-green-200">
+              ✅ إجابة صحيحة: إضافة {reward}<br/>
+              ❌ إجابة خاطئة: لا توجد مكافآت
             </div>
           </div>
         );
@@ -71,51 +71,36 @@ export default function QuestionModal({
     }
   };
 
-  // الحصول على لون الصعوبة
-  const getDifficultyColor = () => {
-    switch (question.difficulty) {
-      case 'easy': return 'text-green-400';
-      case 'medium': return 'text-yellow-400';
-      case 'hard': return 'text-red-400';
-      default: return 'text-gray-400';
-    }
-  };
-
-  // الحصول على نص الصعوبة
-  const getDifficultyText = () => {
-    switch (question.difficulty) {
-      case 'easy': return 'سهل';
-      case 'medium': return 'متوسط';
-      case 'hard': return 'صعب';
-      default: return 'غير محدد';
-    }
-  };
-
-  const handleShowAnswer = () => {
-    setShowAnswer(true);
-  };
-
-  const handleFinalAnswer = (isCorrect) => {
-    onAnswer(isCorrect);
-  };
-
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-800/95 backdrop-blur-lg rounded-2xl p-6 md:p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-slate-600 shadow-2xl">
+    <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-white/20 rounded-3xl p-6 md:p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
         
         {/* Header */}
         <div className="text-center mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
-            {getActionTitle()}
-          </h2>
-          <div className="flex justify-center items-center gap-2">
-            <span className={`font-bold ${getDifficultyColor()}`}>
-              {getDifficultyText()}
-            </span>
-            <span className="text-gray-300"  > : صعوبة السؤال </span>
-            {/* <span className="text-gray-300">
-              ({question.points} نقطة)
-            </span> */}
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl md:text-4xl font-bold text-white">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
+                {getActionTitle()}
+              </span>
+            </h2>
+            
+            <button
+              onClick={onClose}
+              className="w-12 h-12 bg-red-500/20 border border-red-500/30 hover:bg-red-500/30 text-red-300 rounded-xl font-bold text-xl transition-all duration-300 hover:scale-105"
+            >
+              ✕
+            </button>
+          </div>
+          
+          <div className="flex justify-center items-center gap-4 mb-6">
+            <div className={`px-4 py-2 rounded-xl font-bold text-lg ${
+              question.difficulty === 'easy' ? 'bg-green-500/20 border border-green-500/30 text-green-300' :
+              question.difficulty === 'medium' ? 'bg-yellow-500/20 border border-yellow-500/30 text-yellow-300' :
+              'bg-red-500/20 border border-red-500/30 text-red-300'
+            }`}>
+              {question.difficulty === 'easy' ? '🟢 سهل' : 
+               question.difficulty === 'medium' ? '🟡 متوسط' : '🔴 صعب'}
+            </div>
           </div>
         </div>
 
@@ -123,8 +108,8 @@ export default function QuestionModal({
         {getRewardsDescription()}
 
         {/* Question Content */}
-        <div className="bg-slate-700/50 rounded-lg p-6 mb-6">
-          <h3 className="text-xl md:text-2xl font-bold text-center mb-6 text-slate-100">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 mb-6">
+          <h3 className="text-xl md:text-2xl font-bold text-center mb-6 text-white leading-relaxed">
             {question.question}
           </h3>
 
@@ -134,7 +119,7 @@ export default function QuestionModal({
               <img 
                 src={question.imageUrl} 
                 alt="صورة السؤال"
-                className="max-w-full max-h-64 mx-auto rounded-lg shadow-lg"
+                className="max-w-full max-h-64 mx-auto rounded-xl shadow-lg border border-white/10"
                 onError={(e) => {
                   e.target.style.display = 'none';
                 }}
@@ -146,7 +131,7 @@ export default function QuestionModal({
             <div className="text-center mb-4">
               <audio 
                 controls 
-                className="mx-auto"
+                className="mx-auto rounded-xl"
                 onError={(e) => {
                   e.target.style.display = 'none';
                 }}
@@ -161,7 +146,7 @@ export default function QuestionModal({
             <div className="text-center mb-4">
               <video 
                 controls 
-                className="max-w-full max-h-64 mx-auto rounded-lg"
+                className="max-w-full max-h-64 mx-auto rounded-xl border border-white/10"
                 onError={(e) => {
                   e.target.style.display = 'none';
                 }}
@@ -174,70 +159,45 @@ export default function QuestionModal({
         </div>
 
         {!showAnswer ? (
-          /* Show Question - Voice Answer */
-          <div className="space-y-6">
-            {/* <div className="bg-yellow-900/30 rounded-lg p-4 text-center">
-              <div className="text-yellow-300 font-bold mb-2">🎤 إجابة شفهية</div>
-              <div className="text-sm text-yellow-200">
-                ناقش الإجابة مع فريقك في ديسكورد، ثم اضغط على "عرض الإجابة" للتحقق من صحتها
-              </div>
-            </div> */}
-
-            <div className="flex gap-3 justify-center">
-              <button
-                onClick={handleShowAnswer}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-bold transition-all shadow-lg"
-              >
-                عرض الإجابة الصحيحة
-              </button>
-              {/* <button
-                onClick={onClose}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-bold transition-all"
-              >
-                إلغاء
-              </button> */}
-            </div>
+          <div className="text-center">
+            <p className="text-gray-300 text-lg mb-6">فكر جيداً قبل الإجابة...</p>
+            <button
+              onClick={() => setShowAnswer(true)}
+              className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-4 rounded-2xl font-bold text-xl transition-all duration-300 hover:scale-105 shadow-lg shadow-blue-500/30"
+            >
+              💡 عرض الإجابة
+            </button>
           </div>
         ) : (
-          /* Show Answer and Decision */
           <div className="space-y-6">
-            <div className="bg-slate-700/50 rounded-lg p-4">
-              <div className="text-center mb-4">
-                <div className="text-gray-300 mb-2">الإجابة الصحيحة:</div>
-                <div className="text-xl font-bold text-green-400">
-                  {question.answer}
-                </div>
-              </div>
+            {/* Answer Display */}
+            <div className="bg-green-500/20 border border-green-500/30 rounded-2xl p-6 text-center">
+              <h4 className="text-2xl font-bold text-green-300 mb-4">
+                ✅ الإجابة الصحيحة:
+              </h4>
+              <p className="text-xl md:text-2xl text-white font-bold">
+                {question.answer}
+              </p>
             </div>
 
-            <div className="text-center">
-              <div className="text-white font-bold mb-4">
-                هل كانت إجابتكم  صحيحة؟
-              </div>
-              <div className="flex gap-4 justify-center">
-                <button
-                  onClick={() => handleFinalAnswer(true)}
-                  className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg font-bold transition-all shadow-lg"
-                >
-                  ✅ صحيحة
-                </button>
-                <button
-                  onClick={() => handleFinalAnswer(false)}
-                  className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg font-bold transition-all shadow-lg"
-                >
-                  ❌ خاطئة
-                </button>
-              </div>
+            {/* Action Buttons */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button
+                onClick={() => onAnswer(true)}
+                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 shadow-lg shadow-green-500/30"
+              >
+                ✅ أجاب صحيح
+              </button>
+              
+              <button
+                onClick={() => onAnswer(false)}
+                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 shadow-lg shadow-red-500/30"
+              >
+                ❌ أجاب خطأ
+              </button>
             </div>
           </div>
         )}
-
-        {/* Tips */}
-        <div className="mt-6 pt-4 border-t border-slate-600">
-          {/* <div className="text-xs text-gray-400 text-center">
-            💡 نصيحة: ناقش السؤال مع فريقك في ديسكورد قبل عرض الإجابة!
-          </div> */}
-        </div>
       </div>
     </div>
   );

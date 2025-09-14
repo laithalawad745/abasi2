@@ -1,96 +1,55 @@
-// components/RiskGame/GameUI.jsx
+// components/RiskGame/GameUI.jsx - بالتصميم الجديد
 import React from 'react';
-import Link from 'next/link';
 
 export default function GameUI({ 
-  currentPlayer, 
   players, 
+  currentPlayer, 
+  round, 
   countries, 
-  gamePhase,
-  round,
   onEndTurn, 
-  onRestart 
+  onRestart, 
+  getPlayerStats 
 }) {
-  // حساب إحصائيات اللاعبين
-  const getPlayerStats = (player) => {
-    const playerCountries = Object.values(countries).filter(c => c.owner === player.id);
-    const totalTroops = playerCountries.reduce((sum, c) => sum + c.troops, 0);
-    
-    return {
-      countries: playerCountries.length,
-      troops: totalTroops
-    };
-  };
-
-  // حساب إجمالي الدول المحتلة
-  const getTotalOccupiedCountries = () => {
-    return Object.values(countries).filter(c => c.owner !== null).length;
-  };
-
-  const getTotalCountries = () => {
-    return Object.keys(countries).length;
-  };
-
-  // حساب نسبة التقدم في اللعبة
-  const getGameProgress = () => {
-    const totalCountries = getTotalCountries();
-    const occupiedCountries = getTotalOccupiedCountries();
-    return totalCountries > 0 ? (occupiedCountries / totalCountries) * 100 : 0;
-  };
-
-  // الحصول على اللاعبين النشطين فقط
-  const getActivePlayers = () => {
-    return players.filter(p => !p.eliminated);
-  };
-
-  // الحصول على رسالة حالة اللعبة
+  
   const getGameStatusMessage = () => {
-    if (gamePhase === 'playing') {
-      const progress = getGameProgress();
-      if (progress < 100) {
-        return `مرحلة الاحتلال الأولي - ${Math.round(progress)}% من الدول محتلة`;
-      } else {
-        return 'جميع الدول محتلة - جاري الانتقال لمرحلة الإقصاء';
-      }
-    } else if (gamePhase === 'elimination') {
-      return 'مرحلة الإقصاء - المعركة من أجل البقاء!';
+    if (currentPlayer) {
+      return `دور ${currentPlayer.name}`;
     }
     return '';
   };
 
   return (
     <>
-      {/* شريط علوي */}
-      <div className="fixed top-0 left-0 right-0 bg-slate-900/95 backdrop-blur-lg border-b border-slate-700 p-4 z-40">
+      {/* شريط علوي بالتصميم الجديد */}
+      <div className="fixed top-0 left-0 right-0 bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-white/20 p-4 z-40">
         <div className="flex justify-between items-center max-w-7xl mx-auto">
           {/* اللوجو والعنوان */}
           <div className="flex items-center gap-4">
-            <div className="hidden md:block text-lg font-bold text-white">
-              الهيمنة 
+            <div className="text-2xl md:text-3xl font-black text-white tracking-wider">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-emerald-500">
+                الهيمنة
+              </span>
             </div>
           </div>
 
           {/* مؤشر حالة اللعبة */}
           <div className="flex items-center gap-4">
-            <div className="text-center">
-              <div className="text-sm text-gray-300">
+            <div className="text-center hidden md:block">
+              <div className="text-lg text-white font-semibold">
                 {getGameStatusMessage()}
               </div>
-              {/* <div className="text-xs text-gray-400">
-                الجولة {round}
-              </div> */}
             </div>
             
             <button
               onClick={onEndTurn}
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-bold transition-all shadow-lg shadow-green-500/25"
+              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105 shadow-lg shadow-green-500/30"
             >
               إنهاء الدور
             </button>
             
             <button
               onClick={onRestart}
-              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-bold transition-all"
+              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105"
             >
               🔄 إعادة تشغيل
             </button>
@@ -102,28 +61,25 @@ export default function GameUI({
       {currentPlayer && (
         <div className="hidden md:block fixed top-20 left-1/2 transform -translate-x-1/2 z-50">
           <div 
-            className="bg-slate-800/95 backdrop-blur-lg rounded-2xl px-6 py-4 shadow-2xl border-2"
+            className="bg-[#0a0a0f]/90 backdrop-blur-xl rounded-2xl px-8 py-4 shadow-2xl border-2"
             style={{ 
               borderColor: currentPlayer.color,
-              boxShadow: `0 0 20px ${currentPlayer.color}40`
+              boxShadow: `0 0 30px ${currentPlayer.color}40`
             }}
           >
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               {/* دائرة ملونة للاعب */}
               <div 
-                className="w-8 h-8 rounded-full border-3 border-white shadow-lg"
+                className="w-12 h-12 rounded-full border-3 border-white shadow-lg"
                 style={{ backgroundColor: currentPlayer.color }}
               ></div>
               
               {/* معلومات اللاعب */}
               <div className="text-center">
-                <div className="text-white font-bold text-lg">
+                <div className="text-white font-bold text-xl">
                   دور: {currentPlayer.name}
                 </div>
-         
               </div>
-              
-   
             </div>
           </div>
         </div>
@@ -133,36 +89,38 @@ export default function GameUI({
       {currentPlayer && (
         <div className="block md:hidden fixed top-20 left-2 right-2 z-50">
           <div 
-            className="bg-slate-800/90 backdrop-blur-lg rounded-xl px-4 py-2 shadow-xl border"
+            className="bg-[#0a0a0f]/90 backdrop-blur-xl rounded-xl px-4 py-3 shadow-xl border-2"
             style={{ 
               borderColor: currentPlayer.color,
-              boxShadow: `0 0 15px ${currentPlayer.color}30`
+              boxShadow: `0 0 20px ${currentPlayer.color}30`
             }}
           >
-            <div className="flex items-center justify-center gap-3">
+            <div className="flex items-center justify-center gap-4">
               {/* دائرة ملونة صغيرة */}
               <div 
-                className="w-6 h-6 rounded-full border-2 border-white"
+                className="w-8 h-8 rounded-full border-2 border-white"
                 style={{ backgroundColor: currentPlayer.color }}
               ></div>
               
               {/* اسم اللاعب */}
-              <div className="text-white font-bold text-base">
+              <div className="text-white font-bold text-lg">
                 دور: {currentPlayer.name}
               </div>
-              
-              {/* أيقونة صغيرة */}
             </div>
           </div>
         </div>
       )}
 
-      {/* لوحة اللاعبين - ملتصقة بيمين الشاشة مع حواف منحنية */}
-      <div className="hidden md:block fixed top-20 right-0 bottom-16 w-80 bg-slate-800/90 backdrop-blur-lg shadow-2xl z-30 overflow-y-auto border-l border-slate-700 rounded-l-2xl">     
-        <div className="p-4">
-          <h3 className="text-white font-bold text-lg mb-3 text-center"> لوحة اللاعبين</h3>
+      {/* لوحة اللاعبين - ملتصقة بيمين الشاشة مع التصميم الجديد */}
+      <div className="hidden md:block fixed top-32 right-0 bottom-16 w-80 bg-[#0a0a0f]/90 backdrop-blur-xl shadow-2xl z-30 overflow-y-auto border-l border-white/20 rounded-l-3xl">     
+        <div className="p-6">
+          <h3 className="text-white font-bold text-2xl mb-6 text-center">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-500">
+               لوحة اللاعبين
+            </span>
+          </h3>
           
-          <div className="space-y-3">
+          <div className="space-y-4">
             {players.map((player, index) => {
               const stats = getPlayerStats(player);
               const isCurrentPlayer = currentPlayer && player.id === currentPlayer.id;
@@ -171,21 +129,24 @@ export default function GameUI({
               return (
                 <div
                   key={player.id}
-                  className={`p-3 rounded-lg border-2 transition-all ${
+                  className={`p-4 rounded-2xl border-2 transition-all duration-300 ${
                     isEliminated
-                      ? 'border-red-500 bg-red-900/30 opacity-60'
+                      ? 'border-red-500/50 bg-red-500/10 opacity-60'
                       : isCurrentPlayer
-                      ? 'border-yellow-400 bg-slate-700/80 shadow-lg shadow-yellow-400/25 animate-pulse'
-                      : 'border-slate-600 bg-slate-700/50'
+                      ? 'border-yellow-400/80 bg-white/10 shadow-lg animate-pulse'
+                      : 'border-white/20 bg-white/5'
                   }`}
+                  style={isCurrentPlayer ? {
+                    boxShadow: `0 0 20px ${player.color}30`
+                  } : {}}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-4">
                       <div 
-                        className="w-4 h-4 rounded-full border-2 border-white"
+                        className="w-6 h-6 rounded-full border-2 border-white shadow-lg"
                         style={{ backgroundColor: player.color }}
                       ></div>
-                      <span className={`font-bold ${isEliminated ? 'text-red-400' : 'text-white'}`}>
+                      <span className={`font-bold text-lg ${isEliminated ? 'text-red-400' : 'text-white'}`}>
                         {player.name}
                         {isCurrentPlayer && !isEliminated && ' 👑'}
                         {isEliminated && ' ❌'}
@@ -193,79 +154,86 @@ export default function GameUI({
                     </div>
                     
                     <div className="text-right">
-                      <div className={`text-sm ${isEliminated ? 'text-red-300' : 'text-gray-300'}`}>
+                      <div className={`text-sm font-semibold ${isEliminated ? 'text-red-300' : 'text-gray-300'}`}>
                         🏰 {stats.countries} دولة
                       </div>
                       <div className={`text-sm ${isEliminated ? 'text-red-300' : 'text-gray-300'}`}>
-                        ⚔️ {stats.troops} جندي
+                        ⚔️ {stats.totalTroops} جندي
                       </div>
                     </div>
                   </div>
                   
-                  {/* شريط التقدم */}
-                  {!isEliminated && (
-                    <div className="mt-2 w-full bg-slate-600 rounded-full h-2">
+                  {/* شريط تقدم الدول */}
+                  <div className="mt-3">
+                    <div className="w-full bg-white/10 rounded-full h-2">
                       <div 
                         className="h-2 rounded-full transition-all duration-500"
                         style={{ 
-                          backgroundColor: player.color,
-                          width: `${Math.max(5, (stats.countries / getTotalCountries()) * 100)}%`
+                          width: `${Math.min((stats.countries / Object.keys(countries).length) * 100, 100)}%`,
+                          backgroundColor: player.color
                         }}
                       ></div>
                     </div>
-                  )}
-                  
-                  {/* مؤشر الإقصاء */}
-                  {isEliminated && (
-                    <div className="mt-2 text-xs text-red-400 font-bold text-center">
-                      مُقصى من اللعبة
-                    </div>
-                  )}
+                    <p className="text-xs text-gray-400 mt-1 text-center">
+                      {Math.round((stats.countries / Object.keys(countries).length) * 100)}% من العالم
+                    </p>
+                  </div>
                 </div>
               );
             })}
           </div>
 
-          {/* إحصائيات عامة */}
-          <div className="mt-4 pt-3 border-t border-slate-600">
-            <div className="text-sm text-gray-300 space-y-1">
-              <div>🌍 الدول المحتلة: {getTotalOccupiedCountries()}/{getTotalCountries()}</div>
-              <div>👥 اللاعبون النشطون: {getActivePlayers().length}/{players.length}</div>
-              <div>🎯 الدور: {currentPlayer ? currentPlayer.name : 'غير محدد'}</div>
-              <div className="w-full bg-slate-600 rounded-full h-2 mt-2">
-                <div 
-                  className="h-2 bg-gradient-to-r from-blue-500 to-green-500 rounded-full transition-all duration-500"
-                  style={{ width: `${getGameProgress()}%` }}
-                ></div>
-              </div>
-              <div className="text-xs text-center text-gray-400">
-                تقدم اللعبة: {Math.round(getGameProgress())}%
-              </div>
+          {/* معلومات إضافية */}
+          <div className="mt-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4">
+            <h4 className="text-white font-bold mb-3">📈 إحصائيات اللعبة</h4>
+            <div className="text-gray-300 text-sm space-y-2">
+              <p>🔄 الجولة: {round}</p>
+              <p>🌍 إجمالي الدول: {Object.keys(countries).length}</p>
+              <p>👥 اللاعبون النشطون: {players.filter(p => !p.eliminated).length}</p>
+            </div>
+          </div>
+
+          {/* تعليمات سريعة */}
+          <div className="mt-4 bg-blue-500/10 border border-blue-500/30 rounded-2xl p-4">
+            <h4 className="text-blue-300 font-bold mb-2">💡 تعليمات سريعة</h4>
+            <div className="text-blue-200 text-xs space-y-1">
+              <p>• اضغط دولة فارغة = احتلال</p>
+              <p>• اضغط دولتك = تقوية</p>
+              <p>• اضغط دولة عدو = هجوم</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* شريط التقدم السفلي */}
-      <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-lg border-t border-slate-700 p-2 z-30">
-        <div className="flex justify-between items-center text-sm">
-          <div className="flex items-center gap-4">
-            <div className="text-gray-300">
-              🌍 <span className="text-white font-bold">{getTotalOccupiedCountries()}</span>/{getTotalCountries()} دولة
-            </div>
-            <div className="text-gray-300">
-              👥 <span className="text-white font-bold">{getActivePlayers().length}</span> لاعب نشط
-            </div>
+      {/* لوحة مبسطة للهاتف */}
+      <div className="block md:hidden fixed bottom-0 left-0 right-0 bg-[#0a0a0f]/90 backdrop-blur-xl border-t border-white/20 p-4 z-30">
+        <div className="flex justify-between items-center">
+          <div className="text-white text-sm">
+            <span className="font-bold">الجولة {round}</span>
           </div>
           
-          <div className="text-center">
-            <div className="text-gray-300">
-              🎯 <span className="text-white font-bold">{currentPlayer?.name || 'غير محدد'}</span>
-            </div>
-          </div>
-          
-          <div className="text-gray-300">
-            الجولة <span className="text-white font-bold">{round}</span>
+          <div className="flex gap-2">
+            {players.slice(0, 4).map((player) => {
+              const stats = getPlayerStats(player);
+              const isCurrentPlayer = currentPlayer && player.id === currentPlayer.id;
+              
+              return (
+                <div
+                  key={player.id}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl ${
+                    isCurrentPlayer ? 'bg-white/20' : 'bg-white/5'
+                  }`}
+                >
+                  <div 
+                    className="w-4 h-4 rounded-full border border-white"
+                    style={{ backgroundColor: player.color }}
+                  ></div>
+                  <span className="text-white text-xs font-bold">
+                    {stats.countries}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
