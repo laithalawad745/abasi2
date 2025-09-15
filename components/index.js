@@ -34,3 +34,6 @@ export { default as ToastNotification, showSuccessToast, showErrorToast, showWar
 
 // 🆕 لعبة المزاد الجديدة
 export { default as AuctionGame } from './AuctionGame';
+
+// 🆕 لعبة خمن الخطأ الجديدة
+export { default as GuessWrongGame } from './GuessWrongGame';
