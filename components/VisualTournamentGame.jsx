@@ -3,7 +3,13 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { sampleTopics } from '../app/data/gameData';
+import { 
+  getRandomQuestionFromRound, 
+  saveUsedQuestions, 
+  loadUsedQuestions, 
+  clearUsedQuestions,
+  getUsageStats 
+} from '../app/data/tournamentData';
 
 export default function VisualTournamentGame() {
   // State management
@@ -13,6 +19,7 @@ export default function VisualTournamentGame() {
   const [showAnswer, setShowAnswer] = useState(false);
   const [showingDecision, setShowingDecision] = useState(true);
   const [isClient, setIsClient] = useState(false);
+  const [usedQuestionIds, setUsedQuestionIds] = useState([]);
 
   // Tournament configuration
   const roundConfig = {
@@ -50,7 +57,17 @@ export default function VisualTournamentGame() {
   // Client-side mounting
   useEffect(() => {
     setIsClient(true);
+    // تحميل الأسئلة المستخدمة من localStorage
+    const savedUsedQuestions = loadUsedQuestions();
+    setUsedQuestionIds(savedUsedQuestions);
   }, []);
+
+  // حفظ الأسئلة المستخدمة عند تغييرها
+  useEffect(() => {
+    if (isClient && usedQuestionIds.length > 0) {
+      saveUsedQuestions(usedQuestionIds);
+    }
+  }, [usedQuestionIds, isClient]);
 
   // Game functions
   const startGame = () => {
@@ -67,13 +84,24 @@ export default function VisualTournamentGame() {
   };
 
   const continueGame = () => {
-    const questions = sampleTopics.find(t => t.id === 'absi')?.questions || [];
-    if (questions.length === 0) return;
+    const currentTeamData = teams[currentTeam];
+    
+    // الحصول على سؤال عشوائي من الدور الحالي
+    const randomQuestion = getRandomQuestionFromRound(currentTeamData.currentRound, usedQuestionIds);
+    
+    if (!randomQuestion) {
+      console.error('لا توجد أسئلة متاحة للدور:', currentTeamData.currentRound);
+      // إذا لم تعد هناك أسئلة، ننتقل للدور التالي تلقائياً
+      advanceToNextRound();
+      return;
+    }
 
-    const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
     setCurrentQuestion(randomQuestion);
     setShowAnswer(false);
     setShowingDecision(false);
+    
+    // إضافة السؤال للأسئلة المستخدمة
+    setUsedQuestionIds(prev => [...prev, randomQuestion.id]);
   };
 
   const withdrawTeam = () => {
@@ -175,6 +203,8 @@ export default function VisualTournamentGame() {
     setCurrentQuestion(null);
     setShowAnswer(false);
     setShowingDecision(true);
+    setUsedQuestionIds([]);
+    clearUsedQuestions();
     setTeams({
       red: {
         name: 'الفريق الأحمر',
@@ -198,6 +228,12 @@ export default function VisualTournamentGame() {
       },
       tie: false
     });
+  };
+
+  // احصائيات الأسئلة
+  const getQuestionStats = () => {
+    if (!isClient) return { total: { remaining: 0 } };
+    return getUsageStats(usedQuestionIds);
   };
 
   // Tournament bracket components
@@ -351,16 +387,18 @@ export default function VisualTournamentGame() {
               </div>
 
               {/* النهائي */}
-              <div className="flex flex-col">
-                <h4 className="text-center text-yellow-400 font-bold mb-2 text-sm">النهائي</h4>
-                <div className="flex justify-center">
-                  <PlayerCircle 
-                    position={positions.final[0]} 
-                    team={team}
-                    isActive={teamData.currentRound === 'final' && teamData.questionsAnswered === 0}
-                    size="large"
-                  />
-                </div>
+              <div className="flex flex-col justify-center">
+                <h4 className="text-center text-yellow-400 font-bold mb-8 text-sm">النهائي</h4>
+                {positions.final.map((position, index) => (
+                  <div key={position.id} className={`flex items-center justify-center ${team === 'blue' ? 'flex-row-reverse' : ''}`}>
+                    <PlayerCircle 
+                      position={position} 
+                      team={team}
+                      isActive={teamData.currentRound === 'final' && index === teamData.questionsAnswered}
+                      size="large"
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -369,7 +407,10 @@ export default function VisualTournamentGame() {
     );
   };
 
-  // Setup phase
+  const currentTeamData = teams[currentTeam];
+  const stats = getQuestionStats();
+
+  // صفحة الإعداد
   if (gamePhase === 'setup') {
     return (
       <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
@@ -377,16 +418,14 @@ export default function VisualTournamentGame() {
         <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
           <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/20 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-orange-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 right-1/2 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
         </div>
 
-        {/* المحتوى الرئيسي */}
         <div className="relative z-10 p-6 md:p-8">
           {/* Header */}
-          <div className="flex justify-between items-center mb-12">
-            <div className="text-4xl md:text-5xl font-black text-white tracking-wider">
+          <div className="flex justify-between items-center mb-8">
+            <div className="text-2xl md:text-3xl font-black text-white tracking-wider">
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
-                الإقصاء
+                🏆 بطولة الإقصاء
               </span>
             </div>
             <Link 
@@ -397,89 +436,76 @@ export default function VisualTournamentGame() {
             </Link>
           </div>
 
-          {/* العنوان الرئيسي */}
-          <div className="text-center mb-16">
-            <h1 className="text-4xl md:text-7xl font-black text-white mb-6 tracking-tight">
-              بطولة
-              <span className="block bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600">
-                الإقصاء 
-              </span>
+          <div className="max-w-4xl mx-auto text-center space-y-8">
+            <h1 className="text-4xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-8">
+              بطولة الإقصاء
             </h1>
-            {/* <p className="text-xl md:text-2xl text-gray-400 font-light max-w-2xl mx-auto">
-              شجرة بطولة بصرية مثل البطولات الحقيقية
-            </p> */}
-          </div>
 
-          {/* قواعد اللعبة */}
-          <div className="max-w-6xl mx-auto mb-12">
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
-              <h2 className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400 mb-8">
-                 قواعد البطولة 
-              </h2>
+            {/* شرح اللعبة */}
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 mb-8">
+              <h2 className="text-2xl font-bold text-yellow-400 mb-6">📋 قواعد البطولة</h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="text-center p-6 bg-white/5 rounded-2xl border border-green-500/30">
-                  <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-600 rounded-2xl flex items-center justify-center mb-4 mx-auto">
-                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold text-green-400 mb-2">إجابة صحيحة</h3>
-                  <p className="text-gray-300">تتقدم في الشجرة وتحصل على النقاط</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-right">
+                <div className="bg-blue-500/10 rounded-2xl p-6 border border-blue-500/30">
+                  <h3 className="text-blue-400 font-bold text-lg mb-3">🎯 الهدف</h3>
+                  <p className="text-gray-300">
+                    تقدم عبر أدوار البطولة بالإجابة على الأسئلة بنجاح. كل دور له عدد معين من الأسئلة ونقاط مختلفة.
+                  </p>
                 </div>
-                
-                <div className="text-center p-6 bg-white/5 rounded-2xl border border-red-500/30">
-                  <div className="w-16 h-16 bg-gradient-to-br from-red-400 to-red-600 rounded-2xl flex items-center justify-center mb-4 mx-auto">
-                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/>
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold text-red-400 mb-2">إجابة خاطئة</h3>
-                  <p className="text-gray-300">إقصاء فوري وخسارة كل النقاط</p>
-                </div>
-                
-                <div className="text-center p-6 bg-white/5 rounded-2xl border border-yellow-500/30">
-                  <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-600 rounded-2xl flex items-center justify-center mb-4 mx-auto">
-                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd"/>
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold text-yellow-400 mb-2">انسحاب ذكي</h3>
-                  <p className="text-gray-300">يمكن الانسحاب والاحتفاظ بالنقاط</p>
-                </div>
-              </div>
 
-              {/* نظام النقاط */}
-              <div className="bg-white/5 rounded-2xl p-6 border border-purple-500/30">
-                <h3 className="text-purple-400 font-bold text-lg mb-4 text-center">💎 نظام النقاط لكل مرحلة</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-sm">
-                  <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-xl p-4 border border-blue-500/30">
-                    <div className="font-bold text-blue-400 text-lg">دور الـ8</div>
-                    <div className="text-white text-2xl font-bold">10</div>
-                    <div className="text-gray-300">نقاط/سؤال</div>
-                  </div>
-                  <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-xl p-4 border border-purple-500/30">
-                    <div className="font-bold text-purple-400 text-lg">دور الـ4</div>
-                    <div className="text-white text-2xl font-bold">20</div>
-                    <div className="text-gray-300">نقطة/سؤال</div>
-                  </div>
-                  <div className="bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-xl p-4 border border-orange-500/30">
-                    <div className="font-bold text-orange-400 text-lg">نصف النهائي</div>
-                    <div className="text-white text-2xl font-bold">40</div>
-                    <div className="text-gray-300">نقطة/سؤال</div>
-                  </div>
-                  <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 rounded-xl p-4 border border-yellow-500/30">
-                    <div className="font-bold text-yellow-400 text-lg">النهائي</div>
-                    <div className="text-white text-2xl font-bold">80</div>
-                    <div className="text-gray-300">نقطة/سؤال</div>
-                  </div>
+                <div className="bg-green-500/10 rounded-2xl p-6 border border-green-500/30">
+                  <h3 className="text-green-400 font-bold text-lg mb-3">✅ الإجابة الصحيحة</h3>
+                  <p className="text-gray-300">
+                    احصل على نقاط الدور والتقدم للمرحلة التالية في البطولة.
+                  </p>
+                </div>
+
+                <div className="bg-red-500/10 rounded-2xl p-6 border border-red-500/30">
+                  <h3 className="text-red-400 font-bold text-lg mb-3">❌ الإجابة الخاطئة</h3>
+                  <p className="text-gray-300">
+                    تخرج من البطولة فوراً وتفقد جميع نقاطك.
+                  </p>
+                </div>
+
+                <div className="bg-yellow-500/10 rounded-2xl p-6 border border-yellow-500/30">
+                  <h3 className="text-yellow-400 font-bold text-lg mb-3">🚪 الانسحاب</h3>
+                  <p className="text-gray-300">
+                    يمكنك الانسحاب والاحتفاظ بنقاطك الحالية في أي وقت.
+                  </p>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* زر البدء */}
-          <div className="text-center">
+            {/* نظام النقاط */}
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 mb-8">
+              <h3 className="text-yellow-400 font-bold text-xl mb-6">🏆 نظام النقاط</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-blue-500/20 rounded-xl p-4 border border-blue-500/30">
+                  <div className="font-bold text-blue-400">دور الـ8</div>
+                  <div className="text-white font-bold">10 نقاط</div>
+                  <div className="text-gray-400 text-sm">8 أسئلة</div>
+                </div>
+                <div className="bg-purple-500/20 rounded-xl p-4 border border-purple-500/30">
+                  <div className="font-bold text-purple-400">دور الـ4</div>
+                  <div className="text-white font-bold">20 نقطة</div>
+                  <div className="text-gray-400 text-sm">4 أسئلة</div>
+                </div>
+                <div className="bg-orange-500/20 rounded-xl p-4 border border-orange-500/30">
+                  <div className="font-bold text-orange-400">نصف النهائي</div>
+                  <div className="text-white font-bold">40 نقطة</div>
+                  <div className="text-gray-400 text-sm">2 سؤال</div>
+                </div>
+                <div className="bg-yellow-500/20 rounded-xl p-4 border border-yellow-500/30">
+                  <div className="font-bold text-yellow-400">النهائي</div>
+                  <div className="text-white font-bold">80 نقطة</div>
+                  <div className="text-gray-400 text-sm">1 سؤال</div>
+                </div>
+              </div>
+            </div>
+
+            {/* إحصائيات الأسئلة */}
+
+
             <button
               onClick={startGame}
               disabled={!isClient}
@@ -493,339 +519,100 @@ export default function VisualTournamentGame() {
               }`}>
                 <div className="flex items-center gap-3">
                   <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
                   </svg>
-                  ابدأ البطولة البصرية!
+                  ابدأ البطولة!
                 </div>
               </div>
             </button>
-          </div>
 
-          {/* معلومات إضافية */}
-          <div className="text-center mt-16">
-            <div className="inline-flex items-center justify-center space-x-8 space-x-reverse bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-8 py-4">
-              <div className="flex items-center space-x-2 space-x-reverse text-gray-300">
-                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-                <span>شجرة بصرية</span>
-              </div>
-              <div className="w-px h-6 bg-white/20"></div>
-              <div className="flex items-center space-x-2 space-x-reverse text-gray-300">
-                <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
-                <span>4 مراحل</span>
-              </div>
-              <div className="w-px h-6 bg-white/20"></div>
-              <div className="flex items-center space-x-2 space-x-reverse text-gray-300">
-                <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
-                <span>إقصاء مباشر</span>
-              </div>
-            </div>
+            {/* زر إعادة تعيين الأسئلة */}
+            {usedQuestionIds.length > 0 && (
+              <button
+                onClick={() => {
+                  setUsedQuestionIds([]);
+                  clearUsedQuestions();
+                }}
+                className="mt-4 px-6 py-3 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-2xl text-red-400 font-bold transition-all duration-300"
+              >
+                🔄 إعادة تعيين الأسئلة
+              </button>
+            )}
           </div>
         </div>
       </div>
     );
   }
 
-  // Playing phase
-  if (gamePhase === 'playing') {
-    const currentTeamData = teams[currentTeam];
+  // صفحة انتهاء اللعبة
+  if (gamePhase === 'finished') {
+    const redTeam = teams.red;
+    const blueTeam = teams.blue;
     
+    let winner, loser;
+    if (redTeam.score > blueTeam.score) {
+      winner = redTeam;
+      loser = blueTeam;
+    } else if (blueTeam.score > redTeam.score) {
+      winner = blueTeam;
+      loser = redTeam;
+    } else {
+      winner = null; // تعادل
+    }
+
     return (
       <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
-        {/* خلفية متحركة */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/15 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-orange-500/15 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 right-1/2 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-orange-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
         </div>
 
         <div className="relative z-10 p-6 md:p-8">
-          {/* Header */}
           <div className="flex justify-between items-center mb-8">
-            <div className="text-2xl md:text-3xl font-black text-white tracking-wider">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
-                الإقصاء 
-              </span>
-            </div>
             <Link 
               href="/" 
-              className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all duration-300 hover:scale-105"
+              className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all duration-300"
             >
               ← العودة للرئيسية
             </Link>
           </div>
 
-          {/* معلومات الدور الحالي */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-6 px-8 py-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl">
-              <div className="text-center">
-                <div className={`text-xl font-bold ${currentTeam === 'red' ? 'text-red-400' : 'text-blue-400'}`}>
-                  دور {currentTeamData.name}
-                </div>
-              </div>
-              <div className="w-px h-12 bg-white/20"></div>
-              <div className="text-center">
-                <div className="text-yellow-400 font-bold text-lg">
-                  {currentTeamData.currentRound === 'completed' ? 'مكتمل' : roundConfig[currentTeamData.currentRound]?.name}
-                </div>
-              </div>
-              <div className="w-px h-12 bg-white/20"></div>
-              <div className="text-center">
-                <div className="text-green-400 font-bold text-lg">
-                  {currentTeamData.currentRound !== 'completed' ? roundConfig[currentTeamData.currentRound]?.points : 0} نقطة/سؤال
-                </div>
-              </div>
-            </div>
-          </div>
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-4xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-8">
+               انتهت البطولة!
+            </h1>
 
-          {/* شجرة البطولة */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <TeamBracket team="red" />
-            <TeamBracket team="blue" />
-          </div>
-
-          {/* منطقة السؤال */}
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
-              {showingDecision ? (
-                // مرحلة القرار: انسحاب أو متابعة
-                <div className="text-center">
-                  <h3 className="text-3xl font-bold text-white mb-6">
-                    دور {teams[currentTeam].name}
-                  </h3>
-                  <p className="text-xl text-gray-300 mb-8">
-                    اختر ما تريد فعله:
-                  </p>
-                  
-                  <div className="flex flex-wrap justify-center gap-6">
-                    <button
-                      onClick={withdrawTeam}
-                      className="group relative"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <div className="relative px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105">
-                        🏃‍♂️ انسحاب والاحتفاظ بالنقاط
-                      </div>
-                    </button>
-                    
-                    <button
-                      onClick={continueGame}
-                      className="group relative"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <div className="relative px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105">
-                        ⚔️ متابعة اللعب
-                      </div>
-                    </button>
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 mb-8">
+              {winner ? (
+                <>
+                  <h2 className="text-3xl font-bold text-yellow-400 mb-4">
+                    🎉 الفائز: {winner.name}
+                  </h2>
+                  <div className="text-2xl text-white mb-6">
+                    النقاط النهائية: {winner.score}
                   </div>
-                </div>
-              ) : currentQuestion ? (
-                // عرض السؤال
-                <div>
-                  <h3 className="text-2xl md:text-3xl font-bold text-center text-white mb-8">
-                    {currentQuestion.question}
-                  </h3>
-
-                  {!showAnswer ? (
-                    <div className="text-center">
-                      <button
-                        onClick={() => setShowAnswer(true)}
-                        className="group relative"
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <div className="relative px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105">
-                          ✅ انتهيت من الإجابة
-                        </div>
-                      </button>
-                    </div>
-                  ) : (
-                    <div>
-                      {/* عرض الإجابة */}
-                      <div className="bg-white/10 border border-emerald-500/30 rounded-2xl p-6 mb-8 text-center">
-                        <h4 className="text-emerald-400 font-bold text-xl mb-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                            </svg>
-                          </div>
-                          الإجابة الصحيحة
-                        </h4>
-                        <p className="text-2xl text-white font-bold">{currentQuestion.answer}</p>
-                      </div>
-
-                      {/* أزرار التقييم */}
-                      <div className="flex flex-wrap justify-center gap-6">
-                        <button
-                          onClick={correctAnswer}
-                          className="group relative"
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
-                          <div className="relative px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105">
-                            ✅ إجابة صحيحة
-                          </div>
-                        </button>
-                        
-                        <button
-                          onClick={wrongAnswer}
-                          className="group relative"
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-red-600 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
-                          <div className="relative px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105">
-                            ❌ إجابة خاطئة
-                          </div>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  <div className="text-lg text-gray-300">
+                    الفريق المنافس: {loser.name} - {loser.score} نقطة
+                  </div>
+                </>
               ) : (
-                <div className="text-center">
-                  <p className="text-xl text-slate-300">جاري تحضير الدور التالي...</p>
-                </div>
+                <>
+                  <h2 className="text-3xl font-bold text-yellow-400 mb-4">
+                    🤝 تعادل!
+                  </h2>
+                  <div className="text-xl text-white">
+                    كلا الفريقين حصل على {redTeam.score} نقطة
+                  </div>
+                </>
               )}
             </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
-  // Finished phase
-  if (gamePhase === 'finished') {
-    // التحقق من التعادل
-    const isTie = teams.tie || (teams.red.finishedFinal && teams.blue.finishedFinal);
-    
-    if (isTie) {
-      return (
-        <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden flex items-center justify-center">
-          {/* خلفية متحركة */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
-            <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gray-500/30 rounded-full blur-3xl animate-pulse"></div>
-            <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-gray-600/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          </div>
-
-          <div className="relative z-10 max-w-4xl mx-auto text-center p-8">
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-12">
-              <div className="w-32 h-32 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full mx-auto flex items-center justify-center mb-8 shadow-2xl">
-                <span className="text-6xl">🤝</span>
-              </div>
-              
-              <h1 className="text-4xl md:text-6xl font-black text-white mb-8">
-                🤝 تعادل!
-              </h1>
-              
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
-                الفريقان متعادلان! 🎊
-              </h2>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-                <div className="bg-white/10 rounded-2xl p-6">
-                  <h3 className="text-xl font-bold text-red-300 mb-2">🥇 فريق</h3>
-                  <p className="text-2xl font-bold text-white">{teams.red.name}</p>
-                  <p className="text-xl text-white">{teams.red.score} نقطة</p>
-                </div>
-                
-                <div className="bg-white/10 rounded-2xl p-6">
-                  <h3 className="text-xl font-bold text-blue-300 mb-2">🥇 فريق</h3>
-                  <p className="text-2xl font-bold text-white">{teams.blue.name}</p>
-                  <p className="text-xl text-white">{teams.blue.score} نقطة</p>
-                </div>
-              </div>
-              
+            <div className="flex justify-center gap-4">
               <button
                 onClick={resetGame}
-                className="group relative"
+                className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-2xl font-bold text-lg shadow-lg transition-all duration-300"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="relative px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105">
-                  🔄 بطولة جديدة
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // تحديد الفائز
-    let winner, loser;
-    
-    if (teams.red.finishedFinal && !teams.blue.finishedFinal) {
-      winner = teams.red;
-      loser = teams.blue;
-    } else if (teams.blue.finishedFinal && !teams.red.finishedFinal) {
-      winner = teams.blue;
-      loser = teams.red;
-    } else {
-      winner = teams.red.score > teams.blue.score ? teams.red : teams.blue;
-      loser = teams.red.score > teams.blue.score ? teams.blue : teams.red;
-    }
-
-    return (
-      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
-        {/* خلفية متحركة */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/30 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-orange-500/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 right-1/2 w-72 h-72 bg-amber-500/20 rounded-full blur-3xl animate-pulse delay-2000"></div>
-        </div>
-
-        <div className="relative z-10 p-6 md:p-8 flex items-center justify-center min-h-screen">
-          <div className="max-w-4xl mx-auto text-center">
-            {/* Header */}
-            <div className="flex justify-between items-center mb-12 w-full">
-              <div className="text-2xl md:text-3xl font-black text-white tracking-wider">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
-                  الإقصاء البصري
-                </span>
-              </div>
-              <Link 
-                href="/" 
-                className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all duration-300 hover:scale-105"
-              >
-                ← العودة للرئيسية
-              </Link>
-            </div>
-
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-12">
-              {/* تاج النصر */}
-              <div className="mb-8">
-                <div className="w-32 h-32 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full mx-auto flex items-center justify-center shadow-2xl shadow-yellow-500/50">
-                  <svg className="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                  </svg>
-                </div>
-              </div>
-
-              <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-8">
-                🏆 انتهت البطولة!
-              </h1>
-
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-8">
-                البطل: {winner.name}! 🎊
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-2xl p-6 border border-yellow-500/30">
-                  <h3 className="text-2xl font-bold text-yellow-400 mb-4">🥇 البطل</h3>
-                  <p className="text-3xl font-bold text-white mb-2">{winner.name}</p>
-                  <p className="text-2xl text-yellow-300">{winner.score} نقطة</p>
-                </div>
-                
-                <div className="bg-white/5 rounded-2xl p-6 border border-gray-500/30">
-                  <h3 className="text-2xl font-bold text-gray-400 mb-4">🥈 الوصيف</h3>
-                  <p className="text-3xl font-bold text-white mb-2">{loser.name}</p>
-                  <p className="text-2xl text-gray-300">{loser.score} نقطة</p>
-                </div>
-              </div>
-
-              <button
-                onClick={resetGame}
-                className="group relative"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="relative px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-2xl font-bold text-xl transition-all duration-300 hover:scale-105">
-                  🔄 بطولة جديدة
-                </div>
+                🔄 بطولة جديدة
               </button>
             </div>
           </div>
@@ -834,5 +621,169 @@ export default function VisualTournamentGame() {
     );
   }
 
-  return null;
+  // صفحة اللعب
+  return (
+    <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
+      {/* خلفية متحركة */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/15 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-orange-500/15 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
+      <div className="relative z-10 p-6 md:p-8">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div className="text-2xl md:text-3xl font-black text-white tracking-wider">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
+              الإقصاء 
+            </span>
+          </div>
+          <Link 
+            href="/" 
+            className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all duration-300 hover:scale-105"
+          >
+            ← العودة للرئيسية
+          </Link>
+        </div>
+
+        {/* معلومات الدور الحالي */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-6 px-8 py-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl">
+            <div className="text-center">
+              <div className={`text-xl font-bold ${currentTeam === 'red' ? 'text-red-400' : 'text-blue-400'}`}>
+                دور {currentTeamData.name}
+              </div>
+            </div>
+            <div className="w-px h-12 bg-white/20"></div>
+            <div className="text-center">
+              <div className="text-yellow-400 font-bold text-lg">
+                {currentTeamData.currentRound === 'completed' ? 'مكتمل' : roundConfig[currentTeamData.currentRound]?.name}
+              </div>
+            </div>
+            <div className="w-px h-12 bg-white/20"></div>
+            <div className="text-center">
+              <div className="text-green-400 font-bold text-lg">
+                {currentTeamData.currentRound !== 'completed' ? roundConfig[currentTeamData.currentRound]?.points : 0} نقطة/سؤال
+              </div>
+            </div>
+          </div>
+        </div>
+   <div className="max-w-4xl mx-auto mb-4 ">
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
+            {showingDecision ? (
+              // مرحلة اتخاذ القرار
+              <div className="text-center space-y-8">
+                <h2 className={`text-3xl font-bold ${currentTeam === 'red' ? 'text-red-400' : 'text-blue-400'}`}>
+                  دور {currentTeamData.name}
+                </h2>
+                <p className="text-xl text-white">
+                  هل تريد الاستمرار في {roundConfig[currentTeamData.currentRound]?.name}؟
+                </p>
+                
+                <div className="flex justify-center gap-6">
+                  <button
+                    onClick={continueGame}
+                    className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-2xl font-bold text-lg shadow-lg transition-all duration-300"
+                  >
+                    استمرار
+                  </button>
+                  
+                  <button
+                    onClick={withdrawTeam}
+                    className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white rounded-2xl font-bold text-lg shadow-lg transition-all duration-300"
+                  >
+                     انسحاب
+                  </button>
+                </div>
+              </div>
+            ) : currentQuestion ? (
+              // مرحلة عرض السؤال
+              <div className="space-y-8">
+                {/* معلومات السؤال */}
+                <div className="text-center">
+                  <div className="inline-flex items-center gap-4 px-6 py-3 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-2xl border border-purple-500/30">
+                    <span className="text-purple-400 font-bold">
+                      {currentQuestion.difficulty === 'easy' ? 'سهل' : 
+                       currentQuestion.difficulty === 'medium' ? 'متوسط' : 'صعب'}
+                    </span>
+                    <div className="w-px h-6 bg-purple-500/50"></div>
+                    <span className="text-blue-400 font-bold">
+                      {roundConfig[currentTeamData.currentRound]?.points} نقطة
+                    </span>
+                  </div>
+                </div>
+
+                {/* نص السؤال */}
+                <div className="text-center">
+                  <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
+                    <h3 className="text-2xl md:text-3xl font-bold text-white leading-relaxed">
+                      {currentQuestion.question}
+                    </h3>
+                  </div>
+                </div>
+
+                {!showAnswer ? (
+                  <div className="text-center">
+                    <button
+                      onClick={() => setShowAnswer(true)}
+                      className="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-2xl font-bold text-lg shadow-lg transition-all duration-300"
+                    >
+                       إظهار الإجابة
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {/* عرض الإجابة */}
+                    <div className="text-center">
+                      <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-emerald-400 to-green-500 rounded-xl shadow-lg mb-6">
+                        <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                          </svg>
+                        </div>
+                        <h4 className="text-xl font-bold text-white">الإجابة الصحيحة</h4>
+                      </div>
+                      
+                      <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 mb-8">
+                        <p className="text-2xl md:text-3xl text-white font-bold">{currentQuestion.answer}</p>
+                      </div>
+                    </div>
+
+                    {/* أزرار التقييم */}
+                    <div className="flex justify-center gap-6">
+                      <button
+                        onClick={correctAnswer}
+                        className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-2xl font-bold text-lg shadow-lg transition-all duration-300"
+                      >
+                        ✅ إجابة صحيحة
+                      </button>
+                      
+                      <button
+                        onClick={wrongAnswer}
+                        className="px-8 py-4 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-2xl font-bold text-lg shadow-lg transition-all duration-300"
+                      >
+                        ❌ إجابة خاطئة
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="text-center text-white">
+                <p>جاري تحميل السؤال...</p>
+              </div>
+            )}
+          </div>
+        </div>
+        {/* شجرة البطولة */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <TeamBracket team="red" />
+          <TeamBracket team="blue" />
+        </div>
+
+        {/* منطقة السؤال */}
+     
+      </div>
+    </div>
+  );
 }
