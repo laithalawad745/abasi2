@@ -7,7 +7,7 @@ import { guessWrongGameData, getRandomGuessWrongQuestion, shuffleChoices } from 
 
 export default function GuessWrongGame() {
   // حالة اللعبة
-  const [gameState, setGameState] = useState('setup'); // 'setup', 'playing', 'finished'
+  const [gameState, setGameState] = useState('setup'); // 'setup', 'playing', 'finished', 'no-more-questions'
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [shuffledChoices, setShuffledChoices] = useState([]);
   const [usedQuestions, setUsedQuestions] = useState(new Set()); // ✅ استخدام Set مثل باقي الألعاب
@@ -75,28 +75,30 @@ export default function GuessWrongGame() {
     startNewRound();
   };
 
-  // ✅ بدء جولة جديدة مع معالجة أفضل
+  // ✅ بدء جولة جديدة مع معالجة انتهاء الأسئلة
   const startNewRound = () => {
-    const usedQuestionsArray = Array.from(usedQuestions); // ✅ تحويل Set إلى Array للاستعلام
+    const usedQuestionsArray = Array.from(usedQuestions);
+    
+    // 🔍 التحقق من انتهاء جميع الأسئلة
+    if (usedQuestions.size >= guessWrongGameData.length) {
+      console.log('🎯 تم استخدام جميع الأسئلة المتاحة!');
+      setGameState('no-more-questions'); // حالة جديدة لانتهاء الأسئلة
+      return;
+    }
+    
     const question = getRandomGuessWrongQuestion(usedQuestionsArray);
     
     if (!question) {
-      // إذا انتهت الأسئلة، أعد استخدام الأسئلة المستخدمة
-      console.log('⚠️ انتهت الأسئلة الجديدة، سيتم إعادة استخدام الأسئلة...');
-      setUsedQuestions(new Set()); // ✅ مسح Set
-      const newQuestion = getRandomGuessWrongQuestion([]);
-      if (newQuestion) {
-        setCurrentQuestion(newQuestion);
-        setUsedQuestions(new Set([newQuestion.id])); // ✅ إنشاء Set جديد
-        const shuffled = shuffleChoices(newQuestion.choices);
-        setShuffledChoices(shuffled);
-      }
-    } else {
-      setCurrentQuestion(question);
-      setUsedQuestions(prev => new Set([...prev, question.id])); // ✅ إضافة للـ Set
-      const shuffled = shuffleChoices(question.choices);
-      setShuffledChoices(shuffled);
+      // هذا لن يحدث عملياً لأننا نتحقق أولاً، لكن للأمان
+      console.log('⚠️ لم يتم العثور على أسئلة متاحة');
+      setGameState('no-more-questions');
+      return;
     }
+    
+    setCurrentQuestion(question);
+    setUsedQuestions(prev => new Set([...prev, question.id]));
+    const shuffled = shuffleChoices(question.choices);
+    setShuffledChoices(shuffled);
     
     // إعادة تعيين اختيارات الفرق
     setTeams(prev => prev.map(team => ({ ...team, choice: null })));
@@ -171,20 +173,19 @@ export default function GuessWrongGame() {
 
   // ✅ إعادة تعيين الأسئلة المستخدمة فقط
   const resetUsedQuestions = () => {
-    setUsedQuestions(new Set()); // ✅ مسح Set
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-      console.log('🗑️ تم مسح جميع الأسئلة المستخدمة');
-    } catch (error) {
-      console.warn('فشل في مسح الأسئلة المستخدمة:', error);
-    }
+    // 🚫 لا نستخدم هذه الدالة لأنها تمسح localStorage
+    console.log('🚫 تم إلغاء مسح الأسئلة المستخدمة للحفاظ على localStorage');
+    // 🚫 setUsedQuestions(new Set());
+    // 🚫 localStorage.removeItem(STORAGE_KEY);
   };
 
-  // ✅ إعادة تعيين اللعبة
+  // ✅ إعادة تعيين اللعبة (بدون مسح localStorage)
   const resetGame = () => {
     setGameState('setup');
     setCurrentQuestion(null);
-    setUsedQuestions(new Set()); // ✅ مسح Set
+    // 🚫 لا نمسح usedQuestions - نحتفظ بـ localStorage
+    // 🚫 setUsedQuestions(new Set()); // ← تمت إزالة هذا السطر
+    
     setTeams([
       { 
         id: 'red', 
@@ -208,13 +209,9 @@ export default function GuessWrongGame() {
     setRoundWinner(null);
     setGameWinner(null);
     
-    // مسح الأسئلة المستخدمة من localStorage
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-      console.log('🗑️ تم مسح جميع الأسئلة المستخدمة');
-    } catch (error) {
-      console.warn('فشل في مسح الأسئلة المستخدمة:', error);
-    }
+    // 🚫 لا نمسح localStorage نهائياً
+    // 🚫 localStorage.removeItem(STORAGE_KEY); // ← تمت إزالة هذا السطر
+    console.log('🔄 تم إعادة تعيين اللعبة مع الحفاظ على الأسئلة المستخدمة');
   };
 
   // رسم صناديق الأخطاء
@@ -237,6 +234,78 @@ export default function GuessWrongGame() {
     }
     return boxes;
   };
+
+  // 🆕 شاشة انتهاء الأسئلة
+  if (gameState === 'no-more-questions') {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
+        {/* خلفية متحركة */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-orange-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+
+        <div className="relative z-10 p-6 md:p-8 flex items-center justify-center min-h-screen">
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 text-center max-w-2xl">
+            <div className="text-6xl mb-6">📚</div>
+            
+            <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-6">
+              تم انتهاء الأسئلة!
+            </h1>
+            
+            <div className="text-white text-xl mb-8 space-y-4">
+              <p>🎉 <strong>تهانينا!</strong> لقد أجبتم على جميع الأسئلة المتاحة</p>
+              <p>📊 <strong>العدد الإجمالي:</strong> {guessWrongGameData.length} سؤال</p>
+              <p>✨ <strong>الأسئلة المستخدمة:</strong> {usedQuestions.size} سؤال</p>
+            </div>
+
+            <div className="space-y-4">
+              <button
+                onClick={() => {
+                  // العودة للقائمة الرئيسية
+                  setGameState('setup');
+                  setCurrentQuestion(null);
+                  setTeams([
+                    { id: 'red', name: 'الفريق الأحمر', color: 'red', mistakes: 0, choice: null, eliminated: false },
+                    { id: 'blue', name: 'الفريق الأزرق', color: 'blue', mistakes: 0, choice: null, eliminated: false }
+                  ]);
+                  setCurrentRound(1);
+                  setShowResults(false);
+                  setRoundWinner(null);
+                  setGameWinner(null);
+                }}
+                className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 mb-4"
+              >
+                🏠 العودة للقائمة الرئيسية
+              </button>
+              
+              <button
+                onClick={() => {
+                  // مسح الأسئلة المستخدمة والعودة للعبة
+                  setUsedQuestions(new Set());
+                  localStorage.removeItem(STORAGE_KEY);
+                  setGameState('setup');
+                  setCurrentQuestion(null);
+                  setTeams([
+                    { id: 'red', name: 'الفريق الأحمر', color: 'red', mistakes: 0, choice: null, eliminated: false },
+                    { id: 'blue', name: 'الفريق الأزرق', color: 'blue', mistakes: 0, choice: null, eliminated: false }
+                  ]);
+                  setCurrentRound(1);
+                  setShowResults(false);
+                  setRoundWinner(null);
+                  setGameWinner(null);
+                  console.log('🔄 تم مسح جميع الأسئلة المستخدمة');
+                }}
+                className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105"
+              >
+                🗑️ مسح الأسئلة والبدء من جديد
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // شاشة الإعداد
   if (gameState === 'setup') {
