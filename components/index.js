@@ -1,4 +1,4 @@
-// components/index.js
+// components/index.js - تحديث الملف ليشمل لعبة التلميحات الجديدة
 export { default as QuizGame } from './QuizGame';
 export { default as GameSetup } from './GameSetup';
 export { default as TeamScores } from './TeamScores';
@@ -37,3 +37,7 @@ export { default as AuctionGame } from './AuctionGame';
 
 // 🆕 لعبة خمن الخطأ الجديدة
 export { default as GuessWrongGame } from './GuessWrongGame';
+
+// 🧩 🆕 لعبة التلميحات التدريجية الجديدة
+export { default as CluesGame } from './CluesGame';
+export { default as CluesGameRouter } from './CluesGameRouter';
