@@ -1,9 +1,18 @@
-// components/CluesGame.jsx - حل نهائي لمشكلة الإدخال
+// components/CluesGame.jsx - حل نهائي لمشكلة الإدخال + إضافة زر عجزت عن الإجابة
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Pusher from 'pusher-js';
-import { getRandomCluesQuestion, calculatePoints } from '../app/data/cluesGameData';
+import { 
+  getRandomCluesQuestion, 
+  calculatePoints, 
+  loadUsedCluesQuestions, 
+  saveUsedCluesQuestions,
+  clearUsedCluesQuestions,
+  getCluesUsageStats,
+  searchCluesAnswers,
+  isValidCluesAnswer
+} from '../app/data/cluesGameData';
 import { showSuccessToast, showErrorToast, showInfoToast } from './ToastNotification';
 
 export default function CluesGame({ roomId, playerName, isHost, onExit }) {
@@ -23,6 +32,20 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
   // 🆕 تتبع التلميحات لكل لاعب منفرداً
   const [playerClueIndex, setPlayerClueIndex] = useState({}); // {playerName: clueIndex}
   const [gameWinner, setGameWinner] = useState(null);
+  
+  // 🆕 إضافة state جديد لتتبع من ضغط على زر "عجزت عن الإجابة"
+  const [playersGiveUp, setPlayersGiveUp] = useState([]); // قائمة اللاعبين الذين ضغطوا زر عجزت
+  const [hasGivenUp, setHasGivenUp] = useState(false); // هل ضغط اللاعب الحالي على الزر
+  
+  // 🆕 نظام إدارة الأسئلة المستخدمة - مطابق للألعاب الأخرى
+  const [usedQuestions, setUsedQuestions] = useState(new Set());
+  const [isClient, setIsClient] = useState(false);
+
+  // 🆕 نظام الاقتراحات التلقائية
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+  const [isValidAnswer, setIsValidAnswer] = useState(false);
 
   // استخدام useRef لمنع إعادة الاشتراك والمشاكل
   const pusherRef = useRef(null);
@@ -35,6 +58,21 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
   const stableRoomId = useMemo(() => roomId, [roomId]);
   const stablePlayerName = useMemo(() => playerName, [playerName]);
   const stableIsHost = useMemo(() => isHost, [isHost]);
+
+  // 🆕 تحميل الأسئلة المستخدمة من localStorage عند بدء التطبيق
+  useEffect(() => {
+    setIsClient(true);
+    const savedUsedQuestions = loadUsedCluesQuestions();
+    setUsedQuestions(savedUsedQuestions);
+    console.log('📊 تم تحميل', savedUsedQuestions.size, 'سؤال مستخدم مسبقاً');
+  }, []);
+
+  // 🆕 حفظ الأسئلة المستخدمة في localStorage عند تغييرها
+  useEffect(() => {
+    if (isClient && usedQuestions.size > 0) {
+      saveUsedCluesQuestions(usedQuestions);
+    }
+  }, [usedQuestions, isClient]);
 
   // إرسال حدث عبر Pusher - مع منع re-render
   const triggerPusherEvent = useCallback(async (event, data) => {
@@ -52,6 +90,20 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
       console.error('❌ خطأ في إرسال الحدث:', error);
     }
   }, [stableRoomId]);
+
+  // 🆕 دالة الاستسلام - عجزت عن الإجابة
+  const handleGiveUp = useCallback(() => {
+    if (hasGivenUp || hasAnswered || gameWinner) return;
+
+    // إرسال إشعار الاستسلام للجميع
+    triggerPusherEvent('player-give-up', {
+      playerName: stablePlayerName,
+      questionNumber: questionNumber
+    });
+
+    setHasGivenUp(true);
+    showInfoToast('تم تسجيل استسلامك');
+  }, [hasGivenUp, hasAnswered, gameWinner, stablePlayerName, questionNumber, triggerPusherEvent]);
 
   // إعداد Pusher مرة واحدة فقط - بدون dependencies خطيرة
   useEffect(() => {
@@ -106,6 +158,14 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
       setShowCorrectAnswer(false);
       setGameWinner(null);
       setMyAnswer(''); // تنظيف الحقل
+      // 🆕 إعادة تعيين الاستسلام
+      setPlayersGiveUp([]);
+      setHasGivenUp(false);
+      // 🆕 إعادة تعيين الاقتراحات
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setIsValidAnswer(false);
+      setSelectedSuggestionIndex(-1);
       // إعداد التلميحات لكل لاعب - يبدأ الجميع بالتلميح الأول
       setPlayerClueIndex(prev => {
         const newIndexes = {};
@@ -157,10 +217,49 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
       }
     });
 
+    // 🆕 استقبال الاستسلام
+    channel.bind('player-give-up', (data) => {
+      console.log('🏳️ لاعب استسلم:', data.playerName);
+      
+      setPlayersGiveUp(prev => {
+        if (!prev.includes(data.playerName)) {
+          const newGiveUpList = [...prev, data.playerName];
+          
+          // تحقق من أن جميع اللاعبين استسلموا
+          if (newGiveUpList.length >= players.length && players.length > 0) {
+            // جميع اللاعبين استسلموا - تعادل
+            setTimeout(() => {
+              if (stableIsHost) {
+                showInfoToast('جميع اللاعبين استسلموا - تعادل!');
+                // الانتقال للسؤال التالي أو إظهار الإجابة
+                triggerPusherEvent('show-answer', {
+                  isLastQuestion: questionNumber >= totalQuestions,
+                  isDraw: true
+                });
+              }
+            }, 1000);
+          } else {
+            // إشعار عادي
+            if (data.playerName !== stablePlayerName) {
+              showInfoToast(`${data.playerName} استسلم`);
+            }
+          }
+          
+          return newGiveUpList;
+        }
+        return prev;
+      });
+    });
+
     // إظهار الإجابة الصحيحة
     channel.bind('show-answer', (data) => {
       console.log('✅ إظهار الإجابة الصحيحة');
       setShowCorrectAnswer(true);
+      
+      if (data.isDraw) {
+        showInfoToast('السؤال انتهى بتعادل');
+      }
+      
       setTimeout(() => {
         if (data.isLastQuestion) {
           setGamePhase('finished');
@@ -179,6 +278,9 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
       setShowCorrectAnswer(false);
       setMyAnswer(''); // تنظيف الحقل
       setGameWinner(null);
+      // 🆕 إعادة تعيين الاستسلام
+      setPlayersGiveUp([]);
+      setHasGivenUp(false);
       // إعادة تعيين التلميحات لكل اللاعبين
       setPlayerClueIndex(prev => {
         const newIndexes = {};
@@ -206,7 +308,15 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
   const startGame = useCallback(() => {
     if (!stableIsHost) return;
     
-    const question = getRandomCluesQuestion();
+    const question = getRandomCluesQuestion(usedQuestions);
+    if (!question) {
+      showErrorToast('لا توجد أسئلة متاحة!');
+      return;
+    }
+    
+    // إضافة السؤال للأسئلة المستخدمة
+    setUsedQuestions(prev => new Set([...prev, question.id]));
+    
     const playerNames = players.map(p => p.playerName);
     
     triggerPusherEvent('game-started', {
@@ -214,7 +324,9 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
       questionNumber: 1,
       players: playerNames
     });
-  }, [stableIsHost, triggerPusherEvent, players]);
+    
+    console.log('🎮 بدء لعبة التلميحات مع', usedQuestions.size + 1, 'سؤال مستخدم');
+  }, [stableIsHost, triggerPusherEvent, players, usedQuestions]);
 
   // طلب تلميح جديد (لاعب محدد)
   const requestNextClue = useCallback(() => {
@@ -233,7 +345,13 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
   const submitAnswer = useCallback(() => {
     if (!myAnswer.trim() || hasAnswered || attemptsLeft <= 0 || gameWinner) return;
 
-    const isCorrect = myAnswer.trim().toLowerCase() === currentQuestion.answer.toLowerCase();
+    // 🎯 التحقق من صحة الإجابة قبل الإرسال
+    if (!isValidAnswer) {
+      showErrorToast('يجب اختيار إجابة من القائمة المقترحة');
+      return;
+    }
+
+    const isCorrect = currentQuestion?.answer === myAnswer.trim();
     const myCurrentClueIndex = playerClueIndex[stablePlayerName] || 0;
     const points = isCorrect ? calculatePoints(myCurrentClueIndex + 1) : 0;
     const newAttemptsLeft = isCorrect ? attemptsLeft : attemptsLeft - 1;
@@ -255,6 +373,11 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
     } else {
       setAttemptsLeft(newAttemptsLeft);
       setMyAnswer('');
+      // إعادة تعيين الاقتراحات
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setIsValidAnswer(false);
+      
       if (newAttemptsLeft > 0) {
         showErrorToast(`إجابة خاطئة! متبقي ${newAttemptsLeft} محاولات`);
       } else {
@@ -262,7 +385,7 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
         showErrorToast('انتهت محاولاتك!');
       }
     }
-  }, [myAnswer, hasAnswered, attemptsLeft, gameWinner, currentQuestion, playerClueIndex, stablePlayerName, triggerPusherEvent]);
+  }, [myAnswer, hasAnswered, attemptsLeft, gameWinner, currentQuestion, playerClueIndex, stablePlayerName, triggerPusherEvent, isValidAnswer]);
 
   // إظهار الإجابة (المضيف فقط)
   const revealAnswer = useCallback(() => {
@@ -277,17 +400,49 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
   const nextQuestion = useCallback(() => {
     if (!stableIsHost || questionNumber >= totalQuestions) return;
     
-    const question = getRandomCluesQuestion();
+    const question = getRandomCluesQuestion(usedQuestions);
+    if (!question) {
+      showErrorToast('لا توجد أسئلة متاحة!');
+      return;
+    }
+    
+    // إضافة السؤال للأسئلة المستخدمة
+    setUsedQuestions(prev => new Set([...prev, question.id]));
+    
     triggerPusherEvent('next-question', {
       question: question,
       questionNumber: questionNumber + 1
     });
-  }, [stableIsHost, questionNumber, totalQuestions, triggerPusherEvent]);
+    
+    console.log('➡️ السؤال التالي:', question.answer, '- إجمالي الأسئلة المستخدمة:', usedQuestions.size + 1);
+  }, [stableIsHost, questionNumber, totalQuestions, triggerPusherEvent, usedQuestions]);
 
-  // دالة تغيير الإجابة - بحل جذري لمشكلة التركيز
+  // 🗑️ إعادة تعيين الأسئلة المستخدمة (دالة اختيارية)
+  const resetUsedQuestions = useCallback(() => {
+    setUsedQuestions(new Set());
+    clearUsedCluesQuestions();
+    showSuccessToast('تم إعادة تعيين جميع الأسئلة');
+  }, []);
+
+  // دالة تغيير الإجابة - بحل جذري لمشكلة التركيز + الاقتراحات التلقائية
   const handleAnswerChange = useCallback((e) => {
     const newValue = e.target.value;
     setMyAnswer(newValue);
+    
+    // 🔍 البحث عن اقتراحات
+    if (newValue.trim().length >= 1) {
+      const foundSuggestions = searchCluesAnswers(newValue.trim());
+      setSuggestions(foundSuggestions);
+      setShowSuggestions(foundSuggestions.length > 0);
+      setSelectedSuggestionIndex(-1);
+      
+      // التحقق من صحة الإجابة
+      setIsValidAnswer(isValidCluesAnswer(newValue.trim()));
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setIsValidAnswer(false);
+    }
     
     // حفظ موضع المؤشر
     const cursorPosition = e.target.selectionStart;
@@ -301,56 +456,153 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
     }, 0);
   }, []);
 
-  // دالة الضغط على Enter
+  // 🎯 اختيار اقتراح من القائمة
+  const selectSuggestion = useCallback((suggestion) => {
+    setMyAnswer(suggestion);
+    setIsValidAnswer(true);
+    setShowSuggestions(false);
+    setSuggestions([]);
+    setSelectedSuggestionIndex(-1);
+    
+    // التركيز مرة أخرى على الحقل
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 0);
+  }, []);
+
+  // 🎮 التعامل مع الكيبورد للاقتراحات
   const handleKeyPress = useCallback((e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'ArrowDown') {
       e.preventDefault();
-      submitAnswer();
+      if (showSuggestions && suggestions.length > 0) {
+        setSelectedSuggestionIndex(prev => 
+          prev < suggestions.length - 1 ? prev + 1 : 0
+        );
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (showSuggestions && suggestions.length > 0) {
+        setSelectedSuggestionIndex(prev => 
+          prev > 0 ? prev - 1 : suggestions.length - 1
+        );
+      }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (showSuggestions && selectedSuggestionIndex >= 0) {
+        // اختيار الاقتراح المحدد
+        selectSuggestion(suggestions[selectedSuggestionIndex]);
+      } else if (isValidAnswer) {
+        // إرسال الإجابة إذا كانت صالحة
+        submitAnswer();
+      }
+    } else if (e.key === 'Escape') {
+      // إغلاق الاقتراحات
+      setShowSuggestions(false);
+      setSelectedSuggestionIndex(-1);
     }
-  }, [submitAnswer]);
+  }, [showSuggestions, suggestions, selectedSuggestionIndex, selectSuggestion, submitAnswer, isValidAnswer]);
 
   // التأكد من التركيز
   const handleInputClick = useCallback(() => {
     if (inputRef.current) {
       inputRef.current.focus();
-    }
-  }, []);
-
-  // منع فقدان التركيز
-  const handleInputBlur = useCallback((e) => {
-    // إعادة التركيز فوراً إذا لم يكن السبب هو النقر على زر
-    setTimeout(() => {
-      if (inputRef.current && document.activeElement !== inputRef.current) {
-        const isButtonClick = document.activeElement && document.activeElement.tagName === 'BUTTON';
-        if (!isButtonClick) {
-          inputRef.current.focus();
-        }
+      
+      // إظهار الاقتراحات إذا كان هناك نص
+      if (myAnswer.trim().length >= 1) {
+        const foundSuggestions = searchCluesAnswers(myAnswer.trim());
+        setSuggestions(foundSuggestions);
+        setShowSuggestions(foundSuggestions.length > 0);
       }
-    }, 10);
+    }
+  }, [myAnswer]);
+
+  // Handle input blur
+  const handleInputBlur = useCallback((e) => {
+    // إخفاء الاقتراحات بعد تأخير للسماح بالنقر عليها
+    setTimeout(() => {
+      setShowSuggestions(false);
+      setSelectedSuggestionIndex(-1);
+    }, 200);
   }, []);
 
-  // key ثابت للـ input لمنع إعادة إنشاؤه
-  const inputKey = useMemo(() => {
-    return `answer-input-${questionNumber}-stable-${preventRerenderRef.current}`;
-  }, [questionNumber]);
+  // مفتاح تحديث الـ input لحل مشكلة التركيز
+  const [inputKey, setInputKey] = useState(0);
 
-  // تحديث counter عند تغيير السؤال فقط
+  // إعادة تعيين الـ input key عند تغيير السؤال
   useEffect(() => {
-    preventRerenderRef.current += 1;
+    setInputKey(prev => prev + 1);
+    // إعادة تعيين جميع حالات الاقتراحات
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setIsValidAnswer(false);
+    setSelectedSuggestionIndex(-1);
   }, [questionNumber]);
 
-  // صفحة الانتظار
-  const WaitingScreen = () => (
-    <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden flex items-center justify-center">
-      {/* خلفية متحركة */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-500/15 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-blue-500/15 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      </div>
+  if (gamePhase === 'finished') {
+    const finalScores = Object.entries(gameScores).sort(([,a], [,b]) => b - a);
+    const winner = finalScores[0];
+    
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden flex items-center justify-center">
+        {/* خلفية متحركة */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-yellow-500/30 to-orange-500/30 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-gradient-to-r from-green-500/30 to-emerald-500/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
 
-      <div className="relative z-10 text-center p-8">
-        <div className="p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl max-w-lg mx-auto">
-          <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-6">
+        <div className="relative z-10 text-center p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl max-w-2xl mx-auto">
+          <h1 className="text-6xl font-bold text-white mb-8">🏆</h1>
+          <h2 className="text-4xl font-bold text-white mb-6">انتهت اللعبة!</h2>
+          
+          {winner && (
+            <div className="mb-8">
+              <h3 className="text-2xl font-bold text-yellow-400 mb-4">
+                🥇 الفائز: {winner[0]}
+              </h3>
+              <p className="text-xl text-white">بـ {winner[1]} نقطة</p>
+            </div>
+          )}
+
+          {/* الترتيب النهائي */}
+          <div className="mb-8 space-y-2">
+            <h4 className="text-xl font-bold text-white mb-4">الترتيب النهائي:</h4>
+            {finalScores.map(([player, score], index) => (
+              <div 
+                key={player} 
+                className={`flex justify-between items-center p-3 rounded-xl ${
+                  index === 0 ? 'bg-yellow-500/20 border border-yellow-400/50' : 'bg-white/5'
+                }`}
+              >
+                <span className="text-white font-medium">#{index + 1} {player}</span>
+                <span className="text-white font-bold">{score} نقطة</span>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={onExit}
+            className="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold text-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 hover:scale-105"
+          >
+            العودة للقائمة
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (gamePhase === 'waiting') {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden flex items-center justify-center">
+        {/* خلفية متحركة */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+
+        <div className="relative z-10 text-center p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl max-w-2xl mx-auto">
+          <h2 className="text-4xl font-bold text-white mb-6">
             🧩 غرفة التلميحات
           </h2>
           
@@ -383,20 +635,35 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
             </div>
           </div>
 
-          {/* تنبيه قواعد اللعبة الجديدة */}
-          {/* <div className="mb-6 p-4 bg-green-500/10 border border-green-400/30 rounded-xl">
-            <p className="text-green-400 text-sm text-center">
-              ⚡ كل لاعب يتحكم في تلميحاته الخاصة - من يجيب أولاً يفوز!
-            </p>
-          </div> */}
-
           {stableIsHost && players.length >= 2 && (
-            <button
-              onClick={startGame}
-              className="w-full px-6 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold text-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 hover:scale-105"
-            >
-              🚀 بدء اللعبة
-            </button>
+            <div className="space-y-4">
+              <button
+                onClick={startGame}
+                className="w-full px-6 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold text-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 hover:scale-105"
+              >
+                🚀 بدء اللعبة
+              </button>
+              
+              {/* 📊 إحصائيات الأسئلة */}
+              {isClient && (
+                <div className="mt-4 p-3 bg-white/5 rounded-xl border border-white/10">
+                  <p className="text-white/70 text-sm text-center mb-2">📊 إحصائيات الأسئلة</p>
+                  <div className="flex justify-center gap-4 text-xs text-white/60">
+                    <span>المستخدمة: {usedQuestions.size}</span>
+                    <span>المتبقية: {getCluesUsageStats(usedQuestions).remaining}</span>
+                    <span>الإجمالي: {getCluesUsageStats(usedQuestions).total}</span>
+                  </div>
+                  {usedQuestions.size > 0 && (
+                    <button
+                      onClick={resetUsedQuestions}
+                      className="w-full mt-2 px-3 py-1 bg-gray-600/50 hover:bg-gray-600/70 text-white text-xs rounded-lg transition-all duration-300"
+                    >
+                      🗑️ إعادة تعيين الأسئلة
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           )}
 
           {stableIsHost && players.length < 2 && (
@@ -417,8 +684,8 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   // شاشة اللعب
   const GameScreen = () => {
@@ -514,37 +781,130 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
                     </div>
                   </div>
 
-                  {!hasAnswered && attemptsLeft > 0 && (
+                  {!hasAnswered && attemptsLeft > 0 && !hasGivenUp && (
+                    <div className="relative">
+                      <div className="flex gap-4">
+                        <div className="flex-1 relative">
+                          <input
+                            key={inputKey}
+                            ref={inputRef}
+                            type="text"
+                            value={myAnswer}
+                            onChange={handleAnswerChange}
+                            onClick={handleInputClick}
+                            onBlur={handleInputBlur}
+                            placeholder="ابدأ الكتابة  ..."
+                            className={`w-full px-4 py-3 bg-white/10 border rounded-xl text-white placeholder-gray-400 focus:outline-none transition-colors duration-300 ${
+                              isValidAnswer 
+                                ? 'border-green-500 focus:border-green-400 shadow-lg shadow-green-500/20' 
+                                : showSuggestions 
+                                  ? 'border-purple-500 focus:border-purple-400 shadow-lg shadow-purple-500/20'
+                                  : 'border-white/20 focus:border-purple-500'
+                            }`}
+                            onKeyDown={handleKeyPress}
+                            autoComplete="off"
+                            spellCheck="false"
+                            autoCapitalize="off"
+                            autoCorrect="off"
+                            data-stable="true"
+                          />
+                          
+                          {/* 🔍 قائمة الاقتراحات */}
+                          {showSuggestions && suggestions.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl max-h-48 overflow-y-auto z-50">
+                              {suggestions.map((suggestion, index) => (
+                                <div
+                                  key={suggestion}
+                                  onClick={() => selectSuggestion(suggestion)}
+                                  className={`px-4 py-3 text-white cursor-pointer transition-all duration-200 ${
+                                    index === selectedSuggestionIndex
+                                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                                      : 'hover:bg-white/10'
+                                  } ${index === 0 ? 'rounded-t-xl' : ''} ${
+                                    index === suggestions.length - 1 ? 'rounded-b-xl' : ''
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <svg className="w-4 h-4 text-current opacity-70" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"/>
+                                    </svg>
+                                    <span className="font-medium">{suggestion}</span>
+                                  </div>
+                                </div>
+                              ))}
+                              
+                              {/* تلميح للتعامل مع الكيبورد */}
+                              {/* <div className="px-4 py-2 bg-white/5 border-t border-white/10 rounded-b-xl">
+                                <div className="flex items-center gap-4 text-xs text-white/60">
+                                  <span>⬆️⬇️ للتنقل</span>
+                                  <span>Enter للاختيار</span>
+                                  <span>Esc للإغلاق</span>
+                                </div>
+                              </div> */}
+                            </div>
+                          )}
+                          
+                          {/* 🔍 رسالة عدم وجود نتائج */}
+                          {showSuggestions && suggestions.length === 0 && myAnswer.trim().length >= 1 && (
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl p-4 z-50">
+                              <div className="flex items-center gap-2 text-white/70">
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
+                                </svg>
+                                <span>لا توجد إجابات مطابقة. حاول كتابة شيء آخر.</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <button
+                          onClick={submitAnswer}
+                          disabled={!isValidAnswer}
+                          className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 ${
+                            isValidAnswer
+                              ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg shadow-purple-500/30'
+                              : 'bg-white/5 text-white/30 cursor-not-allowed border border-white/10'
+                          }`}
+                        >
+                          إرسال
+                        </button>
+                      </div>
+                      
+                      {/* 💡 نصائح للمستخدم */}
+                      {!isValidAnswer && myAnswer.length > 0 && (
+                        <div className="mt-2 text-center">
+                          <p className="text-yellow-400 text-sm">
+                            💡 ابدأ بكتابة جزء من الإجابة واختر من الاقتراحات
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 🆕 زر "عجزت عن الإجابة" */}
+                  {!hasAnswered && !hasGivenUp && !gameWinner && (
                     <div className="flex gap-4">
-                      <input
-                        key={inputKey}
-                        ref={inputRef}
-                        type="text"
-                        value={myAnswer}
-                        onChange={handleAnswerChange}
-                        onClick={handleInputClick}
-                        onBlur={handleInputBlur}
-                        placeholder="اكتب إجابتك هنا..."
-                        className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors duration-300"
-                        onKeyPress={handleKeyPress}
-                        autoComplete="off"
-                        spellCheck="false"
-                        autoCapitalize="off"
-                        autoCorrect="off"
-                        data-stable="true"
-                      />
                       <button
-                        onClick={submitAnswer}
-                        disabled={!myAnswer.trim()}
-                        className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                        onClick={handleGiveUp}
+                        className="flex-1 px-4 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-xl font-bold hover:from-gray-700 hover:to-gray-800 transition-all duration-300"
                       >
-                        إرسال
+                        🏳️ عجزت عن الإجابة
                       </button>
                     </div>
                   )}
 
+                  {/* إشعار الاستسلام */}
+                  {hasGivenUp && (
+                    <div className="p-3 bg-gray-600/20 border border-gray-500/50 rounded-xl text-center">
+                      <p className="text-gray-300">لقد استسلمت - في انتظار باقي اللاعبين</p>
+                      <p className="text-sm text-gray-400 mt-1">
+                        استسلم {playersGiveUp.length} من أصل {players.length} لاعبين
+                      </p>
+                    </div>
+                  )}
+
                   {/* زر التلميح الإضافي لكل لاعب */}
-                  {!hasAnswered && attemptsLeft > 0 && myCurrentClueIndex < currentQuestion?.clues.length - 1 && !gameWinner && (
+                  {!hasAnswered && attemptsLeft > 0 && myCurrentClueIndex < currentQuestion?.clues.length - 1 && !gameWinner && !hasGivenUp && (
                     <button
                       onClick={requestNextClue}
                       className="w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-bold hover:from-orange-600 hover:to-red-600 transition-all duration-300"
@@ -570,12 +930,22 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
           {/* أزرار التحكم للمضيف */}
           {stableIsHost && (
             <div className="text-center space-y-4">
-              {!showCorrectAnswer && gameWinner && (
+              {/* {!showCorrectAnswer && gameWinner && (
                 <button
                   onClick={revealAnswer}
                   className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl font-bold hover:from-yellow-600 hover:to-orange-600 transition-all duration-300"
                 >
                   🔍 إظهار الإجابة
+                </button>
+              )} */}
+
+              {/* 🆕 زر السؤال التالي عند استسلام الجميع */}
+              {!showCorrectAnswer && !gameWinner && playersGiveUp.length >= players.length && players.length > 0 && questionNumber < totalQuestions && (
+                <button
+                  onClick={nextQuestion}
+                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-bold hover:from-blue-600 hover:to-cyan-600 transition-all duration-300"
+                >
+                  ➡️ السؤال التالي (تعادل)
                 </button>
               )}
 
@@ -590,24 +960,6 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
             </div>
           )}
 
-          {/* عرض حالة التلميحات للاعبين */}
-          {/* <div className="fixed left-4 top-20 w-64 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl">
-            <h3 className="text-white font-bold mb-3">👥 حالة اللاعبين</h3>
-            <div className="space-y-2">
-              {Object.entries(playerClueIndex).map(([playerId, clueIndex]) => (
-                <div
-                  key={`player-${playerId}-${questionNumber}`}
-                  className={`flex justify-between items-center p-2 rounded-lg ${
-                    playerId === stablePlayerName ? 'bg-purple-500/20 border border-purple-400/50' : 'bg-white/5'
-                  }`}
-                >
-                  <span className="text-white text-sm">{playerId}</span>
-                  <span className="text-white font-bold">تلميح {clueIndex + 1}</span>
-                </div>
-              ))}
-            </div>
-          </div> */}
-
           {/* الترتيب الجانبي */}
           <div className="fixed right-4 top-20 w-64 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl">
             <h3 className="text-white font-bold mb-3">🏆 الترتيب</h3>
@@ -621,118 +973,25 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
                       playerId === stablePlayerName ? 'bg-purple-500/20 border border-purple-400/50' : 'bg-white/5'
                     }`}
                   >
-                    <span className="text-white text-sm"> {playerId}</span>
+                    <span className="text-white text-sm">#{index + 1} {playerId}</span>
                     <span className="text-white font-bold">{score}</span>
                   </div>
                 ))}
             </div>
           </div>
-        </div>
-      </div>
-    );
-  };
 
-  // شاشة النتائج النهائية
-  const ResultsScreen = () => {
-    const sortedScores = Object.entries(gameScores).sort(([,a], [,b]) => b - a);
-    const winner = sortedScores[0];
-    const isWinner = winner && winner[0] === stablePlayerName;
-
-    return (
-      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden flex items-center justify-center">
-        {/* خلفية متحركة */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/15 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-green-500/15 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        </div>
-
-        <div className="relative z-10 text-center p-8 max-w-2xl mx-auto">
-          <div className="p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl">
-            <h2 className="text-5xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent mb-8">
-              🏆 انتهت اللعبة!
-            </h2>
-
-            {isWinner && (
-              <div className="mb-8 p-6 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-400/50 rounded-2xl">
-                <div className="text-6xl mb-4">🎉</div>
-                <h3 className="text-3xl font-bold text-yellow-400">مبروك! أنت الفائز!</h3>
-              </div>
-            )}
-
-            <div className="mb-8">
-              <h3 className="text-2xl font-bold text-white mb-4">🏅 الترتيب النهائي</h3>
-              <div className="space-y-3">
-                {sortedScores.map(([playerId, score], index) => (
-                  <div
-                    key={`final-${playerId}`}
-                    className={`flex justify-between items-center p-4 rounded-2xl border ${
-                      index === 0
-                        ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-400/50'
-                        : index === 1
-                        ? 'bg-gradient-to-r from-gray-400/20 to-gray-500/20 border-gray-400/50'
-                        : 'bg-white/10 border-white/20'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">
-                        {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '🏃'}
-                      </span>
-                      <span className="text-white font-bold">{playerId}</span>
-                    </div>
-                    <span className="text-white font-bold text-xl">{score} نقطة</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button
-                onClick={onExit}
-                className="flex-1 px-6 py-3 bg-white/10 border border-white/20 text-white rounded-xl font-bold hover:bg-white/20 transition-all duration-300"
-              >
-                🏠 العودة للرئيسية
-              </button>
-              {stableIsHost && (
-                <button
-                  onClick={() => {
-                    setGamePhase('waiting');
-                    setQuestionNumber(1);
-                    setGameScores({});
-                    setCurrentQuestion(null);
-                    setAttemptsLeft(3);
-                    setHasAnswered(false);
-                    setShowCorrectAnswer(false);
-                    setMyAnswer('');
-                    setPlayerClueIndex({});
-                    setGameWinner(null);
-                  }}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold hover:from-purple-600 hover:to-pink-600 transition-all duration-300"
-                >
-                  🔄 لعبة جديدة
-                </button>
-              )}
-            </div>
+          <div className="fixed bottom-6 left-6">
+            <button
+              onClick={onExit}
+              className="px-4 py-2 bg-white/10 border border-white/20 text-white rounded-xl hover:bg-white/20 transition-all duration-300"
+            >
+              ← خروج
+            </button>
           </div>
         </div>
       </div>
     );
   };
 
-  // عرض الشاشة المناسبة
-  if (!isConnected) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
-        <div className="text-center text-white">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500 mx-auto mb-4"></div>
-          <p>جاري الاتصال...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (gamePhase === 'waiting') return <WaitingScreen />;
-  if (gamePhase === 'playing') return <GameScreen />;
-  if (gamePhase === 'finished') return <ResultsScreen />;
-
-  return null;
+  return <GameScreen />;
 }

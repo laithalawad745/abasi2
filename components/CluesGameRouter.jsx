@@ -1,7 +1,7 @@
-// components/CluesGameRouter.jsx
+// components/CluesGameRouter.jsx - إصلاح مشكلة فقدان التركيز في حقل الإدخال
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import CluesGame from './CluesGame';
 import { ToastContainer } from 'react-toastify';
@@ -13,6 +13,10 @@ export default function CluesGameRouter({ roomIdFromUrl = null }) {
   const [roomId, setRoomId] = useState('');
   const [playerName, setPlayerName] = useState('');
   const [isHost, setIsHost] = useState(false);
+  
+  // 🆕 إضافة refs لحقول الإدخال لحل مشكلة التركيز
+  const playerNameInputRef = useRef(null);
+  const roomIdInputRef = useRef(null);
 
   // إذا كان هناك roomId من الرابط، انتقل مباشرة لصفحة الانضمام
   useEffect(() => {
@@ -21,6 +25,38 @@ export default function CluesGameRouter({ roomIdFromUrl = null }) {
       setCurrentView('join');
     }
   }, [roomIdFromUrl]);
+
+  // 🆕 دالة محسّنة لتغيير اسم اللاعب مع الحفاظ على التركيز
+  const handlePlayerNameChange = useCallback((e) => {
+    const value = e.target.value;
+    const cursorPosition = e.target.selectionStart;
+    
+    setPlayerName(value);
+    
+    // إعادة التركيز في النيكست تيك
+    setTimeout(() => {
+      if (playerNameInputRef.current) {
+        playerNameInputRef.current.focus();
+        playerNameInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+      }
+    }, 0);
+  }, []);
+
+  // 🆕 دالة محسّنة لتغيير رمز الغرفة مع الحفاظ على التركيز
+  const handleRoomIdChange = useCallback((e) => {
+    const value = e.target.value.toUpperCase();
+    const cursorPosition = e.target.selectionStart;
+    
+    setRoomId(value);
+    
+    // إعادة التركيز في النيكست تيك
+    setTimeout(() => {
+      if (roomIdInputRef.current) {
+        roomIdInputRef.current.focus();
+        roomIdInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+      }
+    }, 0);
+  }, []);
 
   // الصفحة الرئيسية
   const HomePage = () => (
@@ -43,33 +79,33 @@ export default function CluesGameRouter({ roomIdFromUrl = null }) {
           </div>
 
           {/* الوصف */}
-          <p className="text-2xl md:text-3xl text-white/80 font-medium mb-12 max-w-4xl leading-relaxed">
-            🎯 خمن الإجابة من التلميحات التدريجية<br/>
-            <span className="text-lg md:text-xl text-purple-300">كلما خمنت أسرع، نقاط أكثر!</span>
+          <p className="text-2xl md:text-3xl text-white/80 font-medium mb-8 leading-relaxed">
+            لعبة الذكاء والتركيز<br />
+            <span className="text-white/60 text-xl">خمن الإجابة من التلميحات التدريجية</span>
           </p>
 
-          {/* الميزات */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 max-w-4xl">
-            <div className="p-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-purple-400/50 transition-all duration-300">
-              <div className="text-4xl mb-3">🧠</div>
-              <h3 className="text-white font-bold text-lg mb-2">تحدي الذكاء</h3>
-              <p className="text-gray-300 text-sm">اختبر قدرتك على التحليل والربط</p>
+          {/* القواعد الأساسية */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 max-w-4xl mx-auto">
+            <div className="p-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl">
+              <div className="text-4xl mb-3">💡</div>
+              <h3 className="text-lg font-bold text-white mb-2">تلميحات تدريجية</h3>
+              <p className="text-white/70 text-sm">احصل على تلميحات إضافية لكن النقاط تقل</p>
             </div>
-            <div className="p-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-blue-400/50 transition-all duration-300">
+            <div className="p-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl">
               <div className="text-4xl mb-3">⚡</div>
-              <h3 className="text-white font-bold text-lg mb-2">سرعة البديهة</h3>
-              <p className="text-gray-300 text-sm">كلما أجبت أسرع، نقاط أكثر</p>
+              <h3 className="text-lg font-bold text-white mb-2">اجب بسرعة</h3>
+              <p className="text-white/70 text-sm">من يجيب أولاً يحصل على نقاط أكثر</p>
             </div>
-            <div className="p-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-pink-400/50 transition-all duration-300">
+            <div className="p-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl">
               <div className="text-4xl mb-3">🏆</div>
-              <h3 className="text-white font-bold text-lg mb-2">تنافس مثير</h3>
-              <p className="text-gray-300 text-sm">العب مع الأصدقاء أونلاين</p>
+              <h3 className="text-lg font-bold text-white mb-2">تنافس شريف</h3>
+              <p className="text-white/70 text-sm">تحدى أصدقاءك في معركة الذكاء</p>
             </div>
           </div>
         </div>
 
-        {/* أزرار التحكم */}
-        <div className="flex flex-col sm:flex-row gap-6 w-full max-w-lg">
+        {/* أزرار الخيارات */}
+        <div className="flex flex-col sm:flex-row gap-6 max-w-md w-full">
           <button
             onClick={() => setCurrentView('create')}
             className="group relative flex-1"
@@ -135,12 +171,17 @@ export default function CluesGameRouter({ roomIdFromUrl = null }) {
             <div>
               <label className="block text-white font-semibold mb-2">اسمك</label>
               <input
+                ref={playerNameInputRef}
                 type="text"
                 value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
+                onChange={handlePlayerNameChange}
                 placeholder="أدخل اسمك"
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors duration-300"
                 maxLength={20}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck="false"
+                key="create-player-name" // مفتاح ثابت لمنع re-mount
               />
             </div>
 
@@ -187,24 +228,34 @@ export default function CluesGameRouter({ roomIdFromUrl = null }) {
             <div>
               <label className="block text-white font-semibold mb-2">اسمك</label>
               <input
+                ref={playerNameInputRef}
                 type="text"
                 value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
+                onChange={handlePlayerNameChange}
                 placeholder="أدخل اسمك"
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors duration-300"
                 maxLength={20}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck="false"
+                key="join-player-name" // مفتاح ثابت لمنع re-mount
               />
             </div>
 
             <div>
               <label className="block text-white font-semibold mb-2">رمز الغرفة</label>
               <input
+                ref={roomIdInputRef}
                 type="text"
                 value={roomId}
-                onChange={(e) => setRoomId(e.target.value.toUpperCase())}
+                onChange={handleRoomIdChange}
                 placeholder="أدخل رمز الغرفة"
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors duration-300 font-mono text-center text-lg tracking-wider"
                 maxLength={6}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck="false"
+                key="join-room-id" // مفتاح ثابت لمنع re-mount
               />
             </div>
 
