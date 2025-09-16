@@ -603,7 +603,7 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
 
         <div className="relative z-10 text-center p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl max-w-2xl mx-auto">
           <h2 className="text-4xl font-bold text-white mb-6">
-            🧩 غرفة التلميحات
+              التلميحات
           </h2>
           
           <div className="mb-8">
@@ -641,11 +641,11 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
                 onClick={startGame}
                 className="w-full px-6 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold text-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 hover:scale-105"
               >
-                🚀 بدء اللعبة
+                 بدء اللعبة
               </button>
               
               {/* 📊 إحصائيات الأسئلة */}
-              {isClient && (
+              {/* {isClient && (
                 <div className="mt-4 p-3 bg-white/5 rounded-xl border border-white/10">
                   <p className="text-white/70 text-sm text-center mb-2">📊 إحصائيات الأسئلة</p>
                   <div className="flex justify-center gap-4 text-xs text-white/60">
@@ -662,7 +662,7 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
                     </button>
                   )}
                 </div>
-              )}
+              )} */}
             </div>
           )}
 
@@ -726,7 +726,7 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
           <div className="max-w-4xl mx-auto mb-8">
             <div className="p-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl">
               <div className="text-center mb-6">
-                <h2 className="text-3xl font-bold text-white mb-2">🧩 التلميحات</h2>
+                <h2 className="text-3xl font-bold text-white mb-2"> التلميحات</h2>
                 <p className="text-white/70">خمن الإجابة من التلميحات المعطاة</p>
               </div>
 

@@ -73,7 +73,7 @@ export default function CluesGameRouter({ roomIdFromUrl = null }) {
           {/* العنوان الرئيسي */}
           <div className="relative mb-8">
             <h1 className="text-6xl md:text-8xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent mb-4 tracking-tight">
-              🧩 التلميحات
+               التلميحات
             </h1>
             <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 blur-2xl opacity-20 -z-10"></div>
           </div>
@@ -122,7 +122,7 @@ export default function CluesGameRouter({ roomIdFromUrl = null }) {
           >
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
             <div className="relative px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 border border-blue-400/20 backdrop-blur-sm">
-              🚪 انضمام لغرفة
+               انضمام لغرفة
             </div>
           </button>
         </div>
@@ -219,7 +219,7 @@ export default function CluesGameRouter({ roomIdFromUrl = null }) {
         <div className="p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl">
           <div className="text-center mb-8">
             <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-3">
-              🚪 انضمام لغرفة
+               انضمام لغرفة
             </h2>
             <p className="text-white/70">انضم لغرفة موجودة وابدأ اللعب!</p>
           </div>
