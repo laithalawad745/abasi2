@@ -384,11 +384,11 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
           </div>
 
           {/* تنبيه قواعد اللعبة الجديدة */}
-          <div className="mb-6 p-4 bg-green-500/10 border border-green-400/30 rounded-xl">
+          {/* <div className="mb-6 p-4 bg-green-500/10 border border-green-400/30 rounded-xl">
             <p className="text-green-400 text-sm text-center">
               ⚡ كل لاعب يتحكم في تلميحاته الخاصة - من يجيب أولاً يفوز!
             </p>
-          </div>
+          </div> */}
 
           {stableIsHost && players.length >= 2 && (
             <button
@@ -591,7 +591,7 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
           )}
 
           {/* عرض حالة التلميحات للاعبين */}
-          <div className="fixed left-4 top-20 w-64 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl">
+          {/* <div className="fixed left-4 top-20 w-64 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl">
             <h3 className="text-white font-bold mb-3">👥 حالة اللاعبين</h3>
             <div className="space-y-2">
               {Object.entries(playerClueIndex).map(([playerId, clueIndex]) => (
@@ -606,7 +606,7 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
 
           {/* الترتيب الجانبي */}
           <div className="fixed right-4 top-20 w-64 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl">
@@ -621,7 +621,7 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
                       playerId === stablePlayerName ? 'bg-purple-500/20 border border-purple-400/50' : 'bg-white/5'
                     }`}
                   >
-                    <span className="text-white text-sm">#{index + 1} {playerId}</span>
+                    <span className="text-white text-sm"> {playerId}</span>
                     <span className="text-white font-bold">{score}</span>
                   </div>
                 ))}

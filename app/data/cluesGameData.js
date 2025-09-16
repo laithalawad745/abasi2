@@ -183,7 +183,7 @@ export const cluesGameQuestions = [
   {
     id: 'tech_2',
     category: 'تكنولوجيا',
-    answer: 'آيفون',
+    answer: 'ايفون',
     clues: [
       'جهاز', // النوع
       'هاتف ذكي', // التصنيف
