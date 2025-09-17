@@ -26,7 +26,7 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
   const [hasAnswered, setHasAnswered] = useState(false);
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
   const [questionNumber, setQuestionNumber] = useState(1);
-  const [totalQuestions] = useState(5); // عدد الأسئلة في اللعبة
+const [totalQuestions] = useState(10); // عدد الأسئلة في اللعبة
   const [isConnected, setIsConnected] = useState(false);
   
   // 🆕 تتبع التلميحات لكل لاعب منفرداً
@@ -149,33 +149,30 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
     });
 
     // بدء اللعبة
-    channel.bind('game-started', (data) => {
-      console.log('🚀 بدأت اللعبة');
-      setCurrentQuestion(data.question);
-      setGamePhase('playing');
-      setAttemptsLeft(3);
-      setHasAnswered(false);
-      setShowCorrectAnswer(false);
-      setGameWinner(null);
-      setMyAnswer(''); // تنظيف الحقل
-      // 🆕 إعادة تعيين الاستسلام
-      setPlayersGiveUp([]);
-      setHasGivenUp(false);
-      // 🆕 إعادة تعيين الاقتراحات
-      setSuggestions([]);
-      setShowSuggestions(false);
-      setIsValidAnswer(false);
-      setSelectedSuggestionIndex(-1);
-      // إعداد التلميحات لكل لاعب - يبدأ الجميع بالتلميح الأول
-      setPlayerClueIndex(prev => {
-        const newIndexes = {};
-        data.players?.forEach(player => {
-          newIndexes[player] = 0;
-        });
-        return newIndexes;
-      });
-      showSuccessToast('بدأت اللعبة!');
+channel.bind('game-started', (data) => {
+  console.log('🎮 بدء اللعبة:', data);
+  setCurrentQuestion(data.question);
+  setQuestionNumber(data.questionNumber); // 🔥 هذا السطر مهم أيضاً!
+  setGamePhase('playing');
+  setGameScores(prev => {
+    const newScores = { ...prev };
+    data.players.forEach(player => {
+      if (!(player in newScores)) {
+        newScores[player] = 0;
+      }
     });
+    return newScores;
+  });
+  setPlayerClueIndex(prev => {
+    const newIndexes = { ...prev };
+    data.players.forEach(player => {
+      if (!(player in newIndexes)) {
+        newIndexes[player] = 0;
+      }
+    });
+    return newIndexes;
+  });
+});
 
     // تلميح جديد للاعب محدد
     channel.bind('player-requested-clue', (data) => {
@@ -270,26 +267,25 @@ export default function CluesGame({ roomId, playerName, isHost, onExit }) {
     });
 
     // السؤال التالي
-    channel.bind('next-question', (data) => {
-      console.log('➡️ السؤال التالي');
-      setCurrentQuestion(data.question);
-      setAttemptsLeft(3);
-      setHasAnswered(false);
-      setShowCorrectAnswer(false);
-      setMyAnswer(''); // تنظيف الحقل
-      setGameWinner(null);
-      // 🆕 إعادة تعيين الاستسلام
-      setPlayersGiveUp([]);
-      setHasGivenUp(false);
-      // إعادة تعيين التلميحات لكل اللاعبين
-      setPlayerClueIndex(prev => {
-        const newIndexes = {};
-        Object.keys(prev).forEach(player => {
-          newIndexes[player] = 0;
-        });
-        return newIndexes;
-      });
+channel.bind('next-question', (data) => {
+  console.log('➡️ السؤال التالي');
+  setCurrentQuestion(data.question);
+  setQuestionNumber(data.questionNumber); // 🔥 هذا السطر مهم جداً!
+  setAttemptsLeft(3);
+  setHasAnswered(false);
+  setShowCorrectAnswer(false);
+  setMyAnswer('');
+  setGameWinner(null);
+  setPlayersGiveUp([]);
+  setHasGivenUp(false);
+  setPlayerClueIndex(prev => {
+    const newIndexes = {};
+    Object.keys(prev).forEach(player => {
+      newIndexes[player] = 0;
     });
+    return newIndexes;
+  });
+});
 
     // تنظيف عند unmount
     return () => {
