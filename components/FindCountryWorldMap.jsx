@@ -1,14 +1,18 @@
 // components/FindCountryWorldMap.jsx - إصلاح مشكلة إعادة التحميل والزوم
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { getCountryNameAR } from '../app/data/findCountryConfig';
 
 export default function FindCountryWorldMap({ countries, onCountryClick, currentPlayer, actionType }) {
   const svgRef = useRef();
   const [isLoading, setIsLoading] = useState(true);
   const [mapData, setMapData] = useState(null);
-  const [mapInitialized, setMapInitialized] = useState(false); // تتبع حالة الخريطة
+  const [mapInitialized, setMapInitialized] = useState(false);
+  
+  // ✅ مرجع للخريطة المرسومة لتجنب إعادة الرسم
+  const mapDrawnRef = useRef(false);
+  const lastCountriesRef = useRef({});
 
   const width = 1000;
   const height = 600;
@@ -23,7 +27,7 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
     return '#cccccc'; // لون افتراضي
   };
 
-  // قائمة الدول المتاحة (نفس القائمة من خريطة الهيمنة)
+  // قائمة الدول المتاحة
   const availableCountries = [
     'egypt', 'libya', 'algeria', 'france', 'germany', 'spain', 'italy', 
     'united_kingdom', 'poland', 'ukraine', 'turkey', 'iran', 'saudi_arabia',
@@ -52,62 +56,54 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
     'mozambique', 'greenland', 'paraguay', 'suriname', 'guyana', 'honduras'
   ];
 
-  // دالة للتحقق من توفر الدولة
   const isCountryAvailable = (countryId) => {
     return availableCountries.includes(countryId);
   };
 
-  // تحويل أسماء الدول إلى معرفات (نفس الدالة من خريطة الهيمنة)
   const getCountryId = (countryName) => {
     const countryMapping = {
-      'United States of America': 'usa',
-      'United Kingdom': 'united_kingdom',
-      'Russian Federation': 'russia',
-      'China': 'china',
-      'India': 'india',
-      'Brazil': 'brazil',
-      'Canada': 'canada',
-      'Australia': 'australia',
+      'Egypt': 'egypt',
+      'Libya': 'libya', 
+      'Algeria': 'algeria',
       'France': 'france',
       'Germany': 'germany',
-      'Italy': 'italy',
       'Spain': 'spain',
-      'Egypt': 'egypt',
-      'Libya': 'libya',
-      'Algeria': 'algeria',
-      'Nigeria': 'nigeria',
-      'South Africa': 'south_africa',
-      'Japan': 'japan',
-      'South Korea': 'south_korea',
-      'Mexico': 'mexico',
-      'Argentina': 'argentina',
+      'Italy': 'italy',
+      'United Kingdom': 'united_kingdom',
+      'Poland': 'poland',
+      'Ukraine': 'ukraine',
       'Turkey': 'turkey',
       'Iran': 'iran',
       'Saudi Arabia': 'saudi_arabia',
       'Pakistan': 'pakistan',
-      'Poland': 'poland',
-      'Ukraine': 'ukraine',
+      'India': 'india',
+      'China': 'china',
+      'Mongolia': 'mongolia',
+      'Russia': 'russia',
+      'Kazakhstan': 'kazakhstan',
       'Thailand': 'thailand',
       'Vietnam': 'vietnam',
       'Indonesia': 'indonesia',
-      'Mongolia': 'mongolia',
-      'Kazakhstan': 'kazakhstan',
+      'Australia': 'australia',
+      'Brazil': 'brazil',
+      'Argentina': 'argentina',
+      'United States of America': 'usa',
+      'Canada': 'canada',
+      'Mexico': 'mexico',
+      'South Africa': 'south_africa',
+      'Nigeria': 'nigeria',
+      'Japan': 'japan',
+      'South Korea': 'south_korea',
       'Chad': 'chad',
-      
-      // أسماء مختصرة ومتنوعة
-      'Dem. Rep. Congo': 'democratic_republic_congo',
-      'Democratic Republic of the Congo': 'democratic_republic_congo',
-      'Central African Rep.': 'central_african_republic',
-      'Central African Republic': 'central_african_republic',
       'Gabon': 'gabon',
-      'S. Sudan': 'south_sudan',
-      'Congo': 'congo',
+      'South Sudan': 'south_sudan',
+      'Central African Republic': 'central_african_republic',
+      'Democratic Republic of the Congo': 'democratic_republic_congo',
       'Republic of the Congo': 'congo',
       'Belarus': 'belarus',
       'Czech Republic': 'czech_republic',
       'Somalia': 'somalia',
       'Ivory Coast': 'ivory_coast',
-      'Côte d\'Ivoire': 'ivory_coast',
       'Ghana': 'ghana',
       'Norway': 'norway',
       'Sweden': 'sweden',
@@ -216,7 +212,7 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
     return countryMapping[countryName] || countryName.toLowerCase().replace(/\s+/g, '_');
   };
 
-  // تحميل D3 وبيانات الخريطة مرة واحدة فقط
+  // ✅ تحميل D3 وبيانات الخريطة مرة واحدة فقط
   useEffect(() => {
     const loadMapData = async () => {
       try {
@@ -242,18 +238,30 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
     loadMapData();
   }, []); // فقط عند التحميل الأول
 
-  // رسم الخريطة مرة واحدة فقط عند التحميل
+  // ✅ رسم الخريطة مرة واحدة فقط عند تحميل البيانات
   useEffect(() => {
-    if (!mapData || !window.d3 || mapInitialized) return;
+    if (!mapData || !window.d3 || mapDrawnRef.current) return;
     
     drawMap();
+    mapDrawnRef.current = true;
     setMapInitialized(true);
   }, [mapData]); // فقط عند تحميل البيانات
 
-  // تحديث ألوان الدول فقط عند تغيير countries (بدون إعادة رسم كامل)
+  // ✅ تحديث ألوان الدول فقط (بدون إعادة رسم كامل) - مع تحسين الأداء
   useEffect(() => {
     if (!mapInitialized || !window.d3) return;
     
+    // ✅ التحقق من التغيير الفعلي في countries قبل التحديث
+    const currentCountriesStr = JSON.stringify(countries);
+    const lastCountriesStr = JSON.stringify(lastCountriesRef.current);
+    
+    if (currentCountriesStr === lastCountriesStr) {
+      return; // لا يوجد تغيير فعلي
+    }
+    
+    lastCountriesRef.current = { ...countries };
+    
+    // ✅ تحديث الألوان فقط بدون إعادة رسم
     updateCountryColors();
   }, [countries, mapInitialized]);
 
@@ -271,8 +279,8 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
     });
   };
 
-  // دالة الرسم الأولي (مرة واحدة فقط)
-  const drawMap = () => {
+  // ✅ دالة الرسم الأولي (مرة واحدة فقط)
+  const drawMap = useCallback(() => {
     const svg = window.d3.select(svgRef.current);
     
     // مسح المحتوى السابق
@@ -296,7 +304,7 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
     svg.call(zoom);
     
     // رسم الدول
-    const countriesSelection = g.selectAll(".country")
+    g.selectAll(".country")
       .data(mapData.features)
       .enter()
       .append("path")
@@ -305,13 +313,14 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
       .attr("fill", d => {
         const countryName = d.properties.NAME || d.properties.name;
         const countryId = getCountryId(countryName);
+        const country = countries[countryId];
         
         // إخفاء الدول غير المتاحة
         if (!isCountryAvailable(countryId)) {
           return '#1e40af'; // لون البحر
         }
         
-        return '#cccccc'; // لون افتراضي
+        return getCountryColor(countryId, country);
       })
       .attr("stroke", d => {
         const countryName = d.properties.NAME || d.properties.name;
@@ -346,13 +355,10 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
           onCountryClick(countryId);
         }
       });
+  }, [mapData, countries, onCountryClick]); // dependencies محدودة بحذر
 
-    // إضافة أسماء الدول
-    // addCountryNames(g, path); // ← تم إيقاف عرض أسماء الدول
-  };
-
-  // تحديث ألوان الدول فقط (بدون إعادة رسم كامل)
-  const updateCountryColors = () => {
+  // ✅ دالة تحديث الألوان فقط (محسنة للأداء)
+  const updateCountryColors = useCallback(() => {
     const svg = window.d3.select(svgRef.current);
     
     svg.selectAll(".country")
@@ -368,71 +374,25 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
         
         return getCountryColor(countryId, country);
       });
-  };
+  }, [countries]);
 
-  // دالة إضافة أسماء الدول على الخريطة
-  const addCountryNames = (g, path) => {
-    const countryNamesData = [];
-    
-    mapData.features.forEach(d => {
-      const countryName = d.properties.NAME || d.properties.name;
-      const countryId = getCountryId(countryName);
-      
-      // فقط الدول المتاحة
-      if (isCountryAvailable(countryId)) {
-        const centroid = path.centroid(d);
-        if (centroid && !isNaN(centroid[0]) && !isNaN(centroid[1])) {
-          countryNamesData.push({
-            countryName: getCountryNameAR(countryId),
-            countryId: countryId,
-            centroid: centroid
-          });
-        }
-      }
-    });
-
-    // رسم أسماء الدول
-    g.selectAll(".country-name")
-      .data(countryNamesData)
-      .enter()
-      .append("text")
-      .attr("class", "country-name")
-      .attr("x", d => d.centroid[0])
-      .attr("y", d => d.centroid[1])
-      .attr("text-anchor", "middle")
-      .attr("dominant-baseline", "middle")
-      .style("font-size", "12px")
-      .style("font-weight", "bold")
-      .style("fill", "#2c3e50")
-      .style("stroke", "white")
-      .style("stroke-width", "2px")
-      .style("paint-order", "stroke")
-      .style("pointer-events", "none")
-      .text(d => d.countryName);
-  };
-
-  // خريطة بديلة بسيطة (في حالة فشل تحميل D3)
+  // خريطة احتياطية في حالة فشل تحميل D3
   const renderFallbackMap = () => {
     const continents = [
-      { id: 'usa', name: 'أمريكا', x: 200, y: 250 },
-      { id: 'canada', name: 'كندا', x: 200, y: 150 },
-      { id: 'brazil', name: 'البرازيل', x: 300, y: 400 },
-      { id: 'france', name: 'فرنسا', x: 500, y: 200 },
-      { id: 'germany', name: 'ألمانيا', x: 520, y: 180 },
-      { id: 'egypt', name: 'مصر', x: 550, y: 300 },
-      { id: 'china', name: 'الصين', x: 750, y: 250 },
-      { id: 'russia', name: 'روسيا', x: 650, y: 150 },
-      { id: 'australia', name: 'أستراليا', x: 800, y: 450 },
+      { id: 'asia', name: 'آسيا', x: 750, y: 200 },
+      { id: 'europe', name: 'أوروبا', x: 500, y: 150 },
+      { id: 'africa', name: 'أفريقيا', x: 500, y: 350 },
+      { id: 'north_america', name: 'أمريكا الشمالية', x: 200, y: 200 },
+      { id: 'south_america', name: 'أمريكا الجنوبية', x: 250, y: 450 },
+      { id: 'oceania', name: 'أوقيانوسيا', x: 850, y: 450 }
     ];
 
     return (
       <svg
-        ref={svgRef}
         width={width}
         height={height}
         viewBox={`0 0 ${width} ${height}`}
-        className="w-full h-full"
-        style={{ background: '#1e40af' }}
+        className="w-full h-auto bg-[#1e40af] rounded-lg"
       >
         {continents.map(continent => {
           const country = countries[continent.id];
@@ -497,18 +457,18 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
           width={width}
           height={height}
           viewBox={`0 0 ${width} ${height}`}
-          className="w-full h-auto bg-[#1e40af] rounded-lg"
+          className="w-full h-auto bg-[#1e40af] rounded-lg "
         />
       ) : (
         renderFallbackMap()
       )}
       
       {/* تعليمات */}
-      <div className="mt-4 text-center">
+      {/* <div className="mt-4 text-center">
         <p className="text-gray-400">
           🌍 اضغط على الدولة الصحيحة في الخريطة
         </p>
-      </div>
+      </div> */}
     </div>
   );
 }
