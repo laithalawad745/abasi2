@@ -31,11 +31,11 @@ export default function SpinWheel({ players, onSpinComplete }) {
       <div className="relative z-10 p-6 md:p-8 flex items-center justify-center min-h-screen">
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-w-lg w-full text-center shadow-2xl">
           
-          <h2 className="text-4xl font-bold text-white mb-8">
+          {/* <h2 className="text-4xl font-bold text-white mb-8">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
                تحديد ترتيب اللعب
             </span>
-          </h2>
+          </h2> */}
           
           {!result ? (
             <>
@@ -68,10 +68,10 @@ export default function SpinWheel({ players, onSpinComplete }) {
             <>
               <h3 className="text-3xl text-white mb-8 font-bold">
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-emerald-500">
-                   ترتيب اللعب:
+                تم الترتيب عشوائي
                 </span>
               </h3>
-              
+               {/*
               <div className="space-y-4 mb-8">
                 {result.map((player, index) => (
                   <div 
@@ -92,13 +92,13 @@ export default function SpinWheel({ players, onSpinComplete }) {
                     </div>
                   </div>
                 ))}
-              </div>
+              </div> */}
               
               <button
                 onClick={confirmOrder}
                 className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-xl transition-all duration-300 hover:scale-105 shadow-lg shadow-green-500/30"
               >
-                ✅ تأكيد الترتيب
+                ابدأ اللعبة
               </button>
             </>
           )}
