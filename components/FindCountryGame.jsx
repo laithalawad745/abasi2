@@ -1,4 +1,4 @@
-// components/FindCountryGame.jsx - إصلاح التايمر فقط مع الحفاظ على النظام الأصلي
+// components/FindCountryGame.jsx - إصلاح زر الحذف على الهاتف
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -119,9 +119,9 @@ export default function FindCountryGame() {
       });
     } else {
       // إجابة خاطئة
-      showErrorToast(`❌ إجابة خاطئة! الدولة الصحيحة هي ${getCountryNameAR(currentQuestion.correctCountry)}`);
+      showErrorToast(`❌ إجابة خاطئة! الإجابة الصحيحة: ${getCountryNameAR(currentQuestion.correctCountry)}`);
       
-      // تحديث عدد الأسئلة المجاب عليها فقط
+      // تحديث عدد الأسئلة المجاب عليها
       setPlayerProgress(prev => ({
         ...prev,
         [currentPlayerIndex]: {
@@ -132,37 +132,33 @@ export default function FindCountryGame() {
       
       // تمييز الدولة الخاطئة باللون الأحمر والصحيحة باللون الأخضر
       setCountries({
-        [countryId]: { owner: -2, troops: 1 }, // -2 للون أحمر
-        [currentQuestion.correctCountry]: { owner: -1, troops: 1 } // -1 للون أخضر
+        [countryId]: { owner: -2, troops: 1 }, // -2 للون خاطئ (أحمر)
+        [currentQuestion.correctCountry]: { owner: -1, troops: 1 } // -1 للون صحيح (أخضر)
       });
     }
 
-    // الانتقال للسؤال التالي أو اللاعب التالي
+    // الانتقال للسؤال التالي بعد تأخير
     setTimeout(() => {
       nextTurn();
-    }, 3000);
+    }, 2000);
   };
 
-  // ✅ الانتقال للدور التالي - نظام تناوب صحيح
+  // الانتقال للسؤال التالي
   const nextTurn = () => {
-    // ✅ انتقال فوري للاعب التالي بعد كل سؤال (نظام تناوب)
-    const nextPlayerIndex = (currentPlayerIndex + 1) % players.length;
-    setCurrentPlayerIndex(nextPlayerIndex);
+    const currentPlayerProgress = playerProgress[currentPlayerIndex];
     
-    // تحقق من انتهاء اللعبة - عندما يكمل كل لاعب 10 أسئلة
-    const totalQuestionsAnswered = Object.values(playerProgress).reduce(
-      (sum, progress) => sum + progress.questionsAnswered, 0
-    ) + 1; // +1 للسؤال الذي تمت الإجابة عليه للتو
-    
-    const totalQuestionsNeeded = players.length * questionsPerPlayer;
-    
-    if (totalQuestionsAnswered >= totalQuestionsNeeded) {
-      // انتهت اللعبة
-      endGame();
-      return;
+    // فحص إذا انتهى هذا اللاعب من أسئلته
+    if (currentPlayerProgress.questionsAnswered >= questionsPerPlayer) {
+      // انتقل للاعب التالي
+      const nextIndex = currentPlayerIndex + 1;
+      if (nextIndex >= players.length) {
+        // انتهت اللعبة
+        endGame();
+        return;
+      }
+      setCurrentPlayerIndex(nextIndex);
     }
     
-    // توليد سؤال جديد
     generateNewQuestion();
   };
 
@@ -170,21 +166,19 @@ export default function FindCountryGame() {
   const endGame = () => {
     setTimerActive(false);
     setGamePhase('finished');
-    
-    // تحديد الفائز
-    let winner = null;
-    let maxScore = -1;
-    
-    Object.values(playerProgress).forEach(player => {
-      if (player.score > maxScore) {
-        maxScore = player.score;
-        winner = player;
-      }
-    });
-    
-    if (winner) {
-      showSuccessToast(`🏆 الفائز: ${winner.name} بـ ${winner.score} نقطة!`);
-    }
+  };
+
+  // إعادة تشغيل اللعبة
+  const resetGame = () => {
+    setGamePhase('setup');
+    setPlayers([]);
+    setCurrentPlayerIndex(0);
+    setCurrentQuestion(null);
+    setUsedQuestions([]);
+    setPlayerProgress({});
+    setCountries({});
+    timerRef.current = 0;
+    setTimerActive(false);
   };
 
   // تنسيق الوقت
@@ -238,9 +232,9 @@ export default function FindCountryGame() {
 
           <div className="space-y-4 mb-8">
             {tempPlayers.map((player, index) => (
-              <div key={index} className="flex items-center gap-4">
+              <div key={index} className="flex items-center gap-2 md:gap-4">
                 <div 
-                  className="w-6 h-6 rounded-full border-2 border-white"
+                  className="w-6 h-6 rounded-full border-2 border-white flex-shrink-0"
                   style={{ backgroundColor: playerColors[player.color] }}
                 ></div>
                 
@@ -249,14 +243,14 @@ export default function FindCountryGame() {
                   placeholder={`اسم اللاعب ${index + 1}`}
                   value={player.name}
                   onChange={(e) => updatePlayerName(index, e.target.value)}
-                  className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-500 focus:bg-white/20 transition-all duration-300"
+                  className="flex-1 min-w-0 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-cyan-500 focus:bg-white/20 transition-all duration-300"
                   maxLength={20}
                 />
                 
                 {tempPlayers.length > 2 && (
                   <button
                     onClick={() => removePlayer(index)}
-                    className="px-4 py-3 bg-red-500/20 border border-red-500/50 rounded-xl text-red-400 hover:bg-red-500/30 transition-all duration-300"
+                    className="flex-shrink-0 w-12 h-12 bg-red-500/20 border border-red-500/50 rounded-xl text-red-400 hover:bg-red-500/30 transition-all duration-300 flex items-center justify-center"
                   >
                     🗑️
                   </button>
@@ -317,13 +311,6 @@ export default function FindCountryGame() {
                   <div className="text-gray-400">دور {currentPlayer.name}</div>
                 </div>
               </div>
-
-              {/* التوقيت */}
-              {/* <div className="text-center">
-                <div className="text-3xl font-mono font-bold text-white">
-                  {formatTime(timerRef.current)}
-                </div>
-              </div> */}
 
               {/* النقاط */}
               <div className="text-center">
@@ -392,22 +379,44 @@ export default function FindCountryGame() {
                         key={index}
                         className={`p-4 rounded-2xl border-2 transition-all ${
                           isActive 
-                            ? 'border-cyan-500 bg-cyan-500/20' 
+                            ? 'border-cyan-400 bg-cyan-500/10' 
                             : 'border-white/20 bg-white/5'
                         }`}
                       >
-                        <div className="flex items-center gap-3 mb-2">
+                        <div className="flex items-center gap-3 mb-3">
                           <div 
-                            className="w-8 h-8 rounded-full"
+                            className="w-8 h-8 rounded-full border-2 border-white/50"
                             style={{ backgroundColor: playerColors[player.color] }}
                           ></div>
-                          <span className="text-white font-bold">{player.name}</span>
+                          <div className="text-white font-bold text-lg truncate">
+                            {player.name}
+                          </div>
                         </div>
-                        <div className="text-green-400 font-bold text-xl">
-                          {progress?.score || 0} نقطة
-                        </div>
-                        <div className="text-gray-400 text-sm">
-                          {progress?.questionsAnswered || 0}/{questionsPerPlayer} سؤال
+                        
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-400">النقاط:</span>
+                            <span className="text-green-400 font-bold text-xl">
+                              {progress?.score || 0}
+                            </span>
+                          </div>
+                          
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-400">الأسئلة:</span>
+                            <span className="text-blue-400 font-bold">
+                              {progress?.questionsAnswered || 0}/{questionsPerPlayer}
+                            </span>
+                          </div>
+                          
+                          {/* شريط التقدم */}
+                          <div className="w-full bg-gray-700 rounded-full h-2 mt-3">
+                            <div 
+                              className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full transition-all duration-500"
+                              style={{
+                                width: `${((progress?.questionsAnswered || 0) / questionsPerPlayer) * 100}%`
+                              }}
+                            ></div>
+                          </div>
                         </div>
                       </div>
                     );
@@ -421,89 +430,83 @@ export default function FindCountryGame() {
     );
   };
 
-  // مكون النتائج النهائية
+  // مكون انتهاء اللعبة
   const GameFinished = () => {
     // ترتيب اللاعبين حسب النقاط
-    const sortedPlayers = players.map((player, index) => ({
-      ...player,
-      ...playerProgress[index],
-      originalIndex: index
-    })).sort((a, b) => b.score - a.score);
-
-    const winner = sortedPlayers[0];
-
-    const resetGame = () => {
-      setGamePhase('setup');
-      setPlayers([]);
-      setCurrentPlayerIndex(0);
-      setCurrentQuestion(null);
-      setUsedQuestions([]);
-      setPlayerProgress({});
-      setCountries({});
-      timerRef.current = 0;
-      setTimerActive(false);
-    };
+    const sortedPlayers = players
+      .map((player, index) => ({
+        ...player,
+        ...playerProgress[index],
+        originalIndex: index
+      }))
+      .sort((a, b) => b.score - a.score);
 
     return (
       <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
         {/* خلفية متحركة */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
           <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-orange-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-green-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
         </div>
 
-        <div className="relative z-10 p-6 md:p-8">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-8">
-               انتهت اللعبة!
-            </h1>
-
-            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-8 mb-8">
-              <h2 className="text-3xl font-bold text-white mb-6"> الفائز</h2>
-              <div className="flex items-center justify-center gap-4 mb-6">
-                <div 
-                  className="w-16 h-16 rounded-full"
-                  style={{ backgroundColor: playerColors[winner.color] }}
-                ></div>
-                <div>
-                  <h3 className="text-4xl font-bold text-white">{winner.name}</h3>
-                  <p className="text-2xl text-yellow-400">{winner.score} نقطة</p>
-                </div>
-              </div>
+        <div className="relative z-10 p-6 md:p-8 flex items-center justify-center min-h-screen">
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-w-4xl w-full text-center">
+            
+            {/* العنوان */}
+            <div className="mb-12">
+              <h1 className="text-4xl md:text-6xl font-black text-white mb-4 tracking-tight">
+                🏆 انتهت اللعبة!
+              </h1>
+              <p className="text-2xl text-gray-300">تهانينا للفائزين</p>
             </div>
 
-            {/* لوحة النتائج */}
-            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-8 mb-8">
-              <h2 className="text-3xl font-bold text-white mb-6">لوحة النتائج</h2>
-              
-              <div className="space-y-4">
-                {sortedPlayers.map((player, index) => (
-                  <div key={player.originalIndex} className={`flex items-center justify-between p-4 rounded-2xl ${
-                    index === 0 ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/50' : 'bg-white/5'
-                  } border border-white/10`}>
-                    <div className="flex items-center gap-4">
-                      <span className="text-2xl">
-                        {index === 0 ? '' : index === 1 ? '' : index === 2 ? '' : ''}
-                      </span>
-                      <div 
-                        className="w-10 h-10 rounded-full"
-                        style={{ backgroundColor: playerColors[player.color] }}
-                      ></div>
-                      <div className="text-left">
-                        <h3 className="text-xl font-bold text-white">{player.name}</h3>
-                        <p className="text-gray-400">{player.questionsAnswered} سؤال مجاب</p>
+            {/* النتائج النهائية */}
+            <div className="space-y-6 mb-12">
+              {sortedPlayers.map((player, rankIndex) => {
+                const isWinner = rankIndex === 0;
+                const medals = ['🥇', '🥈', '🥉'];
+                const medal = medals[rankIndex] || '🏅';
+                
+                return (
+                  <div
+                    key={player.originalIndex}
+                    className={`p-6 rounded-2xl border-2 transition-all ${
+                      isWinner
+                        ? 'border-yellow-400 bg-yellow-500/10 scale-105'
+                        : 'border-white/20 bg-white/5'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="text-4xl">{medal}</div>
+                        <div 
+                          className="w-12 h-12 rounded-full border-4 border-white/20"
+                          style={{ backgroundColor: playerColors[player.color] }}
+                        ></div>
+                        <div className="text-left">
+                          <div className={`font-bold text-2xl ${isWinner ? 'text-yellow-300' : 'text-white'}`}>
+                            {player.name}
+                          </div>
+                          <div className="text-gray-400">المرتبة #{rankIndex + 1}</div>
+                        </div>
+                      </div>
+                      
+                      <div className="text-right">
+                        <div className={`font-bold text-3xl ${isWinner ? 'text-yellow-400' : 'text-green-400'}`}>
+                          {player.score} نقطة
+                        </div>
+                        <div className="text-gray-400">
+                          {player.questionsAnswered}/{questionsPerPlayer} سؤال
+                        </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-3xl font-bold text-cyan-400">{player.score}</p>
-                      <p className="text-sm text-gray-400">نقطة</p>
-                    </div>
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
 
-            <div className="flex flex-wrap justify-center gap-4">
+            {/* أزرار التحكم */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={resetGame}
                 className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105"
@@ -553,12 +556,6 @@ export default function FindCountryGame() {
             <p className="text-xl md:text-2xl text-gray-400 font-light max-w-3xl mx-auto leading-relaxed">
               تحدى أصدقاءك في لعبة تحديد الدول على الخريطة! كل لاعب يحصل على 10 أسئلة    
             </p>
-            {/* <div className="mt-6 flex flex-wrap justify-center gap-6 text-gray-300">
-              <span>📍 10 أسئلة لكل لاعب</span>
-              <span>⏱️ مؤقت زمني</span>
-              <span>🔄 أدوار متناوبة</span>
-              <span>🏆 100 نقطة للإجابة الصحيحة</span>
-            </div> */}
           </div>
 
           <PlayerSetup />

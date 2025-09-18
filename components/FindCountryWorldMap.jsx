@@ -317,7 +317,7 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
         
         // إخفاء الدول غير المتاحة
         if (!isCountryAvailable(countryId)) {
-          return '#1e40af'; // لون البحر
+          return '#3b82f6'; // لون البحر
         }
         
         return getCountryColor(countryId, country);
@@ -327,7 +327,7 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
         const countryId = getCountryId(countryName);
         
         if (!isCountryAvailable(countryId)) {
-          return '#1e40af'; // نفس لون البحر
+          return '#3b82f6'; // نفس لون البحر
         }
         
         return '#2c3e50';
@@ -369,7 +369,7 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
         
         // إخفاء الدول غير المتاحة
         if (!isCountryAvailable(countryId)) {
-          return '#1e40af'; // لون البحر
+          return '#3b82f6'; // لون البحر
         }
         
         return getCountryColor(countryId, country);
@@ -392,7 +392,7 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
         width={width}
         height={height}
         viewBox={`0 0 ${width} ${height}`}
-        className="w-full h-auto bg-[#1e40af] rounded-lg"
+        className="w-full h-auto bg-[#3b82f6] rounded-lg"
       >
         {continents.map(continent => {
           const country = countries[continent.id];
@@ -457,7 +457,7 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
           width={width}
           height={height}
           viewBox={`0 0 ${width} ${height}`}
-          className="w-full h-auto bg-[#1e40af] rounded-lg "
+className="w-full h-[400px] md:h-auto bg-[#3b82f6] rounded-lg"
         />
       ) : (
         renderFallbackMap()
