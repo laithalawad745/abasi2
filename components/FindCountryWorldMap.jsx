@@ -1,8 +1,111 @@
-// components/FindCountryWorldMap.jsx - إصلاح مشكلة إعادة التحميل والزوم
+// components/FindCountryWorldMap.jsx - مع نظام التخزين المؤقت المدمج
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { getCountryNameAR } from '../app/data/findCountryConfig';
+
+// ✅ نظام التخزين المؤقت المدمج - سيمنع إعادة التحميل نهائياً
+class GlobalMapCache {
+  constructor() {
+    this.mapData = null;
+    this.isLoading = false;
+    this.loadingPromise = null;
+    this.scriptsLoaded = false;
+  }
+
+  async getMapData() {
+    // إذا كانت البيانات محفوظة، إرجاعها فوراً
+    if (this.mapData) {
+      console.log('📦 استخدام بيانات الخريطة من الكاش');
+      return this.mapData;
+    }
+
+    // إذا كان التحميل جارياً، انتظار نفس العملية
+    if (this.isLoading && this.loadingPromise) {
+      console.log('⏳ انتظار تحميل الخريطة الجاري...');
+      return this.loadingPromise;
+    }
+
+    // بدء تحميل جديد
+    console.log('🌍 تحميل بيانات الخريطة لأول مرة...');
+    this.isLoading = true;
+    
+    this.loadingPromise = this.loadMapDataInternal();
+    
+    try {
+      const data = await this.loadingPromise;
+      this.mapData = data;
+      this.isLoading = false;
+      console.log('✅ تم حفظ بيانات الخريطة في الكاش - لن تُحمل مرة أخرى!');
+      return data;
+    } catch (error) {
+      this.isLoading = false;
+      this.loadingPromise = null;
+      throw error;
+    }
+  }
+
+  async loadMapDataInternal() {
+    // تحميل D3 أولاً
+    await this.ensureD3Loaded();
+    
+    // تحميل بيانات الخريطة
+    const worldData = await window.d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+    const countriesData = window.topojson.feature(worldData, worldData.objects.countries);
+    
+    return countriesData;
+  }
+
+  async ensureD3Loaded() {
+    if (window.d3 && window.topojson && this.scriptsLoaded) {
+      return;
+    }
+
+    return new Promise((resolve, reject) => {
+      let scriptsLoaded = 0;
+      const totalScripts = 2;
+
+      const onScriptLoad = () => {
+        scriptsLoaded++;
+        if (scriptsLoaded === totalScripts) {
+          this.scriptsLoaded = true;
+          console.log('✅ تم تحميل جميع سكريبتات D3');
+          resolve();
+        }
+      };
+
+      const onScriptError = (error) => {
+        console.error('❌ خطأ في تحميل سكريبت D3:', error);
+        reject(error);
+      };
+
+      // تحميل D3
+      if (!window.d3) {
+        const d3Script = document.createElement('script');
+        d3Script.src = 'https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js';
+        d3Script.onload = onScriptLoad;
+        d3Script.onerror = onScriptError;
+        document.head.appendChild(d3Script);
+      } else {
+        onScriptLoad();
+      }
+
+      // تحميل TopoJSON
+      if (!window.topojson) {
+        const topoScript = document.createElement('script');
+        topoScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js';
+        topoScript.onload = onScriptLoad;
+        topoScript.onerror = onScriptError;
+        document.head.appendChild(topoScript);
+      } else {
+        onScriptLoad();
+      }
+    });
+  }
+}
+
+// ✅ إنشاء instance عالمي واحد - سيبقى في الذاكرة طوال الجلسة
+const globalMapCache = new GlobalMapCache();
 
 export default function FindCountryWorldMap({ countries, onCountryClick, currentPlayer, actionType }) {
   const svgRef = useRef();
@@ -46,30 +149,40 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
     'colombia', 'venezuela', 'bolivia', 'ecuador', 'uruguay', 'guatemala', 
     'cuba', 'panama', 'costa_rica', 'nicaragua', 'new_zealand', 
     'papua_new_guinea', 'fiji', 'syria', 'jordan', 'iraq', 'yemen', 
-    'oman', 'uae', 'kuwait', 'qatar', 'tajikistan', 'turkmenistan', 
-    'armenia', 'georgia', 'kyrgyzstan', 'azerbaijan', 'estonia', 'latvia', 
-    'lithuania', 'slovakia', 'slovenia', 'hungary', 'croatia', 
-    'bosnia_herzegovina', 'serbia', 'montenegro', 'albania', 'ireland', 
-    'iceland', 'eritrea', 'uganda', 'niger', 'mali', 'mauritania', 
-    'western_sahara', 'benin', 'togo', 'burkina_faso', 'liberia', 
-    'guinea', 'sierra_leone', 'guinea_bissau', 'senegal', 'malawi', 
-    'mozambique', 'greenland', 'paraguay', 'suriname', 'guyana', 'honduras'
+    'oman', 'uae', 'kuwait', 'qatar', 'lebanon', 'israel', 'palestine',
+    'senegal', 'mali', 'burkina_faso', 'niger', 'mauritania', 'ivory_coast',
+    'liberia', 'sierra_leone', 'guinea', 'guinea_bissau', 'gambia',
+    'togo', 'benin', 'rwanda', 'burundi', 'uganda', 'malawi', 'mozambique',
+    'swaziland', 'lesotho', 'djibouti', 'eritrea', 'equatorial_guinea',
+    'serbia', 'montenegro', 'bosnia_herzegovina', 'croatia', 'slovenia',
+    'macedonia', 'albania', 'moldova', 'lithuania', 'latvia', 'estonia',
+    'slovakia', 'hungary', 'iceland', 'ireland', 'luxembourg', 'cyprus',
+    'malta', 'san_marino', 'vatican', 'monaco', 'andorra', 'liechtenstein',
+    'armenia', 'georgia', 'azerbaijan', 'kyrgyzstan', 'tajikistan', 
+    'turkmenistan', 'maldives', 'brunei', 'east_timor', 'solomon_islands',
+    'vanuatu', 'samoa', 'tonga', 'palau', 'marshall_islands', 'micronesia',
+    'nauru', 'kiribati', 'tuvalu', 'barbados', 'trinidad_tobago',
+    'jamaica', 'haiti', 'dominican_republic', 'bahamas', 'belize',
+    'honduras', 'el_salvador', 'paraguay', 'suriname', 'guyana',
+    'french_guiana', 'greenland'
   ];
 
   const isCountryAvailable = (countryId) => {
     return availableCountries.includes(countryId);
   };
 
+  // تحويل أسماء الدول لمعرفات
   const getCountryId = (countryName) => {
     const countryMapping = {
       'Egypt': 'egypt',
-      'Libya': 'libya', 
+      'Libya': 'libya',
       'Algeria': 'algeria',
       'France': 'france',
       'Germany': 'germany',
       'Spain': 'spain',
       'Italy': 'italy',
       'United Kingdom': 'united_kingdom',
+      'Great Britain': 'united_kingdom',
       'Poland': 'poland',
       'Ukraine': 'ukraine',
       'Turkey': 'turkey',
@@ -80,29 +193,36 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
       'China': 'china',
       'Mongolia': 'mongolia',
       'Russia': 'russia',
+      'Russian Federation': 'russia',
       'Kazakhstan': 'kazakhstan',
       'Thailand': 'thailand',
       'Vietnam': 'vietnam',
+      'Viet Nam': 'vietnam',
       'Indonesia': 'indonesia',
       'Australia': 'australia',
       'Brazil': 'brazil',
       'Argentina': 'argentina',
       'United States of America': 'usa',
+      'United States': 'usa',
       'Canada': 'canada',
       'Mexico': 'mexico',
       'South Africa': 'south_africa',
       'Nigeria': 'nigeria',
       'Japan': 'japan',
       'South Korea': 'south_korea',
+      'Republic of Korea': 'south_korea',
       'Chad': 'chad',
       'Gabon': 'gabon',
       'South Sudan': 'south_sudan',
       'Central African Republic': 'central_african_republic',
       'Democratic Republic of the Congo': 'democratic_republic_congo',
+      'Congo': 'congo',
       'Republic of the Congo': 'congo',
       'Belarus': 'belarus',
       'Czech Republic': 'czech_republic',
+      'Czechia': 'czech_republic',
       'Somalia': 'somalia',
+      "Côte d'Ivoire": 'ivory_coast',
       'Ivory Coast': 'ivory_coast',
       'Ghana': 'ghana',
       'Norway': 'norway',
@@ -118,9 +238,11 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
       'Greece': 'greece',
       'Portugal': 'portugal',
       'Myanmar': 'myanmar',
+      'Burma': 'myanmar',
       'Malaysia': 'malaysia',
       'Philippines': 'philippines',
       'North Korea': 'north_korea',
+      "Democratic People's Republic of Korea": 'north_korea',
       'Afghanistan': 'afghanistan',
       'Uzbekistan': 'uzbekistan',
       'Bangladesh': 'bangladesh',
@@ -128,6 +250,7 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
       'Nepal': 'nepal',
       'Bhutan': 'bhutan',
       'Laos': 'laos',
+      "Lao People's Democratic Republic": 'laos',
       'Cambodia': 'cambodia',
       'Morocco': 'morocco',
       'Tunisia': 'tunisia',
@@ -135,6 +258,7 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
       'Ethiopia': 'ethiopia',
       'Kenya': 'kenya',
       'Tanzania': 'tanzania',
+      'United Republic of Tanzania': 'tanzania',
       'Zambia': 'zambia',
       'Zimbabwe': 'zimbabwe',
       'Botswana': 'botswana',
@@ -157,9 +281,8 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
       'New Zealand': 'new_zealand',
       'Papua New Guinea': 'papua_new_guinea',
       'Fiji': 'fiji',
-      'Israel': 'israel',
-      'Lebanon': 'lebanon',
       'Syria': 'syria',
+      'Syrian Arab Republic': 'syria',
       'Jordan': 'jordan',
       'Iraq': 'iraq',
       'Yemen': 'yemen',
@@ -167,76 +290,51 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
       'United Arab Emirates': 'uae',
       'Kuwait': 'kuwait',
       'Qatar': 'qatar',
-      'Tajikistan': 'tajikistan',
-      'Turkmenistan': 'turkmenistan',
-      'Armenia': 'armenia',
-      'Georgia': 'georgia',
-      'Kyrgyzstan': 'kyrgyzstan',
-      'Azerbaijan': 'azerbaijan',
-      'Estonia': 'estonia',
-      'Latvia': 'latvia',
-      'Lithuania': 'lithuania',
-      'Slovakia': 'slovakia',
-      'Slovenia': 'slovenia',
-      'Hungary': 'hungary',
-      'Croatia': 'croatia',
-      'Bosnia and Herzegovina': 'bosnia_herzegovina',
+      'Lebanon': 'lebanon',
+      'Israel': 'israel',
+      'Palestine': 'palestine',
       'Serbia': 'serbia',
       'Montenegro': 'montenegro',
+      'Bosnia and Herzegovina': 'bosnia_herzegovina',
+      'Croatia': 'croatia',
+      'Slovenia': 'slovenia',
+      'North Macedonia': 'macedonia',
       'Albania': 'albania',
-      'Ireland': 'ireland',
+      'Moldova': 'moldova',
+      'Lithuania': 'lithuania',
+      'Latvia': 'latvia',
+      'Estonia': 'estonia',
+      'Slovakia': 'slovakia',
+      'Hungary': 'hungary',
       'Iceland': 'iceland',
-      'Eritrea': 'eritrea',
-      'Uganda': 'uganda',
-      'Niger': 'niger',
-      'Mali': 'mali',
-      'Mauritania': 'mauritania',
-      'Western Sahara': 'western_sahara',
-      'Benin': 'benin',
-      'Togo': 'togo',
-      'Burkina Faso': 'burkina_faso',
-      'Liberia': 'liberia',
-      'Guinea': 'guinea',
-      'Sierra Leone': 'sierra_leone',
-      'Guinea-Bissau': 'guinea_bissau',
-      'Senegal': 'senegal',
-      'Malawi': 'malawi',
-      'Mozambique': 'mozambique',
-      'Greenland': 'greenland',
-      'Paraguay': 'paraguay',
-      'Suriname': 'suriname',
-      'Guyana': 'guyana',
-      'Honduras': 'honduras'
+      'Ireland': 'ireland',
+      'Luxembourg': 'luxembourg',
+      'Cyprus': 'cyprus',
+      'Malta': 'malta'
     };
     
     return countryMapping[countryName] || countryName.toLowerCase().replace(/\s+/g, '_');
   };
 
-  // ✅ تحميل D3 وبيانات الخريطة مرة واحدة فقط
+  // ✅ تحميل بيانات الخريطة باستخدام نظام الكاش المدمج
   useEffect(() => {
     const loadMapData = async () => {
       try {
         setIsLoading(true);
         
-        // تحميل D3 إذا لم يكن محملاً
-        if (!window.d3) {
-          await loadD3Scripts();
-        }
-
-        // تحميل بيانات الخريطة
-        const worldData = await window.d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
-        const countriesData = window.topojson.feature(worldData, worldData.objects.countries);
+        // ✅ استخدام الكاش العالمي - لن يحمل البيانات إلا مرة واحدة في كامل التطبيق!
+        const countriesData = await globalMapCache.getMapData();
         
         setMapData(countriesData);
         setIsLoading(false);
       } catch (error) {
-        console.error('خطأ في تحميل الخريطة:', error);
+        console.error('❌ خطأ في تحميل الخريطة:', error);
         setIsLoading(false);
       }
     };
 
     loadMapData();
-  }, []); // فقط عند التحميل الأول
+  }, []);
 
   // ✅ رسم الخريطة مرة واحدة فقط عند تحميل البيانات
   useEffect(() => {
@@ -245,13 +343,13 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
     drawMap();
     mapDrawnRef.current = true;
     setMapInitialized(true);
-  }, [mapData]); // فقط عند تحميل البيانات
+  }, [mapData]);
 
-  // ✅ تحديث ألوان الدول فقط (بدون إعادة رسم كامل) - مع تحسين الأداء
+  // ✅ تحديث ألوان الدول فقط (بدون إعادة رسم كامل)
   useEffect(() => {
     if (!mapInitialized || !window.d3) return;
     
-    // ✅ التحقق من التغيير الفعلي في countries قبل التحديث
+    // التحقق من التغيير الفعلي في countries قبل التحديث
     const currentCountriesStr = JSON.stringify(countries);
     const lastCountriesStr = JSON.stringify(lastCountriesRef.current);
     
@@ -260,30 +358,12 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
     }
     
     lastCountriesRef.current = { ...countries };
-    
-    // ✅ تحديث الألوان فقط بدون إعادة رسم
     updateCountryColors();
   }, [countries, mapInitialized]);
 
-  const loadD3Scripts = () => {
-    return new Promise((resolve) => {
-      const d3Script = document.createElement('script');
-      d3Script.src = 'https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js';
-      d3Script.onload = () => {
-        const topoScript = document.createElement('script');
-        topoScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js';
-        topoScript.onload = resolve;
-        document.head.appendChild(topoScript);
-      };
-      document.head.appendChild(d3Script);
-    });
-  };
-
-  // ✅ دالة الرسم الأولي (مرة واحدة فقط)
+  // رسم الخريطة الأساسية
   const drawMap = useCallback(() => {
     const svg = window.d3.select(svgRef.current);
-    
-    // مسح المحتوى السابق
     svg.selectAll("*").remove();
     
     const g = svg.append("g");
@@ -294,7 +374,6 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
       
     const path = window.d3.geoPath().projection(projection);
     
-    // إعداد الزووم
     const zoom = window.d3.zoom()
       .scaleExtent([0.5, 8])
       .on("zoom", (event) => {
@@ -315,9 +394,8 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
         const countryId = getCountryId(countryName);
         const country = countries[countryId];
         
-        // إخفاء الدول غير المتاحة
         if (!isCountryAvailable(countryId)) {
-          return '#3b82f6'; // لون البحر
+          return '#3b82f6'; // لون البحر للدول غير المتاحة
         }
         
         return getCountryColor(countryId, country);
@@ -327,7 +405,7 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
         const countryId = getCountryId(countryName);
         
         if (!isCountryAvailable(countryId)) {
-          return '#3b82f6'; // نفس لون البحر
+          return '#3b82f6';
         }
         
         return '#2c3e50';
@@ -337,14 +415,15 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
         const countryId = getCountryId(countryName);
         
         if (!isCountryAvailable(countryId)) {
-          return 0.5;
+          return 0;
         }
         
-        return 1.5;
+        return 2;
       })
       .style("cursor", d => {
         const countryName = d.properties.NAME || d.properties.name;
         const countryId = getCountryId(countryName);
+        
         return isCountryAvailable(countryId) ? "pointer" : "default";
       })
       .on("click", (event, d) => {
@@ -355,7 +434,7 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
           onCountryClick(countryId);
         }
       });
-  }, [mapData, countries, onCountryClick]); // dependencies محدودة بحذر
+  }, [mapData, countries, onCountryClick]);
 
   // ✅ دالة تحديث الألوان فقط (محسنة للأداء)
   const updateCountryColors = useCallback(() => {
@@ -367,9 +446,8 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
         const countryId = getCountryId(countryName);
         const country = countries[countryId];
         
-        // إخفاء الدول غير المتاحة
         if (!isCountryAvailable(countryId)) {
-          return '#3b82f6'; // لون البحر
+          return '#3b82f6';
         }
         
         return getCountryColor(countryId, country);
@@ -444,6 +522,7 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-white text-xl">⏳ جاري تحميل الخريطة...</p>
+          <p className="mt-2 text-gray-400 text-sm">هذا التحميل سيحدث مرة واحدة فقط في الجلسة</p>
         </div>
       </div>
     );
@@ -457,18 +536,11 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
           width={width}
           height={height}
           viewBox={`0 0 ${width} ${height}`}
-className="w-full h-[400px] md:h-auto bg-[#3b82f6] rounded-lg"
+          className="w-full h-screen md:h-auto bg-[#3b82f6] rounded-lg"
         />
       ) : (
         renderFallbackMap()
       )}
-      
-      {/* تعليمات */}
-      {/* <div className="mt-4 text-center">
-        <p className="text-gray-400">
-          🌍 اضغط على الدولة الصحيحة في الخريطة
-        </p>
-      </div> */}
     </div>
   );
 }

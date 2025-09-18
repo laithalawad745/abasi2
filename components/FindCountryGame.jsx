@@ -297,9 +297,9 @@ export default function FindCountryGame() {
         <div className="absolute inset-0 z-10 pointer-events-none">
           {/* شريط علوي مع المعلومات */}
           <div className="absolute top-0 left-0 right-0 p-4 pointer-events-auto">
-            <div className="flex justify-between items-start">
+            <div className="flex justify-center items-center">
               {/* زر الخروج والقائمة */}
-              <div className="flex gap-2">
+              {/* <div className="flex gap-2">
                 <Link 
                   href="/"
                   className="bg-black/50 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 text-white font-bold hover:bg-black/70 transition-all"
@@ -312,7 +312,7 @@ export default function FindCountryGame() {
                 >
                   🔄 إعادة تشغيل
                 </button>
-              </div>
+              </div> */}
 
               {/* السؤال الحالي */}
               {currentQuestion && (
@@ -331,7 +331,7 @@ export default function FindCountryGame() {
               )}
 
               {/* معلومات اللاعب الحالي */}
-              {currentPlayer && (
+              {/* {currentPlayer && (
                 <div className="bg-black/50 backdrop-blur-md border border-white/20 rounded-xl p-4">
                   <div className="flex items-center gap-3">
                     <div 
@@ -346,7 +346,7 @@ export default function FindCountryGame() {
                     </div>
                   </div>
                 </div>
-              )}
+              )} */}
             </div>
           </div>
 
