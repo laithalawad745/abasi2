@@ -1,4 +1,4 @@
-// components/index.js - تحديث الملف ليشمل الصفحات المنفصلة الجديدة
+// components/index.js - تحديث الملف ليشمل لعبة أوجد الدولة
 export { default as QuizGame } from './QuizGame';
 export { default as GameSetup } from './GameSetup';
 export { default as TeamScores } from './TeamScores';
@@ -46,3 +46,7 @@ export { default as CluesGameRouter } from './CluesGameRouter';
 export { default as AbsiLivesGame } from './AbsiLivesGame';
 export { default as ChoicesOnlyGame } from './ChoicesOnlyGame';
 export { default as QROnlyGame } from './QROnlyGame';
+
+// 🆕 لعبة أوجد الدولة
+export { default as FindCountryGame } from './FindCountryGame';
+export { default as FindCountryWorldMap } from './FindCountryWorldMap';
