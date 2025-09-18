@@ -346,8 +346,7 @@ export default function AbsiLivesGame() {
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-slate-800 rounded-3xl shadow-2xl max-w-2xl w-full p-8 text-center">
             <div className="mb-8">
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">🏆 انتهت اللعبة!</h1>
-              <p className="text-gray-400 text-lg">تم الانتهاء من جميع الأسئلة الـ 6</p>
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-4"> انتهت اللعبة!</h1>
             </div>
 
             {/* النتيجة النهائية */}
@@ -421,10 +420,10 @@ export default function AbsiLivesGame() {
 
       <div className="relative z-10 p-4 md:p-8">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        {/* <div className="flex justify-between items-center mb-8">
           <div className="text-2xl md:text-3xl font-black text-white tracking-wider">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-              🎬 لايفات عبسي
+               لايفات عبسي
             </span>
           </div>
           <div className="flex gap-4">
@@ -441,11 +440,12 @@ export default function AbsiLivesGame() {
               ← العودة للرئيسية
             </Link>
           </div>
-        </div>
+        </div> */}
 
         {/* شريط التحكم */}
-        <div className="fixed top-20 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-lg border-b border-slate-700 p-3">
-          <div className="text-center">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-lg border-b border-slate-700 p-3">
+
+                <div className="text-center">
             <div className={`inline-flex items-center px-4 md:px-8 py-2 md:py-4 rounded-2xl font-bold text-lg md:text-2xl shadow-lg transition-all duration-500 ${
               currentTurn === 'red' 
                 ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-red-500/25' 
@@ -482,17 +482,13 @@ export default function AbsiLivesGame() {
                 </div>
               </div>
 
-              <div className="flex flex-col items-center">
-                <span className="px-2 md:px-3 py-1 bg-blue-500 rounded-full text-xs md:text-sm">
-                  🎬 لايفات عبسي
-                </span>
-              </div>
             </div>
           </div>
+          
         </div>
 
         {/* نقاط الفرق */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-6 mb-8 mt-24">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-6 mb-8 mt-32">
           <div className={`p-4 md:p-6 rounded-2xl text-center transition-all duration-500 ${
             currentTurn === 'red'
               ? 'bg-gradient-to-br from-red-500 to-pink-500 shadow-2xl shadow-red-500/25 ring-4 ring-red-400/50 scale-105'
@@ -528,7 +524,7 @@ export default function AbsiLivesGame() {
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-white">🎬 لايفات عبسي</h2>
+              <h2 className="text-2xl font-bold text-white"> لايفات عبسي</h2>
             </div>
 
             {/* شبكة الأسئلة */}
@@ -685,8 +681,7 @@ export default function AbsiLivesGame() {
           </div>
 
           {/* زر إعادة التعيين وتغيير الدور */}
-          <div className="text-center space-y-4">
-            {/* معلومات الأسئلة المستخدمة */}
+          {/* <div className="text-center space-y-4">
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 mb-4">
               <h3 className="text-lg font-bold text-blue-400 mb-2">📊 إحصائيات الأسئلة</h3>
               <div className="text-sm text-gray-300">
@@ -717,7 +712,7 @@ export default function AbsiLivesGame() {
                 🗑️ مسح الأسئلة المحفوظة
               </button>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* نافذة السؤال */}

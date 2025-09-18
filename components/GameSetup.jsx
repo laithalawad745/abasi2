@@ -75,13 +75,13 @@ export default function GameSetup() {
                     </svg>
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-3">🎬 لايفات عبسي</h3>
-                  <p className="text-gray-400 text-lg leading-relaxed">أسئلة مصورة من المقاطع الشهيرة</p>
+                  <p className="text-gray-400 text-lg leading-relaxed">أسئلة مصورة من اللايفات </p>
                 </div>
               </div>
             </Link>
 
             {/* 🆕 الاختيارات */}
-            <Link href="/choices-game" className="group">
+            {/* <Link href="/choices-game" className="group">
               <div className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl hover:bg-white/10 transition-all duration-500 hover:scale-105 hover:border-purple-500/50">
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="relative z-10">
@@ -94,7 +94,7 @@ export default function GameSetup() {
                   <p className="text-gray-400 text-lg leading-relaxed">قولوا كلمة مع نظام النقاط</p>
                 </div>
               </div>
-            </Link>
+            </Link> */}
 
             {/* 🆕 ولا كلمة */}
             <Link href="/qr-game" className="group">
