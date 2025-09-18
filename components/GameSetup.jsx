@@ -1,4 +1,4 @@
-// components/GameSetup.jsx - تحديث لإضافة لعبة التلميحات
+// components/GameSetup.jsx - تحديث لإضافة الصفحات المنفصلة الجديدة
 'use client';
 
 import React from 'react';
@@ -64,6 +64,54 @@ export default function GameSetup() {
               </div>
             </Link>
 
+            {/* 🆕 لايفات عبسي */}
+            <Link href="/absi-lives" className="group">
+              <div className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl hover:bg-white/10 transition-all duration-500 hover:scale-105 hover:border-blue-500/50">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="relative z-10">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd"/>
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-3">🎬 لايفات عبسي</h3>
+                  <p className="text-gray-400 text-lg leading-relaxed">أسئلة مصورة من المقاطع الشهيرة</p>
+                </div>
+              </div>
+            </Link>
+
+            {/* 🆕 الاختيارات */}
+            <Link href="/choices-game" className="group">
+              <div className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl hover:bg-white/10 transition-all duration-500 hover:scale-105 hover:border-purple-500/50">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="relative z-10">
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm8 0a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1V8z" clipRule="evenodd"/>
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-3">🎯 الاختيارات</h3>
+                  <p className="text-gray-400 text-lg leading-relaxed">قولوا كلمة مع نظام النقاط</p>
+                </div>
+              </div>
+            </Link>
+
+            {/* 🆕 ولا كلمة */}
+            <Link href="/qr-game" className="group">
+              <div className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl hover:bg-white/10 transition-all duration-500 hover:scale-105 hover:border-green-500/50">
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-teal-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="relative z-10">
+                  <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-teal-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M3 4a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm2 2V5h1v1H5zM3 13a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1v-3zm2 2v-1h1v1H5zM13 4a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1V4zm2 2V5h1v1h-1zM11 4a1 1 0 100-2 1 1 0 000 2zM9 4a1 1 0 100-2 1 1 0 000 2zM7 4a1 1 0 100-2 1 1 0 000 2zM5 9a1 1 0 100-2 1 1 0 000 2zM3 9a1 1 0 100-2 1 1 0 000 2zM11 14a1 1 0 100-2 1 1 0 000 2zM9 14a1 1 0 100-2 1 1 0 000 2zM7 14a1 1 0 100-2 1 1 0 000 2zM5 18a1 1 0 100-2 1 1 0 000 2zM3 18a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd"/>
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-3">📱 ولا كلمة</h3>
+                  <p className="text-gray-400 text-lg leading-relaxed">امسح الـ QR واكتشف المحتوى</p>
+                </div>
+              </div>
+            </Link>
+
             {/* خمن الخطأ */}
             <Link href="/guess-wrong" className="group">
               <div className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl hover:bg-white/10 transition-all duration-500 hover:scale-105 hover:border-orange-500/50">
@@ -74,88 +122,72 @@ export default function GameSetup() {
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
                     </svg>
                   </div>
-                  <h3 className="text-2xl font-bold text-white mb-3">خمن الخطأ</h3>
-                  <p className="text-gray-400 text-lg leading-relaxed">اجتب اختيار الشخص الصحيح</p>
-                </div>
-              </div>
-            </Link>
-
-            {/* الأسرع في الإجابة */}
-            <Link href="/fastest" className="group">
-              <div className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl hover:bg-white/10 transition-all duration-500 hover:scale-105 hover:border-green-500/50">
-                <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd"/>
-                    </svg>
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mb-3">الأسرع في الإجابة</h3>
-                  <p className="text-gray-400 text-lg leading-relaxed">كن الأسرع في الإجابة على الأسئلة</p>
-                </div>
-              </div>
-            </Link>
-
-            {/* بطولة الإضاء */}
-            <Link href="/tournament" className="group">
-              <div className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl hover:bg-white/10 transition-all duration-500 hover:scale-105 hover:border-yellow-500/50">
-                <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 to-orange-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd"/>
-                    </svg>
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mb-3">بطولة الإقصاء</h3>
-                  <p className="text-gray-400 text-lg leading-relaxed">نظام بطولة مثير مع شجرة الإقصاء</p>
+                  <h3 className="text-2xl font-bold text-white mb-3">❌ خمن الخطأ</h3>
+                  <p className="text-gray-400 text-lg leading-relaxed">ابحث عن الخطأ في المعلومات</p>
                 </div>
               </div>
             </Link>
 
             {/* لعبة المزاد */}
             <Link href="/auction" className="group">
-              <div className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl hover:bg-white/10 transition-all duration-500 hover:scale-105 hover:border-amber-500/50">
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-orange-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl hover:bg-white/10 transition-all duration-500 hover:scale-105 hover:border-yellow-500/50">
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 to-amber-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                     <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd"/>
+                      <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/>
                     </svg>
                   </div>
-                  <h3 className="text-2xl font-bold text-white mb-3">لعبة المزاد</h3>
-                  <p className="text-gray-400 text-lg leading-relaxed">زايد على الأسئلة واربح أعلى النقاط</p>
+                  <h3 className="text-2xl font-bold text-white mb-3">💰 لعبة المزاد</h3>
+                  <p className="text-gray-400 text-lg leading-relaxed">زايد على الأسئلة واربح النقاط</p>
+                </div>
+              </div>
+            </Link>
+
+            {/* بطولة الإقصاء */}
+            <Link href="/tournament" className="group">
+              <div className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl hover:bg-white/10 transition-all duration-500 hover:scale-105 hover:border-yellow-500/50">
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 to-orange-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="relative z-10">
+                  <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-3">🏆 بطولة الإقصاء</h3>
+                  <p className="text-gray-400 text-lg leading-relaxed">بطولة بنظام الخروج المباشر</p>
+                </div>
+              </div>
+            </Link>
+
+            {/* لعبة التلميحات */}
+            <Link href="/clues" className="group">
+              <div className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl hover:bg-white/10 transition-all duration-500 hover:scale-105 hover:border-indigo-500/50">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="relative z-10">
+                  <div className="w-16 h-16 bg-gradient-to-br from-indigo-400 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" clipRule="evenodd"/>
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-3">🧩 لعبة التلميحات</h3>
+                  <p className="text-gray-400 text-lg leading-relaxed">خمن الإجابة من التلميحات التدريجية</p>
                 </div>
               </div>
             </Link>
 
             {/* لعبة النرد */}
             <Link href="/dice" className="group">
-              <div className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl hover:bg-white/10 transition-all duration-500 hover:scale-105 hover:border-purple-500/50">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-violet-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-violet-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2a1 1 0 000 2h6a1 1 0 100-2H7zm6 7a1 1 0 011 1v3a1 1 0 11-2 0v-3a1 1 0 011-1zm-3 3a1 1 0 100 2h.01a1 1 0 100-2H10zm-4 1a1 1 0 011-1h.01a1 1 0 110 2H7a1 1 0 01-1-1zm1-4a1 1 0 100 2h.01a1 1 0 100-2H7zm2 1a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm4-4a1 1 0 100 2h.01a1 1 0 100-2H13zM9 9a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zM7 8a1 1 0 000 2h.01a1 1 0 000-2H7z" clipRule="evenodd"/>
-                    </svg>
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mb-3">لعبة النرد</h3>
-                  <p className="text-gray-400 text-lg leading-relaxed">ارم النرد واجب على الأسئلة المتنوعة</p>
-                </div>
-              </div>
-            </Link>
-
-            {/* 🧩 لعبة التلميحات الجديدة */}
-            <Link href="/clues" className="group">
               <div className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl hover:bg-white/10 transition-all duration-500 hover:scale-105 hover:border-pink-500/50">
-                <div className="absolute inset-0 bg-gradient-to-br from-pink-500/20 to-purple-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-pink-500/20 to-rose-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-pink-400 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-16 h-16 bg-gradient-to-br from-pink-400 to-rose-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                     <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" clipRule="evenodd"/>
+                      <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd"/>
                     </svg>
                   </div>
-                  <h3 className="text-2xl font-bold text-white mb-3">لعبة التلميحات</h3>
-                  <p className="text-gray-400 text-lg leading-relaxed">خمن الإجابة من التلميحات التدريجية</p>
+                  <h3 className="text-2xl font-bold text-white mb-3">🎲 لعبة النرد</h3>
+                  <p className="text-gray-400 text-lg leading-relaxed">اختبر حظك مع أسئلة النرد</p>
                 </div>
               </div>
             </Link>
@@ -170,8 +202,24 @@ export default function GameSetup() {
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd"/>
                     </svg>
                   </div>
-                  <h3 className="text-2xl font-bold text-white mb-3">من هو؟</h3>
+                  <h3 className="text-2xl font-bold text-white mb-3">❓ من هو؟</h3>
                   <p className="text-gray-400 text-lg leading-relaxed">خمن شخصية خصمك قبل أن يخمن شخصيتك</p>
+                </div>
+              </div>
+            </Link>
+
+            {/* الأسرع في الإجابة */}
+            <Link href="/fastest" className="group">
+              <div className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl hover:bg-white/10 transition-all duration-500 hover:scale-105 hover:border-emerald-500/50">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-green-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="relative z-10">
+                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-green-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-3">⚡ الأسرع في الإجابة</h3>
+                  <p className="text-gray-400 text-lg leading-relaxed">من سيجيب أسرع؟ لعبة متعددة اللاعبين</p>
                 </div>
               </div>
             </Link>
@@ -186,7 +234,7 @@ export default function GameSetup() {
                       <path fillRule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.559-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.559.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z" clipRule="evenodd"/>
                     </svg>
                   </div>
-                  <h3 className="text-2xl font-bold text-white mb-3">خريطة أوروبا</h3>
+                  <h3 className="text-2xl font-bold text-white mb-3">🌍 خريطة أوروبا</h3>
                   <p className="text-gray-400 text-lg leading-relaxed">استكشف أوروبا وتعلم جغرافيتها</p>
                 </div>
               </div>
@@ -202,7 +250,7 @@ export default function GameSetup() {
                       <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/>
                     </svg>
                   </div>
-                  <h3 className="text-2xl font-bold text-white mb-3">العالم العربي</h3>
+                  <h3 className="text-2xl font-bold text-white mb-3">🗺️ العالم العربي</h3>
                   <p className="text-gray-400 text-lg leading-relaxed">اكتشف البلدان العربية وثقافتها</p>
                 </div>
               </div>
@@ -218,7 +266,7 @@ export default function GameSetup() {
                       <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm8 0a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1V8z" clipRule="evenodd"/>
                     </svg>
                   </div>
-                  <h3 className="text-2xl font-bold text-white mb-3">لعبة المخاطرة</h3>
+                  <h3 className="text-2xl font-bold text-white mb-3">⚔️ لعبة المخاطرة</h3>
                   <p className="text-gray-400 text-lg leading-relaxed">استراتيجية وسيطرة على الخريطة</p>
                 </div>
               </div>
@@ -240,26 +288,26 @@ export default function GameSetup() {
                     <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm8 0a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1V8z" clipRule="evenodd"/>
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">تعدد اللاعبين</h3>
-                <p className="text-gray-400">العب مع أصدقائك أونلاين</p>
-              </div>
-              <div className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-violet-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" clipRule="evenodd"/>
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2">أسئلة متنوعة</h3>
-                <p className="text-gray-400">مكتبة ضخمة من الأسئلة</p>
+                <h3 className="text-xl font-bold text-white mb-2">تنوع الألعاب</h3>
+                <p className="text-gray-400">مجموعة واسعة من الألعاب التفاعلية</p>
               </div>
               <div className="text-center">
                 <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                    <path fillRule="evenodd" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" clipRule="evenodd"/>
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">تجربة ممتعة</h3>
-                <p className="text-gray-400">واجهة جميلة وسهلة الاستخدام</p>
+                <h3 className="text-xl font-bold text-white mb-2">سهولة الاستخدام</h3>
+                <p className="text-gray-400">تصميم بسيط وسهل للجميع</p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" clipRule="evenodd"/>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">لعب جماعي</h3>
+                <p className="text-gray-400">استمتع مع الأصدقاء والعائلة</p>
               </div>
             </div>
           </div>

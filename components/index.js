@@ -1,4 +1,4 @@
-// components/index.js - تحديث الملف ليشمل لعبة التلميحات الجديدة
+// components/index.js - تحديث الملف ليشمل الصفحات المنفصلة الجديدة
 export { default as QuizGame } from './QuizGame';
 export { default as GameSetup } from './GameSetup';
 export { default as TeamScores } from './TeamScores';
@@ -32,12 +32,17 @@ export { default as WorldQuestion } from './WorldQuestion';
 // Toast Component
 export { default as ToastNotification, showSuccessToast, showErrorToast, showWarningToast, showInfoToast } from './ToastNotification';
 
-// 🆕 لعبة المزاد الجديدة
+// لعبة المزاد
 export { default as AuctionGame } from './AuctionGame';
 
-// 🆕 لعبة خمن الخطأ الجديدة
+// لعبة خمن الخطأ
 export { default as GuessWrongGame } from './GuessWrongGame';
 
-// 🧩 🆕 لعبة التلميحات التدريجية الجديدة
+// لعبة التلميحات التدريجية
 export { default as CluesGame } from './CluesGame';
 export { default as CluesGameRouter } from './CluesGameRouter';
+
+// 🆕 الصفحات المنفصلة الجديدة
+export { default as AbsiLivesGame } from './AbsiLivesGame';
+export { default as ChoicesOnlyGame } from './ChoicesOnlyGame';
+export { default as QROnlyGame } from './QROnlyGame';
