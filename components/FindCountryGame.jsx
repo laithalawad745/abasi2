@@ -485,7 +485,7 @@ export default function FindCountryGame() {
                   onClick={startGame}
                   className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-8 py-3 rounded-xl font-bold transition-all"
                 >
-                  🚀 بدء اللعبة
+                   بدء اللعبة
                 </button>
               </div>
             </div>
@@ -648,7 +648,7 @@ export default function FindCountryGame() {
             </div>
 
             {/* أزرار التحكم */}
-            <div className="absolute bottom-4 left-4 z-20 pointer-events-auto">
+            {/* <div className="absolute bottom-4 left-4 z-20 pointer-events-auto">
               <div className="flex gap-3">
                 <Link 
                   href="/" 
@@ -663,7 +663,7 @@ export default function FindCountryGame() {
                   🔄 إعادة تشغيل
                 </button>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       );
@@ -686,7 +686,7 @@ export default function FindCountryGame() {
           <div className="flex-1 flex items-center justify-center">
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-w-4xl w-full text-center">
               <h1 className="text-4xl md:text-6xl font-black text-white mb-8">
-                انتهت اللعبة! 🎉
+                انتهت اللعبة! 
               </h1>
 
               <div className="mb-8">
@@ -705,13 +705,13 @@ export default function FindCountryGame() {
                   onClick={resetGame}
                   className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105"
                 >
-                  🎮 لعبة جديدة
+                   لعبة جديدة
                 </button>
                 <Link
                   href="/"
                   className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105"
                 >
-                  🏠 العودة للقائمة
+                   العودة للقائمة
                 </Link>
               </div>
             </div>
