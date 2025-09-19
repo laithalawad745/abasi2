@@ -425,7 +425,7 @@ export default function VisualTournamentGame() {
           <div className="flex justify-between items-center mb-8">
             <div className="text-2xl md:text-3xl font-black text-white tracking-wider">
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
-                🏆 بطولة الإقصاء
+                 بطولة الإقصاء
               </span>
             </div>
             <Link 

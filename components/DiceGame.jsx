@@ -322,7 +322,7 @@ export default function DiceGame() {
           <div className="max-w-6xl mx-auto mb-12">
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
               <h2 className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-violet-400 mb-8">
-                🎲 قواعد اللعبة
+                 قواعد اللعبة
               </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

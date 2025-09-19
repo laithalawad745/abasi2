@@ -245,7 +245,7 @@ export default function ArabMapD3({
           return 0; // بدون حدود للدول المخفية
         }
         
-        return 2;
+     return 0.8; 
       })
       .style("cursor", d => {
         const countryName = d.properties.NAME || d.properties.name;

@@ -351,7 +351,7 @@ export default function GuessWrongGame() {
               </div>
               
               {/* ✅ معلومات الأسئلة المستخدمة */}
-              {isClient && (
+              {/* {isClient && (
                 <div className="mt-6 pt-6 border-t border-white/20">
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-gray-400">
@@ -367,7 +367,7 @@ export default function GuessWrongGame() {
                     )}
                   </div>
                 </div>
-              )}
+              )} */}
             </div>
 
             <button

@@ -271,7 +271,7 @@ export default function AuctionGame() {
           <div className="max-w-6xl mx-auto mb-12">
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
               <h2 className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-400 mb-8">
-                🏆 قواعد المزاد
+                 قواعد المزاد
               </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -504,7 +504,7 @@ export default function AuctionGame() {
                       ? 'bg-gray-500 cursor-not-allowed opacity-50 text-gray-300' 
                       : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white'
                   }`}>
-                    💰 زايد بـ {currentBid + bidIncrement} نقطة
+                     زايد بـ {currentBid + bidIncrement} نقطة
                   </div>
                 </button>
                 
@@ -519,7 +519,7 @@ export default function AuctionGame() {
                       ? 'bg-gray-500 cursor-not-allowed opacity-50 text-gray-300' 
                       : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white'
                   }`}>
-                    🚫 رفض المزايدة
+                     رفض المزايدة
                   </div>
                 </button>
               </div>

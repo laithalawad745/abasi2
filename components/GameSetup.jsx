@@ -49,7 +49,7 @@ export default function GameSetup() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             
             {/* المباراة الكاملة */}
-            <Link href="/full-match" className="group">
+            {/* <Link href="/full-match" className="group">
               <div className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl hover:bg-white/10 transition-all duration-500 hover:scale-105 hover:border-cyan-500/50">
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="relative z-10">
@@ -66,7 +66,7 @@ export default function GameSetup() {
                   </div>
                 </div>
               </div>
-            </Link>
+            </Link> */}
 
             {/* 🆕 لعبة أوجد الدولة */}
             <Link href="/find-country" className="group">
@@ -77,7 +77,7 @@ export default function GameSetup() {
                     <span className="text-2xl">🌍</span>
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-3">أوجد الدولة</h3>
-                  <p className="text-gray-400 mb-4">اختبر معرفتك بالجغرافيا العالمية على خريطة تفاعلية</p>
+                  <p className="text-gray-400 mb-4">اختبر معرفتك بالجغرافيا العالمية   </p>
                   <div className="flex items-center text-green-400 font-semibold">
                     <span>ابدأ الآن</span>
                     <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="currentColor" viewBox="0 0 20 20">
@@ -157,7 +157,7 @@ export default function GameSetup() {
                     <span className="text-2xl">💰</span>
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-3">لعبة المزاد</h3>
-                  <p className="text-gray-400 mb-4">زايد على الأسئلة واربح النقاط بذكاء</p>
+                  <p className="text-gray-400 mb-4">زايد على الأسئلة واربح النقاط </p>
                   <div className="flex items-center text-amber-400 font-semibold">
                     <span>ابدأ الآن</span>
                     <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="currentColor" viewBox="0 0 20 20">
@@ -197,7 +197,7 @@ export default function GameSetup() {
                     <span className="text-2xl">💡</span>
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-3">التلميحات التدريجية</h3>
-                  <p className="text-gray-400 mb-4">تلميحات متدرجة لحل الألغاز مع نظام غرف مباشر</p>
+                  <p className="text-gray-400 mb-4">تلميحات متدرجة لحل الألغاز    </p>
                   <div className="flex items-center text-indigo-400 font-semibold">
                     <span>ابدأ الآن</span>
                     <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="currentColor" viewBox="0 0 20 20">
@@ -216,8 +216,8 @@ export default function GameSetup() {
                   <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
                     <span className="text-2xl">🏟️</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-white mb-3">بطولة المعرفة</h3>
-                  <p className="text-gray-400 mb-4">شجرة بطولة بصرية مثل البطولات الحقيقية</p>
+                  <h3 className="text-2xl font-bold text-white mb-3"> بطولة الإقصاء</h3>
+                  <p className="text-gray-400 mb-4">شجرة بطولة    </p>
                   <div className="flex items-center text-emerald-400 font-semibold">
                     <span>ابدأ الآن</span>
                     <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="currentColor" viewBox="0 0 20 20">
@@ -257,7 +257,7 @@ export default function GameSetup() {
                     <span className="text-2xl">🇪🇺</span>
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-3">خريطة أوروبا</h3>
-                  <p className="text-gray-400 mb-4">اكتشف دول أوروبا في لعبة جغرافية تفاعلية</p>
+                  <p className="text-gray-400 mb-4">اكتشف دول أوروبا    </p>
                   <div className="flex items-center text-blue-400 font-semibold">
                     <span>ابدأ الآن</span>
                     <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="currentColor" viewBox="0 0 20 20">

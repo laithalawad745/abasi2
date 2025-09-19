@@ -302,7 +302,7 @@ export default function EuropeGame() {
             <div className="p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl">
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-8 text-center">
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-                  🌍 قواعد اللعبة
+                   قواعد اللعبة
                 </span>
               </h2>
               

@@ -619,11 +619,11 @@ channel.bind('next-question', (data) => {
                 >
                   <span className="text-white font-medium">{player.playerName}</span>
                   <div className="flex items-center gap-2">
-                    {player.isHost && (
+                    {/* {player.isHost && (
                       <span className="text-xs bg-gradient-to-r from-yellow-400 to-orange-400 text-black px-2 py-1 rounded-lg font-bold">
                         👑 مضيف
                       </span>
-                    )}
+                    )} */}
                     <span className="text-xs text-white/60">#{index + 1}</span>
                   </div>
                 </div>
@@ -884,7 +884,7 @@ channel.bind('next-question', (data) => {
                         onClick={handleGiveUp}
                         className="flex-1 px-4 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-xl font-bold hover:from-gray-700 hover:to-gray-800 transition-all duration-300"
                       >
-                        🏳️ عجزت عن الإجابة
+                         عجزت عن الإجابة
                       </button>
                     </div>
                   )}
@@ -905,7 +905,7 @@ channel.bind('next-question', (data) => {
                       onClick={requestNextClue}
                       className="w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-bold hover:from-orange-600 hover:to-red-600 transition-all duration-300"
                     >
-                      💡 تلميح إضافي لي (-20 نقطة من نقاطي)
+                       تلميح إضافي لي (-20 نقطة من نقاط السؤال)
                     </button>
                   )}
                 </div>
@@ -957,7 +957,7 @@ channel.bind('next-question', (data) => {
           )}
 
           {/* الترتيب الجانبي */}
-          <div className="fixed right-4 top-20 w-64 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl">
+          <div className="fixed right-4 top-28 w-64 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl">
             <h3 className="text-white font-bold mb-3">🏆 الترتيب</h3>
             <div className="space-y-2">
               {Object.entries(gameScores)
@@ -976,14 +976,14 @@ channel.bind('next-question', (data) => {
             </div>
           </div>
 
-          <div className="fixed bottom-6 left-6">
+          {/* <div className="fixed bottom-6 left-6">
             <button
               onClick={onExit}
               className="px-4 py-2 bg-white/10 border border-white/20 text-white rounded-xl hover:bg-white/20 transition-all duration-300"
             >
               ← خروج
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
     );

@@ -162,7 +162,7 @@ export default function CluesGameRouter({ roomIdFromUrl = null }) {
         <div className="p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl">
           <div className="text-center mb-8">
             <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-3">
-              🎮 إنشاء غرفة
+               إنشاء غرفة
             </h2>
             <p className="text-white/70">أنشئ غرفة جديدة وادع أصدقاءك!</p>
           </div>
