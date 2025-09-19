@@ -119,7 +119,7 @@ export default function FindCountryGame() {
     return progress.questionsAnswered || 0;
   };
 
-  // ✅ التعامل مع النقر على الدولة - حل نهائي لمشكلة العداد المزدوج
+  // ✅ التعامل مع النقر على الدولة - مع إصلاح مشكلة السؤال الزائد
   const handleCountryClick = (countryId) => {
     const now = Date.now();
     console.log(`🎯 نقر على الدولة: ${countryId} في ${now}`);
@@ -144,13 +144,12 @@ export default function FindCountryGame() {
     const isCorrect = countryId === currentQuestion.correctCountry;
     console.log(`📊 النتيجة: ${isCorrect ? 'صحيحة' : 'خاطئة'}`);
 
-    // ✅ تحديث واحد فقط للعداد - بدون setTimeout
+    // ✅ تحديث العداد مع فحص إنهاء اللعبة
     setPlayerProgress(prev => {
       const newProgress = { ...prev };
       const currentPlayerData = newProgress[currentPlayerIndex];
       
       if (currentPlayerData) {
-        // ✅ تحديث مباشر بدون تأخير
         const newQuestionsCount = currentPlayerData.questionsAnswered + 1;
         const newScore = currentPlayerData.score + (isCorrect ? 100 : 0);
         
@@ -163,6 +162,25 @@ export default function FindCountryGame() {
           wrongAnswers: currentPlayerData.wrongAnswers + (isCorrect ? 0 : 1),
           score: newScore
         };
+
+        // ✅ فحص إذا كان اللاعب الحالي أكمل 10 أسئلة
+        if (newQuestionsCount >= questionsPerPlayer) {
+          console.log(`✅ اللاعب ${currentPlayerData.name} أكمل ${questionsPerPlayer} أسئلة`);
+          
+          // فحص إذا كان جميع اللاعبين أكملوا أسئلتهم
+          const allPlayersFinished = Object.values(newProgress).every(
+            progress => progress.questionsAnswered >= questionsPerPlayer
+          );
+          
+          if (allPlayersFinished) {
+            console.log('🏁 جميع اللاعبين أكملوا أسئلتهم - إنهاء اللعبة');
+            // تأخير إنهاء اللعبة قليلاً لإظهار النتيجة
+            setTimeout(() => {
+              endGame();
+            }, 2000);
+            return newProgress;
+          }
+        }
       }
       
       return newProgress;
@@ -183,34 +201,63 @@ export default function FindCountryGame() {
       showErrorToast(`إجابة خاطئة! الإجابة الصحيحة: ${correctCountryName}`);
     }
 
-    // ✅ الانتقال للسؤال التالي بعد تأخير قصير فقط
+    // ✅ الانتقال للسؤال التالي فقط إذا لم تنته اللعبة
     setTimeout(() => {
-      console.log('⏭️ الانتقال للسؤال التالي');
-      nextTurn();
+      console.log('⏭️ فحص إمكانية الانتقال للسؤال التالي');
+      
+      // فحص العداد المحدث للاعب الحالي
+      setPlayerProgress(currentProgress => {
+        const currentPlayerData = currentProgress[currentPlayerIndex];
+        
+        if (currentPlayerData && currentPlayerData.questionsAnswered < questionsPerPlayer) {
+          // اللاعب الحالي لم يكمل بعد
+          nextTurn();
+        } else {
+          // اللاعب الحالي أكمل، فحص باقي اللاعبين
+          const hasMorePlayers = Object.values(currentProgress).some(
+            progress => progress.questionsAnswered < questionsPerPlayer
+          );
+          
+          if (hasMorePlayers) {
+            nextTurn();
+          } else {
+            console.log('🏁 جميع اللاعبين أكملوا - إنهاء اللعبة');
+            endGame();
+          }
+        }
+        
+        return currentProgress; // إرجاع الحالة كما هي
+      });
     }, 2000);
   };
 
-  // الانتقال للدور التالي
+  // ✅ الانتقال للدور التالي - مع فحص دقيق لتجنب السؤال الزائد
   const nextTurn = () => {
     // ✅ إلغاء الحماية هنا
     setIsProcessingClick(false);
 
-    // البحث عن اللاعب التالي
+    // ✅ البحث عن اللاعب التالي الذي لم يكمل أسئلته
     let nextIndex = (currentPlayerIndex + 1) % players.length;
     let attempts = 0;
 
     while (attempts < players.length) {
       const nextPlayerProgress = playerProgress[nextIndex];
+      
+      // ✅ فحص دقيق: اللاعب التالي يجب أن يكون أكمل أقل من 10 أسئلة
       if (nextPlayerProgress && nextPlayerProgress.questionsAnswered < questionsPerPlayer) {
+        console.log(`➡️ الانتقال للاعب ${nextIndex} - أكمل ${nextPlayerProgress.questionsAnswered}/${questionsPerPlayer}`);
         setCurrentPlayerIndex(nextIndex);
         generateNewQuestion();
         return;
       }
+      
+      console.log(`⏭️ تخطي اللاعب ${nextIndex} - أكمل ${nextPlayerProgress?.questionsAnswered || 0}/${questionsPerPlayer}`);
       nextIndex = (nextIndex + 1) % players.length;
       attempts++;
     }
 
-    // جميع اللاعبين أكملوا أسئلتهم
+    // ✅ لم يتم العثور على أي لاعب متاح - إنهاء اللعبة
+    console.log('🏁 جميع اللاعبين أكملوا أسئلتهم - إنهاء اللعبة');
     endGame();
   };
 
