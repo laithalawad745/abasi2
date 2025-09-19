@@ -410,16 +410,26 @@ export default function FindCountryWorldMap({ countries, onCountryClick, current
         
         return '#2c3e50';
       })
+      // .attr("stroke-width", d => {
+      //   const countryName = d.properties.NAME || d.properties.name;
+      //   const countryId = getCountryId(countryName);
+        
+      //   if (!isCountryAvailable(countryId)) {
+      //     return 0;
+      //   }
+        
+      //   return 2;
+      // })
       .attr("stroke-width", d => {
-        const countryName = d.properties.NAME || d.properties.name;
-        const countryId = getCountryId(countryName);
-        
-        if (!isCountryAvailable(countryId)) {
-          return 0;
-        }
-        
-        return 2;
-      })
+  const countryName = d.properties.NAME || d.properties.name;
+  const countryId = getCountryId(countryName);
+  
+  if (!isCountryAvailable(countryId)) {
+    return 0;
+  }
+  
+  return 0.6; // ⬅️ قللت من 2 إلى 0.8
+})
       .style("cursor", d => {
         const countryName = d.properties.NAME || d.properties.name;
         const countryId = getCountryId(countryName);
