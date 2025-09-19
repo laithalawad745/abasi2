@@ -73,3 +73,162 @@ body {
     padding: 12px !important;
   }
 }
+
+
+/* إضافة هذا إلى ملف app/globals.css */
+
+/* حركات للواجهة المحسنة */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 0 5px rgba(34, 197, 94, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(34, 197, 94, 0.5);
+  }
+}
+
+/* كلاسات الحركة */
+.animate-slideDown {
+  animation: slideDown 0.3s ease-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in;
+}
+
+.animate-pulseGlow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* تحسينات للتمرير على الهاتف */
+.mobile-scroll {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.mobile-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* تحسين النقر على الأزرار للهاتف */
+@media (max-width: 1024px) {
+  button {
+    min-height: 44px; /* الحد الأدنى لسهولة النقر */
+  }
+  
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* حركة ناعمة للتبديل بين الشاشات */
+.view-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* تحسين عرض الخريطة على الهاتف */
+@media (max-width: 1024px) {
+  .map-container {
+    width: 100% !important;
+    height: 100% !important;
+  }
+  
+  .map-container svg {
+    width: 100% !important;
+    height: 100% !important;
+  }
+}
+
+/* تحسين أشرطة التقدم */
+.progress-bar {
+  background: linear-gradient(90deg, #22c55e 0%, #3b82f6 100%);
+  transition: width 0.5s ease-in-out;
+}
+
+/* تحسين بطاقات اللاعبين */
+.player-card {
+  transition: all 0.3s ease;
+}
+
+.player-card:hover {
+  transform: translateY(-2px);
+}
+
+.player-card.active {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* تحسين النص للهاتف */
+@media (max-width: 640px) {
+  .responsive-text-sm {
+    font-size: 0.875rem;
+  }
+  
+  .responsive-text-base {
+    font-size: 1rem;
+  }
+  
+  .responsive-text-lg {
+    font-size: 1.125rem;
+  }
+}
+
+/* تحسين الخلفيات المتحركة */
+.bg-animated-bubble {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-10px) rotate(120deg);
+  }
+  66% {
+    transform: translateY(5px) rotate(240deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(360deg);
+  }
+}
