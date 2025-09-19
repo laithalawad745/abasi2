@@ -203,6 +203,10 @@ export const COUNTRY_NAMES_AR = {
   'senegal': 'السنغال',
   'malawi': 'مالاوي',
   'mozambique': 'موزمبيق',
+  'south_sudan': 'جنوب السودان',
+'central_african_republic': 'جمهورية أفريقيا الوسطى', 
+'democratic_republic_congo': 'جمهورية الكونغو الديمقراطية',
+'congo': 'جمهورية الكونغو',
 
   // أمريكا
   'usa': 'الولايات المتحدة',

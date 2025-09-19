@@ -52,7 +52,7 @@ export default function PlayerSetup({ onSetupComplete }) {
             
             {/* ===== دوائر الألوان ===== */}
             <div className="mt-8">
-              <p className="text-gray-300 text-lg mb-4">ألوان اللاعبين:</p>
+              <p className="text-gray-300 text-lg mb-4" > : كل لاعب يختار لون </p>
               <div className="flex justify-center items-center gap-3 flex-wrap">
                 {playerColors.slice(0, playerCount).map((color, index) => (
                   <div

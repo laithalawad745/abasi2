@@ -636,7 +636,30 @@ export const findCountryQuestions = [
     question: 'أوجد دولة فيجي',
     correctCountry: 'fiji',
     continent: 'أوقيانوسيا'
-  }
+  },{
+  id: 'q_south_sudan',
+  question: 'أوجد دولة جنوب السودان',
+  correctCountry: 'south_sudan',
+  continent: 'أفريقيا'
+},
+{
+  id: 'q_central_african_republic',
+  question: 'أوجد دولة جمهورية أفريقيا الوسطى',
+  correctCountry: 'central_african_republic',
+  continent: 'أفريقيا'
+},
+{
+  id: 'q_democratic_republic_congo',
+  question: 'أوجد دولة جمهورية الكونغو الديمقراطية',
+  correctCountry: 'democratic_republic_congo',
+  continent: 'أفريقيا'
+},
+{
+  id: 'q_congo',
+  question: 'أوجد دولة جمهورية الكونغو',
+  correctCountry: 'congo',
+  continent: 'أفريقيا'
+},
 ];
 
 // دالة للحصول على سؤال عشوائي
