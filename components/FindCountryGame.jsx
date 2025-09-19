@@ -1,4 +1,4 @@
-// components/FindCountryGame.jsx - مُصلح ومُوحد
+// components/FindCountryGame.jsx - مُصلح ومُوحد مع حل مشكلة العداد
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -19,6 +19,7 @@ const useIsMobile = () => {
 
     checkIsMobile();
     window.addEventListener('resize', checkIsMobile);
+
     return () => window.removeEventListener('resize', checkIsMobile);
   }, []);
 
@@ -35,14 +36,15 @@ export default function FindCountryGame() {
   const [questionsPerPlayer] = useState(10);
   const [playerProgress, setPlayerProgress] = useState({});
   const [countries, setCountries] = useState({});
-  
+
   // حالة واجهة الهاتف
   const [mobileView, setMobileView] = useState('map'); // 'map' or 'scores'
   const isMobile = useIsMobile();
-  
-  // ✅ حماية ضد النقر المزدوج
 
-  
+  // ✅ حماية ضد النقر المزدوج
+  const [isProcessingClick, setIsProcessingClick] = useState(false);
+  const lastClickRef = useRef(0);
+
   // Timer
   const timerRef = useRef(0);
   const timerIntervalRef = useRef(null);
@@ -85,7 +87,7 @@ export default function FindCountryGame() {
         score: 0
       };
     });
-    
+
     setPlayers(playerList);
     setPlayerProgress(initialProgress);
     setCurrentPlayerIndex(0);
@@ -101,65 +103,66 @@ export default function FindCountryGame() {
       endGame();
       return;
     }
-    
+
     setCurrentQuestion(question);
     setUsedQuestions(prev => [...prev, question.id]);
-    setCountries({});
-    
-    // ✅ إعادة تعيين حماية النقر المزدوج للسؤال الجديد
+    setCountries({}); // ✅ إعادة تعيين حماية النقر المزدوج للسؤال الجديد
     setIsProcessingClick(false);
   };
 
-  // ✅ حماية ضد النقر المزدوج
-  const [isProcessingClick, setIsProcessingClick] = useState(false);
-  const lastClickRef = useRef(0);
+  // ✅ دالة لحساب العداد الصحيح في الوقت الفعلي
+  const getCurrentPlayerQuestionCount = (playerIndex) => {
+    const progress = playerProgress[playerIndex];
+    if (!progress) return 0;
+    
+    // ✅ إرجاع العداد الحقيقي بدون أي إضافات
+    return progress.questionsAnswered || 0;
+  };
 
-  // ✅ التعامل مع النقر على الدولة - مُصلح تماماً مع حماية ضد النقر المزدوج
+  // ✅ التعامل مع النقر على الدولة - حل نهائي لمشكلة العداد المزدوج
   const handleCountryClick = (countryId) => {
     const now = Date.now();
-    
     console.log(`🎯 نقر على الدولة: ${countryId} في ${now}`);
-    
+
     // ✅ حماية ضد النقر المزدوج - فترة 500ms
     if (isProcessingClick || (now - lastClickRef.current) < 500) {
       console.log('🛑 تم تجاهل النقر المزدوج');
       return;
     }
-    
+
     if (!currentQuestion) {
       console.log('⚠️ لا يوجد سؤال حالي');
       return;
     }
-    
+
     console.log(`✅ معالجة النقر - السؤال: ${currentQuestion.question}`);
-    
-    // ✅ تشغيل الحماية
+
+    // ✅ تشغيل الحماية فوراً
     setIsProcessingClick(true);
     lastClickRef.current = now;
 
     const isCorrect = countryId === currentQuestion.correctCountry;
-    
     console.log(`📊 النتيجة: ${isCorrect ? 'صحيحة' : 'خاطئة'}`);
-    
-    // ✅ تحديث واحد فقط لتقدم اللاعب - لا يوجد تحديث مزدوج
+
+    // ✅ تحديث واحد فقط للعداد - بدون setTimeout
     setPlayerProgress(prev => {
       const newProgress = { ...prev };
-      const currentPlayer = newProgress[currentPlayerIndex];
+      const currentPlayerData = newProgress[currentPlayerIndex];
       
-      if (currentPlayer) {
-        const oldScore = currentPlayer.score;
-        const oldQuestions = currentPlayer.questionsAnswered;
+      if (currentPlayerData) {
+        // ✅ تحديث مباشر بدون تأخير
+        const newQuestionsCount = currentPlayerData.questionsAnswered + 1;
+        const newScore = currentPlayerData.score + (isCorrect ? 100 : 0);
         
-        currentPlayer.questionsAnswered += 1; // ✅ زيادة واحدة فقط
+        console.log(`📈 تحديث مباشر للاعب: الأسئلة ${currentPlayerData.questionsAnswered} → ${newQuestionsCount}, النقاط ${currentPlayerData.score} → ${newScore}`);
         
-        if (isCorrect) {
-          currentPlayer.correctAnswers += 1;
-          currentPlayer.score += 100; // ✅ 100 نقطة فقط
-        } else {
-          currentPlayer.wrongAnswers += 1;
-        }
-        
-        console.log(`📈 تحديث اللاعب ${currentPlayer.name}: النقاط ${oldScore} → ${currentPlayer.score}, الأسئلة ${oldQuestions} → ${currentPlayer.questionsAnswered}`);
+        newProgress[currentPlayerIndex] = {
+          ...currentPlayerData,
+          questionsAnswered: newQuestionsCount,
+          correctAnswers: currentPlayerData.correctAnswers + (isCorrect ? 1 : 0),
+          wrongAnswers: currentPlayerData.wrongAnswers + (isCorrect ? 0 : 1),
+          score: newScore
+        };
       }
       
       return newProgress;
@@ -174,47 +177,41 @@ export default function FindCountryGame() {
 
     // إظهار رسالة النتيجة
     if (isCorrect) {
-      showSuccessToast(` إجابة صحيحة!  `);
+      showSuccessToast('إجابة صحيحة! 🎉');
     } else {
       const correctCountryName = getCountryNameAR(currentQuestion.correctCountry);
-      showErrorToast(` إجابة خاطئة`);
+      showErrorToast(`إجابة خاطئة! الإجابة الصحيحة: ${correctCountryName}`);
     }
 
-    // الانتقال للسؤال التالي
+    // ✅ الانتقال للسؤال التالي بعد تأخير قصير فقط
     setTimeout(() => {
       console.log('⏭️ الانتقال للسؤال التالي');
       nextTurn();
-      // ✅ إلغاء الحماية بعد انتهاء العملية
-      setIsProcessingClick(false);
     }, 2000);
   };
 
   // الانتقال للدور التالي
   const nextTurn = () => {
-    setTimeout(() => {
-      // ✅ إعادة تعيين حماية النقر المزدوج للسؤال التالي
-      setIsProcessingClick(false);
-      
-      // البحث عن اللاعب التالي
-      let nextIndex = (currentPlayerIndex + 1) % players.length;
-      let attempts = 0;
-      
-      while (attempts < players.length) {
-        const nextPlayerProgress = playerProgress[nextIndex];
-        
-        if (nextPlayerProgress && nextPlayerProgress.questionsAnswered < questionsPerPlayer) {
-          setCurrentPlayerIndex(nextIndex);
-          generateNewQuestion();
-          return;
-        }
-        
-        nextIndex = (nextIndex + 1) % players.length;
-        attempts++;
+    // ✅ إلغاء الحماية هنا
+    setIsProcessingClick(false);
+
+    // البحث عن اللاعب التالي
+    let nextIndex = (currentPlayerIndex + 1) % players.length;
+    let attempts = 0;
+
+    while (attempts < players.length) {
+      const nextPlayerProgress = playerProgress[nextIndex];
+      if (nextPlayerProgress && nextPlayerProgress.questionsAnswered < questionsPerPlayer) {
+        setCurrentPlayerIndex(nextIndex);
+        generateNewQuestion();
+        return;
       }
-      
-      // جميع اللاعبين أكملوا أسئلتهم
-      endGame();
-    }, 100);
+      nextIndex = (nextIndex + 1) % players.length;
+      attempts++;
+    }
+
+    // جميع اللاعبين أكملوا أسئلتهم
+    endGame();
   };
 
   // إنهاء اللعبة
@@ -235,7 +232,6 @@ export default function FindCountryGame() {
     setTimerActive(false);
     setMobileView('map');
     timerRef.current = 0;
-    
     // ✅ إعادة تعيين حماية النقر المزدوج
     setIsProcessingClick(false);
     lastClickRef.current = 0;
@@ -263,16 +259,15 @@ export default function FindCountryGame() {
     }, 0);
   };
 
-  // ✅ مكون النقاط المُوحد - يعمل للهاتف واللابتوب
+  // ✅ مكون النقاط المُوحد - يعمل للهاتف واللابتوب مع حل العداد
   const UnifiedScoreDisplay = ({ className = "", showRank = true }) => {
     const stats = getGameStats();
-    
+
     return (
       <div className={`bg-black/70 backdrop-blur-md border border-white/20 rounded-2xl p-4 ${className}`}>
         <div className="flex items-center gap-2 mb-4">
-          <h3 className="text-xl  font-bold text-white">جدول النقاط</h3>
+          <h3 className="text-xl font-bold text-white">جدول النقاط</h3>
         </div>
-
         <div className="space-y-3 max-h-96 overflow-y-auto">
           {stats.map((player, index) => (
             <div
@@ -290,7 +285,7 @@ export default function FindCountryGame() {
                   </div>
                 )}
                 <div 
-                  className="w-8 h-8 rounded-full border-2 border-white"
+                  className="w-8 h-8 rounded-full border-2 border-white" 
                   style={{ backgroundColor: playerColors[player.color] }}
                 ></div>
                 <span className="text-white font-bold text-lg">{player.name}</span>
@@ -300,8 +295,8 @@ export default function FindCountryGame() {
                   {player.progress?.score || 0}
                 </div>
                 <div className="text-sm text-gray-400">
-                  {/* ✅ إصلاح العداد - بدون +1 إضافية */}
-                  {player.progress?.questionsAnswered || 0}/10
+                  {/* ✅ استخدام الدالة المُصلحة */}
+                  {getCurrentPlayerQuestionCount(player.index)}/10
                 </div>
               </div>
             </div>
@@ -311,16 +306,16 @@ export default function FindCountryGame() {
     );
   };
 
-  // ✅ مكون معلومات اللاعب الحالي - مُوحد
+  // ✅ مكون معلومات اللاعب الحالي - مُوحد مع حل العداد
   const CurrentPlayerInfo = ({ className = "" }) => {
     if (!currentPlayer) return null;
-    
+
     return (
       <div className={`bg-black/70 backdrop-blur-md border border-white/20 rounded-xl p-3 ${className}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div 
-              className="w-6 h-6 rounded-full border-2 border-white"
+              className="w-6 h-6 rounded-full border-2 border-white" 
               style={{ backgroundColor: playerColors[currentPlayer.color] }}
             ></div>
             <span className="text-white font-bold">{currentPlayer.name}</span>
@@ -330,8 +325,8 @@ export default function FindCountryGame() {
               {playerProgress[currentPlayerIndex]?.score || 0} نقطة
             </div>
             <div className="text-gray-400 text-xs">
-              {/* ✅ إصلاح العداد هنا أيضاً */}
-              {playerProgress[currentPlayerIndex]?.questionsAnswered || 0}/10
+              {/* ✅ استخدام الدالة المُصلحة */}
+              {getCurrentPlayerQuestionCount(currentPlayerIndex)}/10
             </div>
           </div>
         </div>
@@ -342,25 +337,25 @@ export default function FindCountryGame() {
   // مكون إعداد اللاعبين
   const PlayerSetup = () => {
     const [playerInputs, setPlayerInputs] = useState(['', '']);
-    
+
     const addPlayer = () => {
       if (playerInputs.length < 8) {
         setPlayerInputs([...playerInputs, '']);
       }
     };
-    
+
     const removePlayer = (index) => {
       if (playerInputs.length > 2) {
         setPlayerInputs(playerInputs.filter((_, i) => i !== index));
       }
     };
-    
+
     const updatePlayerName = (index, name) => {
       const newInputs = [...playerInputs];
       newInputs[index] = name;
       setPlayerInputs(newInputs);
     };
-    
+
     const startGame = () => {
       const validPlayers = playerInputs
         .filter(name => name.trim())
@@ -368,12 +363,12 @@ export default function FindCountryGame() {
           name: name.trim(),
           color: index
         }));
-      
+
       if (validPlayers.length < 2) {
         showErrorToast('يجب إدخال على الأقل لاعبين!');
         return;
       }
-      
+
       setupPlayers(validPlayers);
     };
 
@@ -394,7 +389,7 @@ export default function FindCountryGame() {
               </span>
             </h1>
             <Link 
-              href="/"
+              href="/" 
               className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all duration-300"
             >
               ← العودة للرئيسية
@@ -407,7 +402,7 @@ export default function FindCountryGame() {
               <h2 className="text-2xl font-bold text-white text-center mb-8">
                 إعداد اللاعبين
               </h2>
-              
+
               <div className="space-y-4 mb-8">
                 {playerInputs.map((name, index) => (
                   <div key={index} className="flex gap-3">
@@ -481,8 +476,7 @@ export default function FindCountryGame() {
                           {currentQuestion.question}
                         </div>
                         <div className="flex justify-center items-center gap-2 text-xs mt-1">
-                
-                          <span className="text-green-300">200 نقطة</span>
+                          <span className="text-green-300">100 نقطة</span>
                         </div>
                       </div>
                     </div>
@@ -497,10 +491,11 @@ export default function FindCountryGame() {
               <div className="h-full p-4 overflow-y-auto">
                 <div className="space-y-4">
                   <div className="text-center mb-6">
-                    <h2 className="text-2xl font-bold text-white mb-2"> جدول النقاط</h2>
+                    <h2 className="text-2xl font-bold text-white mb-2">
+                      جدول النقاط
+                    </h2>
                     <div className="text-gray-400">
-                      الدور: {currentPlayerIndex + 1}/{players.length} • 
-                      الجولة: {Math.floor(getTotalQuestionsAnswered() / players.length) + 1}
+                      الدور: {currentPlayerIndex + 1}/{players.length} • الجولة: {Math.floor(getTotalQuestionsAnswered() / players.length) + 1}
                     </div>
                   </div>
 
@@ -508,7 +503,9 @@ export default function FindCountryGame() {
 
                   {/* إحصائيات إضافية */}
                   <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4">
-                    <h3 className="text-lg font-bold text-white mb-3"> إحصائيات اللعبة</h3>
+                    <h3 className="text-lg font-bold text-white mb-3">
+                      إحصائيات اللعبة
+                    </h3>
                     <div className="grid grid-cols-2 gap-4 text-center">
                       <div className="text-center">
                         <div className="text-2xl font-bold text-yellow-400">
@@ -535,18 +532,18 @@ export default function FindCountryGame() {
               <button
                 onClick={() => setMobileView('map')}
                 className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all duration-300 ${
-                  mobileView === 'map' 
-                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg scale-105' 
+                  mobileView === 'map'
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg scale-105'
                     : 'bg-white/10 text-gray-400 hover:bg-white/20'
                 }`}
               >
-                 الخريطة
+                🗺️ الخريطة
               </button>
               <button
                 onClick={() => setMobileView('scores')}
                 className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all duration-300 ${
-                  mobileView === 'scores' 
-                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg scale-105' 
+                  mobileView === 'scores'
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg scale-105'
                     : 'bg-white/10 text-gray-400 hover:bg-white/20'
                 }`}
               >
@@ -585,13 +582,11 @@ export default function FindCountryGame() {
                 {currentQuestion && (
                   <div className="flex-1 max-w-2xl mx-4">
                     <div className="bg-gradient-to-r from-black/60 to-black/40 backdrop-blur-md border-2 border-cyan-400/50 rounded-xl p-4 text-center shadow-xl">
-             
                       <div className="text-white font-bold text-xl mb-2">
                         {currentQuestion.question}
                       </div>
                       <div className="flex justify-center items-center gap-4 text-sm">
-                        <span className="text-green-400 font-semibold">200 نقطة</span>
-          
+                        <span className="text-green-400 font-semibold">100 نقطة</span>
                         <span className="text-purple-400 font-semibold">دور: {currentPlayer?.name}</span>
                       </div>
                     </div>
@@ -606,10 +601,10 @@ export default function FindCountryGame() {
             </div>
 
             {/* أزرار التحكم */}
-            {/* <div className="absolute bottom-4 left-4 z-20 pointer-events-auto">
+            <div className="absolute bottom-4 left-4 z-20 pointer-events-auto">
               <div className="flex gap-3">
                 <Link 
-                  href="/"
+                  href="/" 
                   className="bg-black/50 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 text-white font-bold hover:bg-black/70 transition-all"
                 >
                   🏠 القائمة
@@ -621,7 +616,7 @@ export default function FindCountryGame() {
                   🔄 إعادة تشغيل
                 </button>
               </div>
-            </div> */}
+            </div>
           </div>
         </div>
       );
@@ -644,12 +639,12 @@ export default function FindCountryGame() {
           <div className="flex-1 flex items-center justify-center">
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-w-4xl w-full text-center">
               <h1 className="text-4xl md:text-6xl font-black text-white mb-8">
-                 انتهت اللعبة! 
+                انتهت اللعبة! 🎉
               </h1>
-              
+
               <div className="mb-8">
                 <h2 className="text-3xl font-bold text-yellow-400 mb-4">
-                   الفائز: {winner.name}
+                  الفائز: {winner.name}
                 </h2>
                 <div className="text-2xl text-green-400 font-bold">
                   {winner.progress?.score || 0} نقطة
@@ -663,13 +658,13 @@ export default function FindCountryGame() {
                   onClick={resetGame}
                   className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105"
                 >
-                   لعبة جديدة
+                  🎮 لعبة جديدة
                 </button>
                 <Link
                   href="/"
                   className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105"
                 >
-                   العودة للقائمة
+                  🏠 العودة للقائمة
                 </Link>
               </div>
             </div>
@@ -683,11 +678,11 @@ export default function FindCountryGame() {
   if (gamePhase === 'setup') {
     return <PlayerSetup />;
   }
-  
+
   if (gamePhase === 'finished') {
     return <GameFinished />;
   }
-  
+
   return (
     <>
       <UnifiedGamePlay />
