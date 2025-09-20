@@ -1,9 +1,9 @@
-// components/PlayerCareerGame.jsx - إصلاح مشكلة اللاعب الثاني (كل لاعب يقيم إجابته بنفسه)
+// components/PlayerCareerGame.jsx - الحل النهائي لمشكلة إرسال السؤالين
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { playerCareerData, searchPlayers, isValidPlayerAnswer, isValidPlayerName, uniquePlayerNames } from '../app/data/playerCareerData';
- import Link from 'next/link';
+import Link from 'next/link';
 
 export default function PlayerCareerGame({ 
   roomId, 
@@ -29,7 +29,7 @@ export default function PlayerCareerGame({
   const [gameFinished, setGameFinished] = useState(false);
   
   // 🆕 نظام المحاولات - مطابق للتلميحات التدريجية
-  const [attemptsLeft, setAttemptsLeft] = useState(2); // محاولتين لكل لاعب
+const [attemptsLeft, setAttemptsLeft] = useState(3);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [showingAnswer, setShowingAnswer] = useState(false);
   const [canAnswer, setCanAnswer] = useState(true);
@@ -45,6 +45,10 @@ export default function PlayerCareerGame({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
   const [isValidAnswer, setIsValidAnswer] = useState(false);
+  
+  // 🔧 الحل النهائي - استخدام useRef بدلاً من state
+  const lastQuestionSentTime = useRef(0);
+  const transitionTimeoutRef = useRef(null);
   
   // مرجع القناة
   const channelRef = useRef(null);
@@ -69,17 +73,23 @@ export default function PlayerCareerGame({
             [playerId]: 0,
             [opponentId]: 0
           });
-          console.log('🏁 تهيئة النقاط للعبة جديدة');
+          console.log(' تهيئة النقاط للعبة جديدة');
         }
         
         // إعادة تعيين كل شيء للسؤال الجديد
         setShowingAnswer(false);
         setHasAnswered(false);
         setCanAnswer(true);
-        setAttemptsLeft(2);
-        setRoundWinner(null); // 🆕
-        setShowCorrectAnswer(false); // 🆕
-        setPlayersFinished(new Set()); // 🆕 إعادة تعيين اللاعبين المنتهين
+setAttemptsLeft(3);
+        setRoundWinner(null);
+        setShowCorrectAnswer(false);
+        setPlayersFinished(new Set());
+        
+        // 🔧 تنظيف timeout السابق
+        if (transitionTimeoutRef.current) {
+          clearTimeout(transitionTimeoutRef.current);
+          transitionTimeoutRef.current = null;
+        }
         
         // إعادة تعيين نظام البحث
         setSearchQuery('');
@@ -98,10 +108,6 @@ export default function PlayerCareerGame({
       // 🆕 استقبال إجابة اللاعب - إصلاح تحديث النقاط + آلية عدم الفوز
       gameChannel.bind('player-answered', (data) => {
         console.log('📨 إجابة مستلمة:', data);
-        console.log('🔍 معرفات اللاعبين:');
-        console.log('- playerId الحالي:', playerId);
-        console.log('- opponentId:', opponentId);
-        console.log('- data.playerId:', data.playerId);
         
         if (data.isCorrect && !roundWinner) {
           // هذا اللاعب فاز بالسؤال!
@@ -127,22 +133,19 @@ export default function PlayerCareerGame({
             
             // تحديد اللاعب الفائز وإضافة النقاط
             if (data.playerId === playerId) {
-              // اللاعب الحالي فاز
               newScores[playerId] += data.points;
             } else {
-              // المنافس فاز - نستخدم opponentId
               newScores[opponentId] += data.points;
             }
             
             console.log('🏆 تحديث النقاط النهائي:');
             console.log('- اللاعب الحالي:', playerId, '=', newScores[playerId]);
             console.log('- المنافس:', opponentId, '=', newScores[opponentId]);
-            console.log('- الفائز بالسؤال:', data.playerId, 'حصل على', data.points, 'نقطة');
             
             return newScores;
           });
           
-          // إظهار الإجابة الصحيحة بعد ثانيتين - مطابق للتلميحات
+          // إظهار الإجابة الصحيحة بعد ثانيتين
           setTimeout(() => {
             setShowCorrectAnswer(true);
           }, 2000);
@@ -153,7 +156,6 @@ export default function PlayerCareerGame({
               if (currentRound >= totalRounds) {
                 // انتهاء اللعبة
                 setGameScores(currentScores => {
-                  console.log('🏁 حساب الفائز النهائي:', currentScores);
                   const playerScore = currentScores[playerId] || 0;
                   const opponentScore = currentScores[opponentId] || 0;
                   
@@ -163,10 +165,9 @@ export default function PlayerCareerGame({
                   } else if (opponentScore > playerScore) {
                     finalWinner = opponentId;
                   } else {
-                    finalWinner = playerId; // تعادل - نختار اللاعب الحالي
+                    finalWinner = playerId; // تعادل
                   }
                   
-                  console.log('🏆 الفائز النهائي:', finalWinner);
                   setWinner(finalWinner);
                   setGameFinished(true);
                   setGamePhase('finished');
@@ -195,41 +196,60 @@ export default function PlayerCareerGame({
             console.log('🔚 لاعب انتهى:', data.playerId);
             console.log('🔚 اللاعبون المنتهون:', Array.from(newFinished));
             
-            // 🆕 فحص إذا انتهى كلا اللاعبين بدون فائز
+            // 🔧 الحل النهائي - منع التكرار باستخدام timeout + timestamp
             if (newFinished.size >= 2 && !roundWinner && isHost) {
-              console.log('🚫 لا يوجد فائز - الانتقال للسؤال التالي');
+              console.log('🚫 لا يوجد فائز - التحضير للانتقال...');
               
-              // إظهار رسالة "لا يوجد فائز" ثم الانتقال
-              setTimeout(() => {
-                setShowCorrectAnswer(true);
-              }, 1000);
+              // 🛡️ منع التكرار - فحص آخر مرة تم إرسال سؤال فيها
+              const now = Date.now();
+              if (now - lastQuestionSentTime.current < 3000) { // منع الإرسال خلال 3 ثوانِ
+                console.log('🚫 منع إرسال سؤال مكرر - تم إرسال سؤال مؤخراً');
+                return newFinished;
+              }
               
-              setTimeout(() => {
-                if (currentRound >= totalRounds) {
-                  // انتهاء اللعبة
-                  setGameScores(currentScores => {
-                    const playerScore = currentScores[playerId] || 0;
-                    const opponentScore = currentScores[opponentId] || 0;
-                    
-                    let finalWinner;
-                    if (playerScore > opponentScore) {
-                      finalWinner = playerId;
-                    } else if (opponentScore > playerScore) {
-                      finalWinner = opponentId;
+              // 🎯 استخدام timeout لمنع التداخل
+              if (transitionTimeoutRef.current) {
+                console.log('🚫 إلغاء timeout سابق');
+                clearTimeout(transitionTimeoutRef.current);
+              }
+              
+              transitionTimeoutRef.current = setTimeout(() => {
+                // التحقق المضاعف من أنه لا يوجد فائز
+                if (!roundWinner) {
+                  console.log('🚀 تنفيذ الانتقال للسؤال التالي...');
+                  
+                  // إظهار الإجابة الصحيحة أولاً
+                  setShowCorrectAnswer(true);
+                  
+                  // ثم الانتقال للسؤال التالي
+                  setTimeout(() => {
+                    if (currentRound >= totalRounds) {
+                      // انتهاء اللعبة
+                      setGameScores(currentScores => {
+                        const playerScore = currentScores[playerId] || 0;
+                        const opponentScore = currentScores[opponentId] || 0;
+                        
+                        let finalWinner;
+                        if (playerScore > opponentScore) {
+                          finalWinner = playerId;
+                        } else if (opponentScore > playerScore) {
+                          finalWinner = opponentId;
+                        } else {
+                          finalWinner = playerId; // تعادل
+                        }
+                        
+                        setWinner(finalWinner);
+                        setGameFinished(true);
+                        setGamePhase('finished');
+                        return currentScores;
+                      });
                     } else {
-                      finalWinner = playerId; // تعادل
+                      // الانتقال للسؤال التالي
+                      nextRound();
                     }
-                    
-                    setWinner(finalWinner);
-                    setGameFinished(true);
-                    setGamePhase('finished');
-                    return currentScores;
-                  });
-                } else {
-                  // الانتقال للسؤال التالي
-                  nextRound();
+                  }, 1500);
                 }
-              }, 4000); // 4 ثوانِ لعرض الإجابة الصحيحة
+              }, 1000); // انتظار ثانية واحدة للتأكد
             }
             
             return newFinished;
@@ -271,6 +291,10 @@ export default function PlayerCareerGame({
       });
 
       return () => {
+        // تنظيف المراجع عند إلغاء المكون
+        if (transitionTimeoutRef.current) {
+          clearTimeout(transitionTimeoutRef.current);
+        }
         if (gameChannel) {
           pusher.unsubscribe(`player-career-${roomId}`);
         }
@@ -397,14 +421,7 @@ export default function PlayerCareerGame({
       }
     }
     
-    console.log('📤 إرسال البيانات عبر Pusher:', {
-      playerId: playerId,
-      isCorrect: isCorrect,
-      points: points,
-      attemptsLeft: newAttemptsLeft
-    });
-    
-    // إرسال الإجابة للجميع مع التقييم (النقاط ستُحدث عبر Pusher فقط)
+    // إرسال الإجابة للجميع مع التقييم
     fetch('/api/pusher/trigger', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -413,7 +430,7 @@ export default function PlayerCareerGame({
         event: 'player-answered',
         data: {
           playerId: playerId,
-          playerName: playerId, // يمكن استخدام اسم أفضل
+          playerName: playerId,
           answer: searchQuery.trim(),
           correctAnswer: currentPlayer.name,
           isCorrect: isCorrect,
@@ -452,9 +469,18 @@ export default function PlayerCareerGame({
     }
   }, [searchQuery]);
 
-  // الجولة التالية - محسنة (للمضيف فقط)
+  // 🔧 الجولة التالية - محسنة مع حماية من التكرار
   const nextRound = () => {
     if (!isHost) return;
+    
+    // 🛡️ حماية إضافية - التحقق من آخر مرة تم إرسال سؤال فيها
+    const now = Date.now();
+    if (now - lastQuestionSentTime.current < 2000) { // منع الإرسال خلال ثانيتين
+      console.log('🚫 منع إرسال سؤال مكرر - تم إرسال سؤال مؤخراً');
+      return;
+    }
+    
+    lastQuestionSentTime.current = now;
     
     const nextRoundNumber = currentRound + 1;
     
@@ -476,6 +502,8 @@ export default function PlayerCareerGame({
       
       // إضافة اللاعب للمستخدمين
       setUsedPlayers(prev => [...prev, newPlayer.id]);
+      
+      console.log('📤 إرسال سؤال جديد:', newPlayer.name, 'الجولة:', nextRoundNumber);
       
       fetch('/api/pusher/trigger', {
         method: 'POST',
@@ -518,6 +546,7 @@ export default function PlayerCareerGame({
     const firstPlayer = playerCareerData[randomIndex];
     
     setUsedPlayers([firstPlayer.id]);
+    lastQuestionSentTime.current = Date.now();
     
     fetch('/api/pusher/trigger', {
       method: 'POST',
@@ -575,25 +604,17 @@ export default function PlayerCareerGame({
           <div className="text-center bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-12">
             <h1 className="text-6xl font-bold text-white mb-8"> انتهت اللعبة!</h1>
             
-            {/* <div className="text-3xl font-bold mb-8">
-              {winner === playerId ? (
-                <span className="text-green-400">أنت الفائز! 🎉</span>
-              ) : (
-                <span className="text-red-400">فاز المنافس 😔</span>
-              )}
-            </div> */}
-            
             <div className="text-xl text-white space-y-2">
               <div>أنت: {gameScores[playerId] || 0} نقطة</div>
               <div>المنافس: {gameScores[opponentId] || 0} نقطة</div>
             </div>
             
-          <Link 
-            href="/"
-            className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all duration-300 hover:scale-105"
-          >
-            ← العودة للرئيسية
-          </Link>
+            <Link 
+              href="/"
+              className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all duration-300 hover:scale-105 inline-block mt-8"
+            >
+              ← العودة للرئيسية
+            </Link>
           </div>
         </div>
       </div>
@@ -725,7 +746,8 @@ export default function PlayerCareerGame({
                       <div className="flex items-center justify-center gap-4">
                         <span className="text-white/70">المحاولات المتبقية:</span>
                         <div className="flex gap-1">
-                          {[...Array(2)].map((_, i) => (
+                          {[...Array(3)].map((_, i) => (
+
                             <div
                               key={i}
                               className={`w-3 h-3 rounded-full ${
@@ -757,33 +779,30 @@ export default function PlayerCareerGame({
                           isValidAnswer 
                             ? 'border-green-500 focus:border-green-400 shadow-lg shadow-green-500/20' 
                             : showSuggestions 
-                              ? 'border-purple-500 focus:border-purple-400 shadow-lg shadow-purple-500/20'
-                              : 'border-purple-400/50 focus:border-purple-400'
+                              ? 'border-blue-500 focus:border-blue-400' 
+                              : 'border-gray-600 focus:border-purple-400'
                         }`}
-                        autoComplete="off"
-                        spellCheck="false"
-                        autoCapitalize="off"
-                        autoCorrect="off"
                       />
                       
+                      {/* أيقونة البحث */}
                       <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                        <span className="text-2xl text-purple-400">🔍</span>
+                        <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
                       </div>
 
-                      {/* 🔍 قائمة الاقتراحات - مطابقة للتلميحات التدريجية */}
+                      {/* قائمة الاقتراحات */}
                       {showSuggestions && suggestions.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl max-h-48 overflow-y-auto z-50">
+                        <div className="absolute z-50 w-full mt-2 bg-slate-800 border border-gray-600 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
                           {suggestions.map((suggestion, index) => (
                             <div
-                              key={suggestion}
-                              onClick={() => selectSuggestion(suggestion)}
-                              className={`px-4 py-3 text-white cursor-pointer transition-all duration-200 ${
-                                index === selectedSuggestionIndex
-                                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                                  : 'hover:bg-white/10'
-                              } ${index === 0 ? 'rounded-t-xl' : ''} ${
-                                index === suggestions.length - 1 ? 'rounded-b-xl' : ''
+                              key={index}
+                              className={`px-6 py-3 cursor-pointer transition-colors border-b border-gray-700 last:border-b-0 ${
+                                index === selectedSuggestionIndex 
+                                  ? 'bg-purple-600/50 text-white' 
+                                  : 'text-gray-300 hover:bg-gray-700'
                               }`}
+                              onClick={() => selectSuggestion(suggestion)}
                             >
                               {suggestion}
                             </div>
@@ -792,30 +811,36 @@ export default function PlayerCareerGame({
                       )}
                     </div>
 
-                    {/* زر الإجابة */}
-                    <div className="flex justify-center mt-6">
-                      <button
-                        onClick={submitAnswer}
-                        disabled={!canAnswer || hasAnswered || !isValidAnswer}
-                        className={`px-8 py-4 font-bold text-xl rounded-2xl transition-all duration-300 ${
-                          isValidAnswer && canAnswer && !hasAnswered
-                            ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:scale-105 shadow-lg'
-                            : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                        }`}
-                      >
-                        📤 إرسال الإجابة
-                      </button>
-                    </div>
+                    {/* زر الإرسال */}
+                    <button
+                      onClick={submitAnswer}
+                      disabled={!canAnswer || hasAnswered || !isValidAnswer}
+                      className={`w-full mt-6 px-6 py-4 rounded-2xl font-bold text-xl transition-all duration-300 ${
+                        isValidAnswer && canAnswer && !hasAnswered
+                          ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white hover:scale-105 shadow-lg shadow-green-500/30'
+                          : 'bg-gray-600/50 text-gray-400 cursor-not-allowed'
+                      }`}
+                    >
+                      {hasAnswered ? '⏳ انتظار...' : '✈️ إرسال الإجابة'}
+                    </button>
                   </div>
                 )}
 
-                {/* 🆕 إظهار الإجابة الصحيحة - مطابق للتلميحات التدريجية */}
+                {/* عرض الإجابة الصحيحة */}
                 {showCorrectAnswer && (
-                  <div className="mt-8 text-center">
-                    <div className="inline-block px-8 py-4 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-2 border-green-400/50 rounded-2xl">
-                      <div className="text-3xl text-green-400 font-bold">
-                        ✅ الإجابة الصحيحة: {currentPlayer.name}
-                      </div>
+                  <div className="text-center mt-8">
+                    <div className="inline-block px-8 py-6 bg-gradient-to-r from-emerald-500/20 to-green-500/20 border-2 border-emerald-400/50 rounded-2xl">
+                      <h4 className="text-2xl text-emerald-400 font-bold mb-2">
+                        ✅ الإجابة الصحيحة:
+                      </h4>
+                      <p className="text-3xl font-bold text-white">
+                        {currentPlayer.name}
+                      </p>
+                      {!roundWinner && (
+                        <p className="text-xl text-gray-400 mt-2">
+                          لم يجب أي لاعب إجابة صحيحة
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
