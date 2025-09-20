@@ -50,3 +50,10 @@ export { default as QROnlyGame } from './QROnlyGame';
 // 🆕 لعبة أوجد الدولة
 export { default as FindCountryGame } from './FindCountryGame';
 export { default as FindCountryWorldMap } from './FindCountryWorldMap';
+
+// إضافة هذه الأسطر لملف components/index.js:
+
+// 🆕 لعبة مسيرة اللاعبين
+export { default as PlayerCareerGame } from './PlayerCareerGame';
+export { default as PlayerCareerGameRouter } from './PlayerCareerGameRouter';
+export { default as PlayerCareerSetup } from './PlayerCareerSetup';
