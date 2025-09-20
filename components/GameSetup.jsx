@@ -89,7 +89,7 @@ export default function GameSetup() {
             </Link>
 
             {/* فقرة الاختيارات */}
-            <Link href="/choices-game" className="group">
+            {/* <Link href="/choices-game" className="group">
               <div className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl hover:bg-white/10 transition-all duration-500 hover:scale-105 hover:border-purple-500/50">
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="relative z-10">
@@ -106,7 +106,7 @@ export default function GameSetup() {
                   </div>
                 </div>
               </div>
-            </Link>
+            </Link> */}
 
             {/* فقرة QR */}
             <Link href="/qr-game" className="group">
