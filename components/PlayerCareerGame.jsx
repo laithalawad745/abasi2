@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { playerCareerData, searchPlayers, isValidPlayerAnswer, isValidPlayerName, uniquePlayerNames } from '../app/data/playerCareerData';
+ import Link from 'next/link';
 
 export default function PlayerCareerGame({ 
   roomId, 
@@ -587,12 +588,12 @@ export default function PlayerCareerGame({
               <div>المنافس: {gameScores[opponentId] || 0} نقطة</div>
             </div>
             
-            <button
-              onClick={onGameEnd}
-              className="mt-8 px-8 py-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-bold rounded-2xl hover:scale-105 transition-all duration-300"
-            >
-              العودة للقائمة الرئيسية
-            </button>
+          <Link 
+            href="/"
+            className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all duration-300 hover:scale-105"
+          >
+            ← العودة للرئيسية
+          </Link>
           </div>
         </div>
       </div>
