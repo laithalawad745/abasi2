@@ -702,7 +702,7 @@ setAttemptsLeft(3);
                     {currentPlayer.career.map((club, index) => (
                       <React.Fragment key={index}>
                         <div className="flex flex-col items-center group">
-                          <div className="w-14 h-14 md:w-18 md:h-18 bg-white rounded-full p-2 transition-all duration-300 group-hover:scale-110 shadow-xl border-2 border-gray-200">
+                          <div className="w-14 h-14 md:w-18 md:h-18 bg-[#1a1a27] rounded-full p-2 transition-all duration-300 group-hover:scale-110 shadow-xl ">
                             <img 
                               src={`/clubs/${club.club}.png`}
                               alt={club.name}
