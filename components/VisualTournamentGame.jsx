@@ -1,4 +1,4 @@
-// components/VisualTournamentGame.jsx
+// components/VisualTournamentGame.jsx - النسخة العادلة
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -20,6 +20,11 @@ export default function VisualTournamentGame() {
   const [showingDecision, setShowingDecision] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [usedQuestionIds, setUsedQuestionIds] = useState([]);
+
+  // 🆕 حالات جديدة للمنطق العادل
+  const [eliminationPhase, setEliminationPhase] = useState(null); // 'first_team_failed', 'waiting_second_team'
+  const [firstFailedTeam, setFirstFailedTeam] = useState(null); // أي فريق أخطأ أولاً
+  const [failureType, setFailureType] = useState(null); // 'wrong_answer' أو 'withdrawal'
 
   // Tournament configuration
   const roundConfig = {
@@ -57,64 +62,128 @@ export default function VisualTournamentGame() {
   // Client-side mounting
   useEffect(() => {
     setIsClient(true);
-    // تحميل الأسئلة المستخدمة من localStorage
     const savedUsedQuestions = loadUsedQuestions();
     setUsedQuestionIds(savedUsedQuestions);
   }, []);
 
-  // حفظ الأسئلة المستخدمة عند تغييرها
   useEffect(() => {
     if (isClient && usedQuestionIds.length > 0) {
       saveUsedQuestions(usedQuestionIds);
     }
   }, [usedQuestionIds, isClient]);
 
-  // Game functions
-  const startGame = () => {
-    if (!isClient) return;
-
-    setGamePhase('playing');
-    setCurrentTeam('red');
-    setShowingDecision(true);
-    setTeams(prev => ({
-      ...prev,
-      red: { ...prev.red, active: true },
-      blue: { ...prev.blue, active: true }
-    }));
-  };
-
-  const continueGame = () => {
-    const currentTeamData = teams[currentTeam];
-    
-    // الحصول على سؤال عشوائي من الدور الحالي
-    const randomQuestion = getRandomQuestionFromRound(currentTeamData.currentRound, usedQuestionIds);
-    
-    if (!randomQuestion) {
-      console.error('لا توجد أسئلة متاحة للدور:', currentTeamData.currentRound);
-      // إذا لم تعد هناك أسئلة، ننتقل للدور التالي تلقائياً
-      advanceToNextRound();
-      return;
+  // 🔧 NEW FAIR LOGIC - المنطق العادل الجديد
+  
+  const wrongAnswer = () => {
+    if (eliminationPhase === null) {
+      // الفريق الأول أخطأ - نعطي الفريق الآخر فرصة
+      setFirstFailedTeam(currentTeam);
+      setFailureType('wrong_answer');
+      setEliminationPhase('first_team_failed');
+      
+      // تحديث حالة الفريق الذي أخطأ
+      setTeams(prev => ({
+        ...prev,
+        [currentTeam]: {
+          ...prev[currentTeam],
+          eliminated: true,
+          active: false,
+          score: 0
+        }
+      }));
+      
+      // التحويل للفريق الآخر
+      const otherTeam = currentTeam === 'red' ? 'blue' : 'red';
+      setCurrentTeam(otherTeam);
+      setCurrentQuestion(null);
+      setShowAnswer(false);
+      setShowingDecision(true);
+      setEliminationPhase('waiting_second_team');
+      
+    } else if (eliminationPhase === 'waiting_second_team') {
+      // الفريق الثاني أيضاً أخطأ - تعادل
+      setTeams(prev => ({
+        ...prev,
+        [currentTeam]: {
+          ...prev[currentTeam],
+          eliminated: true,
+          active: false,
+          score: 0
+        },
+        tie: true
+      }));
+      
+      setTimeout(() => {
+        setGamePhase('finished');
+      }, 1500);
     }
-
-    setCurrentQuestion(randomQuestion);
-    setShowAnswer(false);
-    setShowingDecision(false);
-    
-    // إضافة السؤال للأسئلة المستخدمة
-    setUsedQuestionIds(prev => [...prev, randomQuestion.id]);
   };
 
   const withdrawTeam = () => {
-    setTeams(prev => ({
-      ...prev,
-      [currentTeam]: { ...prev[currentTeam], withdrawn: true, active: false }
-    }));
-    
-    if (checkGameEnd()) return;
-    switchTeam();
+    if (eliminationPhase === null) {
+      // الفريق الأول انسحب - نعطي الفريق الآخر فرصة
+      setFirstFailedTeam(currentTeam);
+      setFailureType('withdrawal');
+      setEliminationPhase('first_team_failed');
+      
+      // تحديث حالة الفريق الذي انسحب
+      setTeams(prev => ({
+        ...prev,
+        [currentTeam]: {
+          ...prev[currentTeam],
+          withdrawn: true,
+          active: false
+        }
+      }));
+      
+      // التحويل للفريق الآخر
+      const otherTeam = currentTeam === 'red' ? 'blue' : 'red';
+      setCurrentTeam(otherTeam);
+      setCurrentQuestion(null);
+      setShowAnswer(false);
+      setShowingDecision(true);
+      setEliminationPhase('waiting_second_team');
+      
+    } else if (eliminationPhase === 'waiting_second_team') {
+      // الفريق الثاني أيضاً انسحب - تعادل
+      setTeams(prev => ({
+        ...prev,
+        [currentTeam]: {
+          ...prev[currentTeam],
+          withdrawn: true,
+          active: false
+        },
+        tie: true
+      }));
+      
+      setTimeout(() => {
+        setGamePhase('finished');
+      }, 1500);
+    }
   };
 
   const correctAnswer = () => {
+    if (eliminationPhase === 'waiting_second_team') {
+      // الفريق الثاني أجاب صحيح - يفوز
+      const currentTeamData = teams[currentTeam];
+      const roundPoints = roundConfig[currentTeamData.currentRound]?.points || 0;
+      
+      setTeams(prev => ({
+        ...prev,
+        [currentTeam]: {
+          ...prev[currentTeam],
+          score: prev[currentTeam].score + roundPoints,
+          questionsAnswered: prev[currentTeam].questionsAnswered + 1
+        }
+      }));
+      
+      setTimeout(() => {
+        setGamePhase('finished');
+      }, 1500);
+      return;
+    }
+    
+    // المنطق العادي للإجابة الصحيحة
     const currentTeamData = teams[currentTeam];
     const roundPoints = roundConfig[currentTeamData.currentRound]?.points || 0;
     
@@ -137,19 +206,39 @@ export default function VisualTournamentGame() {
     }
   };
 
-  const wrongAnswer = () => {
+  // باقي الدوال بدون تغيير
+  const startGame = () => {
+    if (!isClient) return;
+
+    setGamePhase('playing');
+    setCurrentTeam('red');
+    setShowingDecision(true);
+    setEliminationPhase(null);
+    setFirstFailedTeam(null);
+    setFailureType(null);
     setTeams(prev => ({
       ...prev,
-      [currentTeam]: {
-        ...prev[currentTeam],
-        eliminated: true,
-        active: false,
-        score: 0
-      }
+      red: { ...prev.red, active: true },
+      blue: { ...prev.blue, active: true }
     }));
+  };
+
+  const continueGame = () => {
+    const currentTeamData = teams[currentTeam];
     
-    if (checkGameEnd()) return;
-    switchTeam();
+    const randomQuestion = getRandomQuestionFromRound(currentTeamData.currentRound, usedQuestionIds);
+    
+    if (!randomQuestion) {
+      console.error('لا توجد أسئلة متاحة للدور:', currentTeamData.currentRound);
+      advanceToNextRound();
+      return;
+    }
+
+    setCurrentQuestion(randomQuestion);
+    setShowAnswer(false);
+    setShowingDecision(false);
+    
+    setUsedQuestionIds(prev => [...prev, randomQuestion.id]);
   };
 
   const advanceToNextRound = () => {
@@ -162,7 +251,18 @@ export default function VisualTournamentGame() {
         [currentTeam]: { ...prev[currentTeam], finishedFinal: true, active: false }
       }));
       
-      if (checkGameEnd()) return;
+      const updatedTeams = {
+        ...teams,
+        [currentTeam]: { ...teams[currentTeam], finishedFinal: true, active: false }
+      };
+      
+      if (updatedTeams.red.finishedFinal && updatedTeams.blue.finishedFinal) {
+        setTimeout(() => {
+          setGamePhase('finished');
+        }, 1500);
+      } else {
+        switchTeam();
+      }
     } else {
       const nextRound = roundOrder[currentRoundIndex + 1];
       setTeams(prev => ({
@@ -173,9 +273,9 @@ export default function VisualTournamentGame() {
           questionsAnswered: 0
         }
       }));
+      
+      switchTeam();
     }
-    
-    switchTeam();
   };
 
   const switchTeam = () => {
@@ -186,17 +286,6 @@ export default function VisualTournamentGame() {
     setShowingDecision(true);
   };
 
-  const checkGameEnd = () => {
-    const activeTeams = Object.values(teams).filter(t => t.active && !t.eliminated && !t.withdrawn);
-    
-    if (activeTeams.length <= 1 || (teams.red.finishedFinal && teams.blue.finishedFinal)) {
-      setGamePhase('finished');
-      return true;
-    }
-    
-    return false;
-  };
-
   const resetGame = () => {
     setGamePhase('setup');
     setCurrentTeam('red');
@@ -204,6 +293,9 @@ export default function VisualTournamentGame() {
     setShowAnswer(false);
     setShowingDecision(true);
     setUsedQuestionIds([]);
+    setEliminationPhase(null);
+    setFirstFailedTeam(null);
+    setFailureType(null);
     clearUsedQuestions();
     setTeams({
       red: {
@@ -230,13 +322,12 @@ export default function VisualTournamentGame() {
     });
   };
 
-  // احصائيات الأسئلة
   const getQuestionStats = () => {
     if (!isClient) return { total: { remaining: 0 } };
     return getUsageStats(usedQuestionIds);
   };
 
-  // Tournament bracket components
+  // Tournament bracket components (نفس الكود السابق)
   const PlayerCircle = ({ position, team, isActive, size = 'normal' }) => {
     const sizeClasses = {
       small: 'w-8 h-8 text-xs',
@@ -274,12 +365,7 @@ export default function VisualTournamentGame() {
 
   const TeamBracket = ({ team }) => {
     const teamData = teams[team];
-    const teamColors = {
-      red: 'border-red-500/50 bg-red-500/10',
-      blue: 'border-blue-500/50 bg-blue-500/10'
-    };
 
-    // Create positions for bracket visualization
     const createPositions = (count, round) => {
       return Array(count).fill(null).map((_, i) => {
         const roundOrder = ['round8', 'round4', 'semi', 'final'];
@@ -323,7 +409,7 @@ export default function VisualTournamentGame() {
         <h2 className={`text-center text-2xl font-bold mb-6 ${team === 'red' ? 'text-red-400' : 'text-blue-400'}`}>
           {teamData.name}
           {teamData.withdrawn && <span className="text-yellow-400 text-sm mr-2">(منسحب)</span>}
-          {teamData.eliminated && <span className="text-red-400 text-sm mr-2">(مُبعد)</span>}
+          {teamData.eliminated && <span className="text-red-400 text-sm mr-2">(مُقصى)</span>}
           {teamData.finishedFinal && <span className="text-green-400 text-sm mr-2">(أنهى النهائي)</span>}
         </h2>
         
@@ -371,7 +457,7 @@ export default function VisualTournamentGame() {
               </div>
 
               {/* نصف النهائي */}
-              <div className="flex flex-col space-y-12">
+              <div className="flex flex-col space-y-16">
                 <h4 className="text-center text-orange-400 font-bold mb-2 text-sm">نصف النهائي</h4>
                 {positions.semi.map((position, index) => (
                   <div key={position.id} className={`flex items-center space-x-2 ${team === 'blue' ? 'flex-row-reverse space-x-reverse' : ''}`}>
@@ -387,10 +473,10 @@ export default function VisualTournamentGame() {
               </div>
 
               {/* النهائي */}
-              <div className="flex flex-col justify-center">
+              <div className="flex flex-col">
                 <h4 className="text-center text-yellow-400 font-bold mb-8 text-sm">النهائي</h4>
                 {positions.final.map((position, index) => (
-                  <div key={position.id} className={`flex items-center justify-center ${team === 'blue' ? 'flex-row-reverse' : ''}`}>
+                  <div key={position.id} className="flex items-center justify-center">
                     <PlayerCircle 
                       position={position} 
                       team={team}
@@ -407,23 +493,20 @@ export default function VisualTournamentGame() {
     );
   };
 
-  const currentTeamData = teams[currentTeam];
-  const stats = getQuestionStats();
-
-  // صفحة الإعداد
+  // صفحة الإعداد (نفس الكود السابق مع إضافة شرح المنطق الجديد)
   if (gamePhase === 'setup') {
+    const stats = getQuestionStats();
+    
     return (
       <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
-        {/* خلفية متحركة */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-orange-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/15 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-orange-500/15 rounded-full blur-3xl animate-pulse delay-1000"></div>
         </div>
 
         <div className="relative z-10 p-6 md:p-8">
-          {/* Header */}
           <div className="flex justify-between items-center mb-8">
-            <div className="text-2xl md:text-3xl font-black text-white tracking-wider">
+            <div className="text-4xl md:text-5xl font-black text-white tracking-wider">
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
                  بطولة الإقصاء
               </span>
@@ -436,48 +519,45 @@ export default function VisualTournamentGame() {
             </Link>
           </div>
 
-          <div className="max-w-4xl mx-auto text-center space-y-8">
-            <h1 className="text-4xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-8">
-              بطولة الإقصاء
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-4xl md:text-7xl font-black text-white mb-6 tracking-tight">
+              بطولة
+              <span className="block bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600">
+                الإقصاء 
+              </span>
             </h1>
+            
+ 
 
-            {/* شرح اللعبة */}
+            {/* شرح المنطق الجديد */}
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 mb-8">
-              <h2 className="text-2xl font-bold text-yellow-400 mb-6">📋 قواعد البطولة</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-right">
-                <div className="bg-blue-500/10 rounded-2xl p-6 border border-blue-500/30">
-                  <h3 className="text-blue-400 font-bold text-lg mb-3">🎯 الهدف</h3>
+              <h3 className="text-yellow-400 font-bold text-xl mb-6">قواعد اللعبة  </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-red-500/10 rounded-2xl p-6 border border-red-500/30">
+                  <h3 className="text-red-400 font-bold text-lg mb-3">❌ فريق أخطأ أولاً</h3>
                   <p className="text-gray-300">
-                    تقدم عبر أدوار البطولة بالإجابة على الأسئلة بنجاح. كل دور له عدد معين من الأسئلة ونقاط مختلفة.
+                    الفريق الآخر يحصل على فرصة للإجابة على نفس السؤال.
                   </p>
                 </div>
 
                 <div className="bg-green-500/10 rounded-2xl p-6 border border-green-500/30">
-                  <h3 className="text-green-400 font-bold text-lg mb-3">✅ الإجابة الصحيحة</h3>
+                  <h3 className="text-green-400 font-bold text-lg mb-3">✅ الفريق الثاني صحيح</h3>
                   <p className="text-gray-300">
-                    احصل على نقاط الدور والتقدم للمرحلة التالية في البطولة.
-                  </p>
-                </div>
-
-                <div className="bg-red-500/10 rounded-2xl p-6 border border-red-500/30">
-                  <h3 className="text-red-400 font-bold text-lg mb-3">❌ الإجابة الخاطئة</h3>
-                  <p className="text-gray-300">
-                    تخرج من البطولة فوراً وتفقد جميع نقاطك.
+                    الفريق الثاني يفوز ويحصل على النقاط.
                   </p>
                 </div>
 
                 <div className="bg-yellow-500/10 rounded-2xl p-6 border border-yellow-500/30">
-                  <h3 className="text-yellow-400 font-bold text-lg mb-3">🚪 الانسحاب</h3>
+                  <h3 className="text-yellow-400 font-bold text-lg mb-3">🤝 كلاهما أخطأ</h3>
                   <p className="text-gray-300">
-                    يمكنك الانسحاب والاحتفاظ بنقاطك الحالية في أي وقت.
+                    إذا كلا الفريقين أخطأ أو انسحب → تعادل.
                   </p>
                 </div>
               </div>
             </div>
 
             {/* نظام النقاط */}
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 mb-8">
+            {/* <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 mb-8">
               <h3 className="text-yellow-400 font-bold text-xl mb-6">🏆 نظام النقاط</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-blue-500/20 rounded-xl p-4 border border-blue-500/30">
@@ -501,10 +581,16 @@ export default function VisualTournamentGame() {
                   <div className="text-gray-400 text-sm">1 سؤال</div>
                 </div>
               </div>
-            </div>
+            </div> */}
 
-            {/* إحصائيات الأسئلة */}
-
+            {/* {stats.total.remaining > 0 && (
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 mb-8">
+                <h3 className="text-cyan-400 font-bold text-lg mb-4">📊 الأسئلة المتاحة</h3>
+                <div className="text-white text-xl">
+                  {stats.total.remaining} سؤال متاح من أصل {stats.total.available}
+                </div>
+              </div>
+            )} */}
 
             <button
               onClick={startGame}
@@ -521,13 +607,12 @@ export default function VisualTournamentGame() {
                   <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
                   </svg>
-                  ابدأ البطولة!
+                  ابدأ البطولة العادلة!
                 </div>
               </div>
             </button>
 
-            {/* زر إعادة تعيين الأسئلة */}
-            {usedQuestionIds.length > 0 && (
+            {/* {usedQuestionIds.length > 0 && (
               <button
                 onClick={() => {
                   setUsedQuestionIds([]);
@@ -537,7 +622,7 @@ export default function VisualTournamentGame() {
               >
                 🔄 إعادة تعيين الأسئلة
               </button>
-            )}
+            )} */}
           </div>
         </div>
       </div>
@@ -550,7 +635,9 @@ export default function VisualTournamentGame() {
     const blueTeam = teams.blue;
     
     let winner, loser;
-    if (redTeam.score > blueTeam.score) {
+    if (teams.tie) {
+      winner = null; // تعادل
+    } else if (redTeam.score > blueTeam.score) {
       winner = redTeam;
       loser = blueTeam;
     } else if (blueTeam.score > redTeam.score) {
@@ -593,6 +680,8 @@ export default function VisualTournamentGame() {
                   </div>
                   <div className="text-lg text-gray-300">
                     الفريق المنافس: {loser.name} - {loser.score} نقطة
+                    {loser.eliminated && " (مُقصى)"}
+                    {loser.withdrawn && " (منسحب)"}
                   </div>
                 </>
               ) : (
@@ -600,8 +689,11 @@ export default function VisualTournamentGame() {
                   <h2 className="text-3xl font-bold text-yellow-400 mb-4">
                     🤝 تعادل!
                   </h2>
-                  <div className="text-xl text-white">
+                  <div className="text-xl text-white mb-4">
                     كلا الفريقين حصل على {redTeam.score} نقطة
+                  </div>
+                  <div className="text-lg text-gray-300">
+                    {teams.tie && "كلا الفريقين أخطأ أو انسحب"}
                   </div>
                 </>
               )}
@@ -622,16 +714,16 @@ export default function VisualTournamentGame() {
   }
 
   // صفحة اللعب
+  const currentTeamData = teams[currentTeam];
+  
   return (
     <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
-      {/* خلفية متحركة */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/15 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-orange-500/15 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
       <div className="relative z-10 p-6 md:p-8">
-        {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div className="text-2xl md:text-3xl font-black text-white tracking-wider">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
@@ -645,6 +737,25 @@ export default function VisualTournamentGame() {
             ← العودة للرئيسية
           </Link>
         </div>
+
+        {/* رسالة الحالة الحالية */}
+        {eliminationPhase && (
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-4 px-8 py-4 bg-orange-500/20 backdrop-blur-xl border border-orange-500/50 rounded-3xl">
+              <svg className="w-6 h-6 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+              </svg>
+              <div className="text-orange-300 font-bold">
+                {eliminationPhase === 'first_team_failed' && (
+                  `${teams[firstFailedTeam].name} ${failureType === 'wrong_answer' ? 'أخطأ' : 'انسحب'} - فرصة للفريق الآخر!`
+                )}
+                {eliminationPhase === 'waiting_second_team' && (
+                  `فرصة أخيرة للفوز أو التعادل - ${currentTeamData.name}`
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* معلومات الدور الحالي */}
         <div className="text-center mb-8">
@@ -668,54 +779,63 @@ export default function VisualTournamentGame() {
             </div>
           </div>
         </div>
-   <div className="max-w-4xl mx-auto mb-4 ">
+        {/* منطقة السؤال */}
+        <div className="max-w-4xl mx-auto mb-4">
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
             {showingDecision ? (
-              // مرحلة اتخاذ القرار
               <div className="text-center space-y-8">
                 <h2 className={`text-3xl font-bold ${currentTeam === 'red' ? 'text-red-400' : 'text-blue-400'}`}>
                   دور {currentTeamData.name}
                 </h2>
-                <p className="text-xl text-white">
-                  هل تريد الاستمرار في {roundConfig[currentTeamData.currentRound]?.name}؟
-                </p>
+                
+                {eliminationPhase === 'waiting_second_team' ? (
+                  <div className="space-y-4">
+                    <p className="text-xl text-orange-300">
+                      🔥 فرصة أخيرة! {teams[firstFailedTeam].name} {failureType === 'wrong_answer' ? 'أخطأ' : 'انسحب'}
+                    </p>
+                    <p className="text-lg text-white">
+                      هل تريد الاستمرار والمحاولة للفوز؟
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-xl text-white">
+                    هل تريد الاستمرار في {roundConfig[currentTeamData.currentRound]?.name}؟
+                  </p>
+                )}
                 
                 <div className="flex justify-center gap-6">
                   <button
                     onClick={continueGame}
                     className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-2xl font-bold text-lg shadow-lg transition-all duration-300"
                   >
-                    استمرار
+                    {eliminationPhase === 'waiting_second_team' ? '🎯 محاولة الفوز' : 'استمرار'}
                   </button>
                   
                   <button
                     onClick={withdrawTeam}
                     className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white rounded-2xl font-bold text-lg shadow-lg transition-all duration-300"
                   >
-                     انسحاب
+                    {eliminationPhase === 'waiting_second_team' ? '🤝 قبول التعادل' : 'انسحاب'}
                   </button>
                 </div>
               </div>
             ) : currentQuestion ? (
-              // مرحلة عرض السؤال
               <div className="space-y-8">
-                {/* معلومات السؤال */}
                 <div className="text-center">
                   <div className="inline-flex items-center gap-4 px-6 py-3 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-2xl border border-purple-500/30">
                     <span className="text-purple-400 font-bold">
                       {currentQuestion.difficulty === 'easy' ? 'سهل' : 
                        currentQuestion.difficulty === 'medium' ? 'متوسط' : 'صعب'}
                     </span>
-                    <div className="w-px h-6 bg-purple-500/50"></div>
+                    <span className="text-white">•</span>
                     <span className="text-blue-400 font-bold">
                       {roundConfig[currentTeamData.currentRound]?.points} نقطة
                     </span>
                   </div>
                 </div>
 
-                {/* نص السؤال */}
                 <div className="text-center">
-                  <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
+                  <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8">
                     <h3 className="text-2xl md:text-3xl font-bold text-white leading-relaxed">
                       {currentQuestion.question}
                     </h3>
@@ -726,18 +846,17 @@ export default function VisualTournamentGame() {
                   <div className="text-center">
                     <button
                       onClick={() => setShowAnswer(true)}
-                      className="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-2xl font-bold text-lg shadow-lg transition-all duration-300"
+                      className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-2xl font-bold text-lg shadow-lg transition-all duration-300"
                     >
-                       إظهار الإجابة
+                      📝 إظهار الإجابة
                     </button>
                   </div>
                 ) : (
                   <>
-                    {/* عرض الإجابة */}
-                    <div className="text-center">
-                      <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-emerald-400 to-green-500 rounded-xl shadow-lg mb-6">
-                        <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                          <svg className="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                    <div className="text-center space-y-6">
+                      <div className="flex items-center justify-center gap-3 mb-4">
+                        <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                          <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                           </svg>
                         </div>
@@ -749,13 +868,13 @@ export default function VisualTournamentGame() {
                       </div>
                     </div>
 
-                    {/* أزرار التقييم */}
                     <div className="flex justify-center gap-6">
                       <button
                         onClick={correctAnswer}
                         className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-2xl font-bold text-lg shadow-lg transition-all duration-300"
                       >
                         ✅ إجابة صحيحة
+                        {eliminationPhase === 'waiting_second_team' && ' - الفوز!'}
                       </button>
                       
                       <button
@@ -763,6 +882,7 @@ export default function VisualTournamentGame() {
                         className="px-8 py-4 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-2xl font-bold text-lg shadow-lg transition-all duration-300"
                       >
                         ❌ إجابة خاطئة
+                        {eliminationPhase === 'waiting_second_team' && ' - تعادل!'}
                       </button>
                     </div>
                   </>
@@ -781,8 +901,7 @@ export default function VisualTournamentGame() {
           <TeamBracket team="blue" />
         </div>
 
-        {/* منطقة السؤال */}
-     
+
       </div>
     </div>
   );
