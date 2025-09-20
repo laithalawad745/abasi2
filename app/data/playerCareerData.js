@@ -1,5 +1,7 @@
-// app/data/playerCareerData.js
+// app/data/playerCareerData.js - محدث مع إصلاح البحث المكرر
+
 export const playerCareerData = [
+  // لاعبين حاليين
   {
     id: 'ronaldo',
     name: 'كريستيانو رونالدو',
@@ -12,9 +14,9 @@ export const playerCareerData = [
       { club: 'manchester-united', name: 'مانشستر يونايتد' },
       { club: 'al-nassr', name: 'النصر' }
     ],
-    difficulty: 'medium'
+    difficulty: 'easy'
   },
-  
+
   {
     id: 'messi',
     name: 'ليونيل ميسي',
@@ -22,7 +24,7 @@ export const playerCareerData = [
     career: [
       { club: 'barcelona', name: 'برشلونة' },
       { club: 'psg', name: 'باريس سان جيرمان' },
-      { club: 'inter-miami', name: 'إنتر ميامي' }
+      { club: 'inter-miami', name: 'انتر مايامي' }
     ],
     difficulty: 'easy'
   },
@@ -37,7 +39,7 @@ export const playerCareerData = [
       { club: 'psg', name: 'باريس سان جيرمان' },
       { club: 'al-hilal', name: 'الهلال' }
     ],
-    difficulty: 'medium'
+    difficulty: 'easy'
   },
 
   {
@@ -57,9 +59,9 @@ export const playerCareerData = [
     name: 'روبرت ليفاندوفسكي',
     hint: 'لاعب حالي',
     career: [
-      { club: 'lech-poznan', name: 'ليخ بوزنان' },
-      { club: 'dortmund', name: 'بوروسيا دورتموند' },
-      { club: 'bayern', name: 'بايرن ميونخ' },
+      { club: 'lech-poznan', name: 'ليتش بوزنان' },
+      { club: 'borussia-dortmund', name: 'بوروسيا دورتموند' },
+      { club: 'bayern-munich', name: 'بايرن ميونيخ' },
       { club: 'barcelona', name: 'برشلونة' }
     ],
     difficulty: 'medium'
@@ -82,7 +84,7 @@ export const playerCareerData = [
     name: 'محمد صلاح',
     hint: 'لاعب حالي',
     career: [
-      { club: 'al-mokawloon', name: 'المقاولون العرب' },
+      { club: 'arab-contractors', name: 'المقاولون العرب' },
       { club: 'basel', name: 'بازل' },
       { club: 'chelsea', name: 'تشيلسي' },
       { club: 'fiorentina', name: 'فيورنتينا' },
@@ -98,11 +100,11 @@ export const playerCareerData = [
     hint: 'لاعب حالي',
     career: [
       { club: 'molde', name: 'مولده' },
-      { club: 'salzburg', name: 'ريد بول سالزبورغ' },
-      { club: 'dortmund', name: 'بوروسيا دورتموند' },
-      { club: 'city', name: 'مانشستر سيتي' }
+      { club: 'red-bull-salzburg', name: 'ريد بل سالزبورغ' },
+      { club: 'borussia-dortmund', name: 'بوروسيا دورتموند' },
+      { club: 'manchester-city', name: 'مانشستر سيتي' }
     ],
-    difficulty: 'medium'
+    difficulty: 'easy'
   },
 
   {
@@ -122,7 +124,7 @@ export const playerCareerData = [
     name: 'نغولو كانتي',
     hint: 'لاعب حالي',
     career: [
-      { club: 'boulogne', name: 'بولوني' },
+      { club: 'boulogne', name: 'بولون' },
       { club: 'caen', name: 'كان' },
       { club: 'leicester', name: 'ليستر سيتي' },
       { club: 'chelsea', name: 'تشيلسي' },
@@ -203,21 +205,100 @@ export const playerCareerData = [
   }
 ];
 
-// قائمة شاملة بأسماء جميع اللاعبين للبحث
-export const allPlayerNames = [
-  'كريستيانو رونالدو', 'ليونيل ميسي', 'نيمار جونيور', 'لوكا مودريتش',
-  'روبرت ليفاندوفسكي', 'كيليان مبابي', 'محمد صلاح', 'إيرلينغ هالاند',
-  'كريم بنزيما', 'نغولو كانتي', 'باولو ديبالا', 'أنطوان جريزمان',
-  'سيرجيو راموس', 'لويس سواريز', 'بيب جوارديولا', 'كارلو أنشيلوتي',
-  'يورغن كلوب', 'ديجو سيميوني', 'أرسين فينجر', 'جوزيه مورينيو',
-  'زين الدين زيدان', 'فرانك لامبارد', 'ستيفن جيرارد', 'أندريا بيرلو',
-  'تياجو ألكانتارا', 'سيرجيو بوسكيتس', 'خافي هيرنانديز', 'أندريس إنييستا',
-  'ديفيد بيكهام', 'رونالدينيو', 'كاكا', 'ريفالدو', 'رونالدو نازاريو',
-  'زلاتان إبراهيموفيتش', 'فرانشيسكو توتي', 'ماتيو فيراتي', 'نيكولو باريلا',
-  'لورينزو إنسيني', 'كلاوديو رانييري', 'سيمونه إنزاجي', 'ماكس أليجري',
-  'أنطونيو كونتي', 'ماوريسيو بوتشيتينو', 'جوليان ناجلسمان',
-  'هانسي فليك', 'توماس توخيل', 'ميكيل أرتيتا', 'أولي جونار سولشاير'
+// 🔍 قائمة الأسماء الفريدة فقط - بدون تكرار (مطابقة للتلميحات التدريجية)
+export const uniquePlayerNames = [
+  'كريستيانو رونالدو',
+  'ليونيل ميسي', 
+  'نيمار جونيور',
+  'لوكا مودريتش',
+  'روبرت ليفاندوفسكي',
+  'كيليان مبابي',
+  'محمد صلاح',
+  'إيرلينغ هالاند',
+  'كريم بنزيما',
+  'نغولو كانتي',
+  'باولو ديبالا',
+  'أنطوان جريزمان',
+  'سيرجيو راموس',
+  'لويس سواريز',
+  'بيب جوارديولا'
 ];
+
+// 🔍 دالة البحث المحسنة - مطابقة للتلميحات التدريجية
+export const searchPlayers = (query) => {
+  if (!query || query.length < 2) return [];
+  
+  const normalizeText = (text) => {
+    return text
+      .toLowerCase()
+      .replace(/[إأآا]/g, 'ا')        // توحيد الألف
+      .replace(/[ئي]/g, 'ي')         // توحيد الياء  
+      .replace(/ة/g, 'ه')            // ة → ه
+      .replace(/\s+/g, ' ')          // توحيد المسافات
+      .trim();
+  };
+
+  const normalizedQuery = normalizeText(query);
+  
+  // البحث في الأسماء الفريدة فقط
+  const matches = uniquePlayerNames
+    .filter(name => normalizeText(name).includes(normalizedQuery))
+    .slice(0, 5); // أقصى 5 اقتراحات
+
+  return [...new Set(matches)]; // إزالة التكرارات إضافياً
+};
+
+// 🎯 دالة التحقق من صحة الإجابة - محسنة
+export const isValidPlayerAnswer = (userAnswer, correctAnswer) => {
+  if (!userAnswer || !correctAnswer) return false;
+  
+  const normalizeString = (str) => {
+    return str.toLowerCase()
+              .trim()
+              .replace(/\s+/g, ' ') // تبديل المسافات المتعددة بمسافة واحدة
+              .replace(/[أإآا]/g, 'ا') // توحيد الألف
+              .replace(/[ىي]/g, 'ي') // توحيد الياء
+              .replace(/ة/g, 'ه') // تبديل التاء المربوطة بالهاء
+              .replace(/ؤ/g, 'و') // تبديل الواو المهمزة
+              .replace(/ئ/g, 'ي'); // تبديل الياء المهمزة
+  };
+  
+  const normalizedUser = normalizeString(userAnswer);
+  const normalizedCorrect = normalizeString(correctAnswer);
+  
+  // مطابقة تامة
+  if (normalizedUser === normalizedCorrect) return true;
+  
+  // مطابقة جزئية للأسماء الطويلة
+  const userWords = normalizedUser.split(' ');
+  const correctWords = normalizedCorrect.split(' ');
+  
+  // إذا كان الاسم يحتوي على كلمتين أو أكثر، قبول الاسم الأول أو الأخير
+  if (correctWords.length >= 2) {
+    const firstName = correctWords[0];
+    const lastName = correctWords[correctWords.length - 1];
+    
+    if (normalizedUser === firstName || normalizedUser === lastName) return true;
+    
+    // قبول إذا كان المستخدم كتب أي كلمتين من الاسم الصحيح
+    const matchingWords = userWords.filter(word => correctWords.includes(word));
+    if (matchingWords.length >= Math.min(2, correctWords.length)) return true;
+  }
+  
+  // مطابقة إذا كان الاسم المدخل يحتوي على 80% من الاسم الصحيح
+  if (normalizedCorrect.includes(normalizedUser) && normalizedUser.length >= normalizedCorrect.length * 0.6) {
+    return true;
+  }
+  
+  return false;
+};
+
+// 🎯 دالة للتحقق إذا كانت الإجابة المدخلة موجودة في قائمة الأسماء الصحيحة - مطابقة للتلميحات التدريجية
+export const isValidPlayerName = (userAnswer) => {
+  return uniquePlayerNames.some(name => 
+    isValidPlayerAnswer(userAnswer, name)
+  );
+};
 
 // دالة للحصول على لاعب عشوائي
 export const getRandomPlayer = () => {
@@ -232,15 +313,6 @@ export const getPlayerByDifficulty = (difficulty) => {
   
   const randomIndex = Math.floor(Math.random() * filteredPlayers.length);
   return filteredPlayers[randomIndex];
-};
-
-// دالة للبحث في أسماء اللاعبين
-export const searchPlayers = (query) => {
-  if (!query || query.length < 2) return [];
-  
-  return allPlayerNames.filter(name => 
-    name.toLowerCase().includes(query.toLowerCase())
-  ).slice(0, 6); // أول 6 نتائج فقط
 };
 
 // دالة للحصول على إحصائيات البيانات
