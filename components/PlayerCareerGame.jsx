@@ -658,9 +658,7 @@ setAttemptsLeft(3);
             <div className="text-white font-bold text-lg">
               الجولة {currentRound} / {totalRounds}
             </div>
-            <div className="text-gray-400">
-              الهدف: 500 نقطة
-            </div>
+  
           </div>
         </div>
 
@@ -669,14 +667,7 @@ setAttemptsLeft(3);
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
             
             {/* عنوان السؤال */}
-            <div className="text-center mb-8">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                🔍 من هذا اللاعب؟
-              </h2>
-              <p className="text-xl text-gray-400">
-                انظر إلى مسيرته واكتشف هويته - لديك محاولتين!
-              </p>
-            </div>
+    
 
             {/* مسيرة اللاعب */}
             {currentPlayer && gamePhase === 'showing-career' && (
@@ -692,11 +683,7 @@ setAttemptsLeft(3);
 
                 {/* المسيرة الكاملة */}
                 <div className="space-y-6">
-                  <div className="flex items-center justify-center gap-4 mb-6">
-                    <h3 className="text-2xl font-bold text-cyan-400">
-                      📋 المسيرة الكاملة
-                    </h3>
-                  </div>
+        
                   
                   <div className="flex flex-wrap items-center justify-center gap-3 md:gap-6 bg-gradient-to-r from-slate-800/50 to-slate-700/50 backdrop-blur-md border border-white/10 rounded-2xl p-6">
                     {currentPlayer.career.map((club, index) => (
@@ -759,10 +746,7 @@ setAttemptsLeft(3);
                       </div>
                     </div>
 
-                    <h3 className="text-2xl font-bold text-center text-purple-400 mb-6">
-                      ✍️ أدخل اسم اللاعب
-                    </h3>
-                    
+      
                     {/* مربع البحث مطابق للتلميحات التدريجية */}
                     <div className="relative">
                       <input
@@ -821,7 +805,7 @@ setAttemptsLeft(3);
                           : 'bg-gray-600/50 text-gray-400 cursor-not-allowed'
                       }`}
                     >
-                      {hasAnswered ? '⏳ انتظار...' : '✈️ إرسال الإجابة'}
+                      {hasAnswered ? '⏳ انتظار...' : ' إرسال الإجابة'}
                     </button>
                   </div>
                 )}
