@@ -49,7 +49,8 @@ export const playerCareerData = [
     career: [
       { club: 'dinamo-zagreb', name: 'دينامو زغرب' },
       { club: 'tottenham', name: 'توتنهام' },
-      { club: 'real-madrid', name: 'ريال مدريد' }
+      { club: 'real-madrid', name: 'ريال مدريد' },
+      { club: 'milan', name: ' ميلان' },
     ],
     difficulty: 'medium'
   },
@@ -124,8 +125,6 @@ export const playerCareerData = [
     name: 'نغولو كانتي',
     hint: 'لاعب حالي',
     career: [
-      { club: 'boulogne', name: 'بولون' },
-      { club: 'caen', name: 'كان' },
       { club: 'leicester', name: 'ليستر سيتي' },
       { club: 'chelsea', name: 'تشيلسي' },
       { club: 'al-ittihad', name: 'الاتحاد' }
@@ -138,7 +137,6 @@ export const playerCareerData = [
     name: 'باولو ديبالا',
     hint: 'لاعب حالي',
     career: [
-      { club: 'instituto', name: 'إنستيتوتو' },
       { club: 'palermo', name: 'باليرمو' },
       { club: 'juventus', name: 'يوفنتوس' },
       { club: 'roma', name: 'روما' }
@@ -163,12 +161,13 @@ export const playerCareerData = [
   {
     id: 'ramos',
     name: 'سيرجيو راموس',
-    hint: 'لاعب معتزل',
+    hint: 'لاعب حالي',
     career: [
       { club: 'sevilla', name: 'إشبيلية' },
       { club: 'real-madrid', name: 'ريال مدريد' },
       { club: 'psg', name: 'باريس سان جيرمان' },
-      { club: 'sevilla', name: 'إشبيلية' }
+      { club: 'sevilla', name: 'إشبيلية' },
+      { club: 'monterrey', name: 'مونتيري' }
     ],
     difficulty: 'medium'
   },
@@ -178,13 +177,13 @@ export const playerCareerData = [
     name: 'لويس سواريز',
     hint: 'لاعب معتزل',
     career: [
-      { club: 'nacional', name: 'ناسيونال' },
-      { club: 'groningen', name: 'خرونينجن' },
+
       { club: 'ajax', name: 'أياكس' },
       { club: 'liverpool', name: 'ليفربول' },
       { club: 'barcelona', name: 'برشلونة' },
       { club: 'atletico', name: 'أتلتيكو مدريد' },
-      { club: 'nacional', name: 'ناسيونال' }
+      { club: 'gremio', name: 'جريميو' },
+        { club: 'inter-miami', name: 'انتر مايامي' }
     ],
     difficulty: 'medium'
   },
@@ -202,7 +201,45 @@ export const playerCareerData = [
       { club: 'al-ahli-doha', name: 'الأهلي الدوحة' }
     ],
     difficulty: 'hard'
-  }
+  },
+  {
+  id: 'kaka',
+  name: 'كاكا',
+  hint: 'لاعب معتزل',
+  career: [
+    { club: 'sao-paulo', name: 'ساو باولو' },
+    { club: 'milan', name: 'ميلان' },
+    { club: 'real-madrid', name: 'ريال مدريد' },
+    { club: 'milan', name: 'ميلان' },
+    { club: 'new-york-city', name: 'نيويورك سيتي' },
+    { club: 'sao-paulo', name: 'ساو باولو' }
+  ],
+  difficulty: 'hard'
+},
+
+{
+  id: 'pirlo',
+  name: 'أندريا بيرلو',
+  hint: 'لاعب معتزل',
+  career: [
+    { club: 'brescia', name: 'بريشيا' },
+    { club: 'inter', name: 'انتر ميلان' },
+    { club: 'milan', name: 'ميلان' },
+    { club: 'juventus', name: 'يوفنتوس' },
+    { club: 'new-york-city', name: 'نيويورك سيتي' }
+  ],
+  difficulty: 'hard'
+},
+
+{
+  id: 'totti',
+  name: 'فرانشيسكو توتي',
+  hint: 'أسطورة نادي واحد',
+  career: [
+    { club: 'roma', name: 'روما' }
+  ],
+  difficulty: 'hard'
+},
 ];
 
 // 🔍 قائمة الأسماء الفريدة فقط - بدون تكرار (مطابقة للتلميحات التدريجية)
@@ -221,7 +258,10 @@ export const uniquePlayerNames = [
   'أنطوان جريزمان',
   'سيرجيو راموس',
   'لويس سواريز',
-  'بيب جوارديولا'
+  'بيب جوارديولا',
+  'كاكا',
+  'أندريا بيرلو',
+  'فرانشيسكو توتي'
 ];
 
 // 🔍 دالة البحث المحسنة - مطابقة للتلميحات التدريجية
