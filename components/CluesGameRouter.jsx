@@ -112,7 +112,7 @@ export default function CluesGameRouter({ roomIdFromUrl = null }) {
           >
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
             <div className="relative px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 border border-purple-400/20 backdrop-blur-sm">
-              🎮 إنشاء غرفة جديدة
+               إنشاء غرفة جديدة
             </div>
           </button>
 

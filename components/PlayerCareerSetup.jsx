@@ -154,12 +154,10 @@ export default function PlayerCareerSetup({
             <div className="text-center mb-8">
               <h1 className="text-4xl md:text-5xl font-black text-white mb-4">
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-500">
-                  ⚽ مسيرة اللاعبين
+                   مسيرة اللاعبين
                 </span>
               </h1>
-              <p className="text-xl text-gray-400">
-                من يجيب أولاً يفوز!
-              </p>
+       
             </div>
 
             {/* اختيار الوضع */}
@@ -172,7 +170,6 @@ export default function PlayerCareerSetup({
                   <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="relative px-8 py-6 bg-gradient-to-r from-green-500/30 to-emerald-500/30 hover:from-green-500/50 hover:to-emerald-500/50 border-2 border-green-400/50 rounded-2xl font-bold text-xl text-white transition-all duration-300 hover:scale-105">
                     <div className="flex items-center justify-center gap-3">
-                      <span className="text-2xl">🏠</span>
                       إنشاء غرفة جديدة
                     </div>
                   </div>
@@ -198,7 +195,6 @@ export default function PlayerCareerSetup({
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
                     <div className="relative px-8 py-6 bg-gradient-to-r from-blue-500/30 to-indigo-500/30 hover:from-blue-500/50 hover:to-indigo-500/50 border-2 border-blue-400/50 rounded-2xl font-bold text-xl text-white transition-all duration-300 hover:scale-105">
                       <div className="flex items-center justify-center gap-3">
-                        <span className="text-2xl">🚪</span>
                         انضمام للغرفة
                       </div>
                     </div>
@@ -216,30 +212,17 @@ export default function PlayerCareerSetup({
             {/* انتظار إنشاء الغرفة */}
             {mode === 'hosting' && (
               <div className="text-center space-y-6">
-                <div className="text-6xl mb-4">🏠</div>
-                <h2 className="text-2xl font-bold text-white">غرفة جاهزة!</h2>
-                
+         
                 <div className="bg-white/5 border border-white/20 rounded-2xl p-6">
                   <p className="text-gray-400 mb-3">رقم الغرفة:</p>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="flex-1 bg-black/50 border border-white/20 rounded-xl px-4 py-3 text-white font-bold text-2xl text-center tracking-wider">
                       {roomId}
                     </div>
-                    <button
-                      onClick={copyRoomId}
-                      className="bg-gradient-to-r from-purple-500/30 to-indigo-500/30 hover:from-purple-500/50 hover:to-indigo-500/50 border border-purple-400/50 rounded-xl px-4 py-3 text-white font-bold transition-all duration-300 hover:scale-110"
-                    >
-                      📋
-                    </button>
+            
                   </div>
                   
-                  <p className="text-gray-400 mb-2 text-sm">أو انسخ الرابط:</p>
-                  <button
-                    onClick={copyRoomLink}
-                    className="w-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 border border-cyan-400/50 rounded-xl px-4 py-2 text-cyan-300 font-bold transition-all duration-300 hover:scale-105"
-                  >
-                    🔗 نسخ رابط الغرفة
-                  </button>
+          
                 </div>
 
                 {!opponentJoined ? (
@@ -254,7 +237,7 @@ export default function PlayerCareerSetup({
                 ) : (
                   <div className="space-y-4">
                     <div className="text-green-400 text-xl font-bold">
-                      ✅ انضم لاعب جديد!
+                       انضم لاعب جديد!
                     </div>
                     <button
                       onClick={startGame}
@@ -262,7 +245,7 @@ export default function PlayerCareerSetup({
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
                       <div className="relative px-8 py-6 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-2xl font-bold text-xl text-white transition-all duration-300 hover:scale-105">
-                        🚀 ابدأ اللعبة!
+                         ابدأ اللعبة!
                       </div>
                     </button>
                   </div>
@@ -305,7 +288,7 @@ export default function PlayerCareerSetup({
             )}
 
             {/* قواعد اللعبة */}
-            <div className="mt-8 bg-white/5 border border-white/10 rounded-2xl p-6">
+            {/* <div className="mt-8 bg-white/5 border border-white/10 rounded-2xl p-6">
               <h3 className="text-purple-400 font-bold text-lg mb-4 text-center">📋 قواعد اللعبة الجديدة</h3>
               <div className="space-y-3 text-sm text-gray-300">
                 <div className="flex items-start gap-2">
@@ -342,7 +325,7 @@ export default function PlayerCareerSetup({
                   ابحث عن "رونالدو" أو "كريستيانو" واختر من القائمة!
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

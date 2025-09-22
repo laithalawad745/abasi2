@@ -1,4 +1,4 @@
-// components/PlayerCareerGame.jsx - الحل النهائي لمشكلة إرسال السؤالين
+// components/PlayerCareerGame.jsx - إضافة زر "عجزت عن السؤال" بدون تعديل آلية الانتقال الأصلية
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -28,31 +28,66 @@ export default function PlayerCareerGame({
   const [winner, setWinner] = useState(null);
   const [gameFinished, setGameFinished] = useState(false);
   
-  // 🆕 نظام المحاولات - مطابق للتلميحات التدريجية
-const [attemptsLeft, setAttemptsLeft] = useState(3);
+  // نظام المحاولات - مطابق للتلميحات التدريجية
+  const [attemptsLeft, setAttemptsLeft] = useState(3);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [showingAnswer, setShowingAnswer] = useState(false);
   const [canAnswer, setCanAnswer] = useState(true);
   
-  // 🆕 متغيرات الفائز والانتقال التلقائي - مطابق للتلميحات
+  // متغيرات الفائز والانتقال التلقائي - مطابق للتلميحات
   const [roundWinner, setRoundWinner] = useState(null); // من فاز في هذا السؤال
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false); // إظهار الإجابة الصحيحة
   const [playersFinished, setPlayersFinished] = useState(new Set()); // تتبع اللاعبين الذين انتهوا
   
-  // 🔍 نظام البحث - مطابق للتلميحات التدريجية
+  // 🆕 إضافة نظام الاستسلام فقط - بدون تعديل باقي الآليات
+  const [playersGiveUp, setPlayersGiveUp] = useState([]); // قائمة اللاعبين الذين ضغطوا زر عجزت
+  const [hasGivenUp, setHasGivenUp] = useState(false); // هل ضغط اللاعب الحالي على الزر
+  
+  // نظام البحث - مطابق للتلميحات التدريجية
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
   const [isValidAnswer, setIsValidAnswer] = useState(false);
   
-  // 🔧 الحل النهائي - استخدام useRef بدلاً من state
+  // الحل النهائي - استخدام useRef بدلاً من state
   const lastQuestionSentTime = useRef(0);
   const transitionTimeoutRef = useRef(null);
   
   // مرجع القناة
   const channelRef = useRef(null);
   const searchInputRef = useRef(null);
+
+  // 🆕 دالة الاستسلام - مطابقة للتلميحات بالضبط
+  const handleGiveUp = useCallback(() => {
+    if (hasGivenUp || hasAnswered || roundWinner) return;
+
+    // إرسال إشعار الاستسلام للجميع
+    triggerPusherEvent('player-give-up', {
+      playerName: playerId,
+      roundNumber: currentRound
+    });
+
+    setHasGivenUp(true);
+    console.log('🏳️ تم تسجيل الاستسلام');
+  }, [hasGivenUp, hasAnswered, roundWinner, playerId, currentRound]);
+
+  // إرسال حدث عبر Pusher
+  const triggerPusherEvent = useCallback(async (event, data) => {
+    try {
+      await fetch('/api/pusher/trigger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channel: `player-career-${roomId}`,
+          event: event,
+          data: data
+        })
+      });
+    } catch (error) {
+      console.error('❌ خطأ في إرسال الحدث:', error);
+    }
+  }, [roomId]);
 
   // إعداد Pusher
   useEffect(() => {
@@ -73,17 +108,21 @@ const [attemptsLeft, setAttemptsLeft] = useState(3);
             [playerId]: 0,
             [opponentId]: 0
           });
-          console.log(' تهيئة النقاط للعبة جديدة');
+          console.log('🎯 تهيئة النقاط للعبة جديدة');
         }
         
         // إعادة تعيين كل شيء للسؤال الجديد
         setShowingAnswer(false);
         setHasAnswered(false);
         setCanAnswer(true);
-setAttemptsLeft(3);
+        setAttemptsLeft(3);
         setRoundWinner(null);
         setShowCorrectAnswer(false);
         setPlayersFinished(new Set());
+        
+        // 🆕 إعادة تعيين حالات الاستسلام
+        setPlayersGiveUp([]);
+        setHasGivenUp(false);
         
         // 🔧 تنظيف timeout السابق
         if (transitionTimeoutRef.current) {
@@ -105,7 +144,111 @@ setAttemptsLeft(3);
         }
       });
 
-      // 🆕 استقبال إجابة اللاعب - إصلاح تحديث النقاط + آلية عدم الفوز
+      // 🆕 استقبال الاستسلام - إضافة جديدة بدون تعديل الآليات الأصلية
+      gameChannel.bind('player-give-up', (data) => {
+        console.log('🏳️ لاعب استسلم:', data.playerName);
+        
+        setPlayersGiveUp(prev => {
+          if (!prev.includes(data.playerName)) {
+            const newGiveUpList = [...prev, data.playerName];
+            
+            // إضافة اللاعب المستسلم لـ playersFinished لتفعيل الآلية الأصلية
+            setPlayersFinished(prevFinished => {
+              const newFinished = new Set(prevFinished);
+              newFinished.add(data.playerName);
+              
+              console.log('🔚 اللاعبون المنتهون بعد الاستسلام:', Array.from(newFinished));
+              
+              // استخدام نفس الآلية الأصلية للانتقال
+              if (newFinished.size >= 2 && !roundWinner && isHost) {
+                console.log('🚫 لا يوجد فائز - التحضير للانتقال...');
+                
+                const now = Date.now();
+                if (now - lastQuestionSentTime.current < 3000) {
+                  console.log('🚫 منع إرسال سؤال مكرر - تم إرسال سؤال مؤخراً');
+                  return newFinished;
+                }
+                
+                if (transitionTimeoutRef.current) {
+                  console.log('🚫 إلغاء timeout سابق');
+                  clearTimeout(transitionTimeoutRef.current);
+                }
+                
+                transitionTimeoutRef.current = setTimeout(() => {
+                  if (!roundWinner) {
+                    console.log('🚀 تنفيذ الانتقال للسؤال التالي...');
+                    
+                    // 🔧 إرسال event لإظهار الإجابة للجميع
+                    triggerPusherEvent('show-correct-answer', {
+                      playerName: currentPlayer?.name,
+                      isLastRound: currentRound >= totalRounds,
+                      currentScores: {
+                        [playerId]: gameScores[playerId] || 0,
+                        [opponentId]: gameScores[opponentId] || 0
+                      }
+                    });
+                  }
+                }, 1000);
+              }
+              
+              return newFinished;
+            });
+            
+            return newGiveUpList;
+          }
+          return prev;
+        });
+      });
+
+      // 🆕 استقبال إظهار الإجابة الصحيحة للجميع
+      gameChannel.bind('show-correct-answer', (data) => {
+        console.log('✅ إظهار الإجابة الصحيحة للجميع:', data.playerName);
+        setShowCorrectAnswer(true);
+        
+        setTimeout(() => {
+          if (data.isLastRound) {
+            // إرسال event لإنهاء اللعبة للجميع
+            if (isHost) {
+              triggerPusherEvent('game-ended', {
+                finalScores: data.currentScores || {
+                  [playerId]: gameScores[playerId] || 0,
+                  [opponentId]: gameScores[opponentId] || 0
+                }
+              });
+            }
+          } else {
+            // الانتقال للسؤال التالي
+            if (isHost) {
+              nextRound();
+            }
+          }
+        }, 1500);
+      });
+
+      // 🆕 استقبال إنهاء اللعبة للجميع
+      gameChannel.bind('game-ended', (data) => {
+        console.log('🏁 انتهاء اللعبة للجميع:', data.finalScores);
+        
+        setGameScores(data.finalScores);
+        
+        const playerScore = data.finalScores[playerId] || 0;
+        const opponentScore = data.finalScores[opponentId] || 0;
+        
+        let finalWinner;
+        if (playerScore > opponentScore) {
+          finalWinner = playerId;
+        } else if (opponentScore > playerScore) {
+          finalWinner = opponentId;
+        } else {
+          finalWinner = playerId; // تعادل
+        }
+        
+        setWinner(finalWinner);
+        setGameFinished(true);
+        setGamePhase('finished');
+      });
+
+      // 🔧 استقبال إجابة اللاعب - الآلية الأصلية بالضبط بدون تعديل
       gameChannel.bind('player-answered', (data) => {
         console.log('📨 إجابة مستلمة:', data);
         
@@ -131,54 +274,41 @@ setAttemptsLeft(3);
               newScores[opponentId] = 0;
             }
             
-            // تحديد اللاعب الفائز وإضافة النقاط
-            if (data.playerId === playerId) {
-              newScores[playerId] += data.points;
-            } else {
-              newScores[opponentId] += data.points;
-            }
+            // إضافة النقاط للفائز
+            newScores[data.playerId] = (newScores[data.playerId] || 0) + data.points;
             
-            console.log('🏆 تحديث النقاط النهائي:');
-            console.log('- اللاعب الحالي:', playerId, '=', newScores[playerId]);
-            console.log('- المنافس:', opponentId, '=', newScores[opponentId]);
-            
+            console.log('📊 النقاط المحدثة:', newScores);
             return newScores;
           });
           
-          // إظهار الإجابة الصحيحة بعد ثانيتين
-          setTimeout(() => {
-            setShowCorrectAnswer(true);
-          }, 2000);
+          // إظهار الإجابة الصحيحة أولاً
+          setShowCorrectAnswer(true);
           
-          // بدء عملية الانتقال التلقائي بعد 5 ثوانِ
+          // ثم الانتقال للسؤال التالي - الآلية الأصلية
           setTimeout(() => {
-            if (isHost) {
-              if (currentRound >= totalRounds) {
-                // انتهاء اللعبة
+            if (currentRound >= totalRounds) {
+              // انتهاء اللعبة - إرسال للجميع مع النقاط المحدثة
+              if (isHost) {
+                // احصل على النقاط المحدثة
                 setGameScores(currentScores => {
-                  const playerScore = currentScores[playerId] || 0;
-                  const opponentScore = currentScores[opponentId] || 0;
+                  const updatedScores = { ...currentScores };
+                  updatedScores[data.playerId] = (updatedScores[data.playerId] || 0) + data.points;
                   
-                  let finalWinner;
-                  if (playerScore > opponentScore) {
-                    finalWinner = playerId;
-                  } else if (opponentScore > playerScore) {
-                    finalWinner = opponentId;
-                  } else {
-                    finalWinner = playerId; // تعادل
-                  }
+                  // إرسال النقاط النهائية
+                  triggerPusherEvent('game-ended', {
+                    finalScores: updatedScores
+                  });
                   
-                  setWinner(finalWinner);
-                  setGameFinished(true);
-                  setGamePhase('finished');
-                  return currentScores;
+                  return updatedScores;
                 });
-              } else {
-                // الانتقال للسؤال التالي
+              }
+            } else {
+              // الانتقال للسؤال التالي
+              if (isHost) {
                 nextRound();
               }
             }
-          }, 5000);
+          }, 1500);
           
         } else if (!data.isCorrect) {
           // إجابة خاطئة - لا نفعل شيء مع النقاط
@@ -187,7 +317,7 @@ setAttemptsLeft(3);
           }
         }
         
-        // 🆕 تتبع اللاعبين الذين انتهوا من المحاولات
+        // 🆕 تتبع اللاعبين الذين انتهوا من المحاولات - الآلية الأصلية
         if (data.attemptsLeft === 0 || data.isCorrect) {
           setPlayersFinished(prev => {
             const newFinished = new Set(prev);
@@ -196,7 +326,7 @@ setAttemptsLeft(3);
             console.log('🔚 لاعب انتهى:', data.playerId);
             console.log('🔚 اللاعبون المنتهون:', Array.from(newFinished));
             
-            // 🔧 الحل النهائي - منع التكرار باستخدام timeout + timestamp
+            // 🔧 الحل النهائي - منع التكرار باستخدام timeout + timestamp - الآلية الأصلية
             if (newFinished.size >= 2 && !roundWinner && isHost) {
               console.log('🚫 لا يوجد فائز - التحضير للانتقال...');
               
@@ -258,8 +388,8 @@ setAttemptsLeft(3);
         
         // تحديث حالة اللاعب الحالي فقط
         if (data.playerId === playerId) {
-          setHasAnswered(true);
-          setCanAnswer(false);
+          setHasAnswered(data.isCorrect || data.attemptsLeft <= 0);
+          setCanAnswer(!(data.isCorrect || data.attemptsLeft <= 0));
           setAttemptsLeft(data.attemptsLeft);
           
           if (data.isCorrect) {
@@ -270,369 +400,229 @@ setAttemptsLeft(3);
             setShowSuggestions(false);
             setIsValidAnswer(false);
           } else {
-            console.log('❌ إجابة خاطئة. المحاولات المتبقية:', data.attemptsLeft);
+            console.log('❌ إجابة خاطئة. محاولات متبقية:', data.attemptsLeft);
             if (data.attemptsLeft > 0) {
-              // السماح بمحاولة أخرى
+              // مسح الحقل للمحاولة التالية
+              setSearchQuery('');
+              setIsValidAnswer(false);
               setTimeout(() => {
-                setHasAnswered(false);
-                setCanAnswer(true);
-                setSearchQuery('');
-                setSuggestions([]);
-                setShowSuggestions(false);
-                setSelectedSuggestionIndex(-1);
-                setIsValidAnswer(false);
                 if (searchInputRef.current) {
                   searchInputRef.current.focus();
                 }
-              }, 2000);
+              }, 500);
             }
           }
         }
       });
 
       return () => {
-        // تنظيف المراجع عند إلغاء المكون
+        // تنظيف جميع الـ timeouts
         if (transitionTimeoutRef.current) {
           clearTimeout(transitionTimeoutRef.current);
         }
-        if (gameChannel) {
-          pusher.unsubscribe(`player-career-${roomId}`);
-        }
+        
+        gameChannel.unbind_all();
+        pusher.unsubscribe(`player-career-${roomId}`);
       };
     }
-  }, [pusher, roomId, playerId, opponentId, isHost, currentRound, totalRounds, gameScores, roundWinner]);
+  }, [pusher, roomId, isHost, playerId, opponentId, currentRound, totalRounds]);
 
-  // 🔍 تحديث الاقتراحات - مطابق للتلميحات التدريجية (منع الإدخال اليدوي)
-  const handleSearchChange = useCallback((e) => {
-    const newValue = e.target.value;
-    setSearchQuery(newValue);
+  // دالة الانتقال للجولة التالية - الآلية الأصلية بدون تعديل
+  const nextRound = useCallback(() => {
+    if (!isHost) return;
     
-    // 🔍 البحث عن اقتراحات
-    if (newValue.trim().length >= 2) {
-      const foundSuggestions = searchPlayers(newValue.trim());
-      setSuggestions(foundSuggestions);
-      setShowSuggestions(foundSuggestions.length > 0);
-      setSelectedSuggestionIndex(-1);
-      
-      // 🔧 إصلاح: منع الإدخال اليدوي - isValidAnswer = false دائماً عند الكتابة
-      setIsValidAnswer(false);
-    } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      setIsValidAnswer(false);
-    }
+    console.log('🔄 بدء الجولة التالية...');
     
-    // حفظ موضع المؤشر
-    const cursorPosition = e.target.selectionStart;
+    const now = Date.now();
+    lastQuestionSentTime.current = now;
     
-    // إعادة التركيز والموضع في الـ next tick
-    setTimeout(() => {
-      if (searchInputRef.current) {
-        searchInputRef.current.focus();
-        searchInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
-      }
-    }, 0);
-  }, []);
-
-  // 🎯 اختيار اقتراح من القائمة - مطابق للتلميحات التدريجية
-  const selectSuggestion = useCallback((suggestion) => {
-    setSearchQuery(suggestion);
-    setIsValidAnswer(true);
-    setShowSuggestions(false);
-    setSuggestions([]);
-    setSelectedSuggestionIndex(-1);
-    
-    // التركيز مرة أخرى على الحقل
-    setTimeout(() => {
-      if (searchInputRef.current) {
-        searchInputRef.current.focus();
-      }
-    }, 0);
-  }, []);
-
-  // 🎮 التعامل مع الكيبورد للاقتراحات
-  const handleKeyPress = useCallback((e) => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      if (showSuggestions && suggestions.length > 0) {
-        setSelectedSuggestionIndex(prev => 
-          prev < suggestions.length - 1 ? prev + 1 : 0
-        );
-      }
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      if (showSuggestions && suggestions.length > 0) {
-        setSelectedSuggestionIndex(prev => 
-          prev > 0 ? prev - 1 : suggestions.length - 1
-        );
-      }
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      if (showSuggestions && selectedSuggestionIndex >= 0) {
-        // اختيار الاقتراح المحدد
-        selectSuggestion(suggestions[selectedSuggestionIndex]);
-      } else if (isValidAnswer) {
-        // إرسال الإجابة إذا كانت صالحة
-        submitAnswer();
-      }
-    } else if (e.key === 'Escape') {
-      // إغلاق الاقتراحات
-      setShowSuggestions(false);
-      setSelectedSuggestionIndex(-1);
-    }
-  }, [showSuggestions, suggestions, selectedSuggestionIndex, selectSuggestion, isValidAnswer]);
-
-  // 🆕 إرسال الإجابة - تحديث واحد فقط
-  const submitAnswer = useCallback(() => {
-    if (!canAnswer || hasAnswered || !currentPlayer || !searchQuery.trim()) return;
-    
-    if (!isValidAnswer) {
-      if (searchInputRef.current) {
-        searchInputRef.current.focus();
-      }
+    const availablePlayers = playerCareerData.filter(p => !usedPlayers.includes(p.id));
+    if (availablePlayers.length === 0) {
+      console.log('⚠️ لا توجد لاعبين متاحين - إنهاء اللعبة');
+      setGamePhase('finished');
       return;
     }
     
-    console.log('🎯 إرسال إجابة:', searchQuery, 'الصحيحة:', currentPlayer.name);
+    const randomPlayer = availablePlayers[Math.floor(Math.random() * availablePlayers.length)];
+    const newUsedPlayers = [...usedPlayers, randomPlayer.id];
+    setUsedPlayers(newUsedPlayers);
     
-    // 🆕 تقييم الإجابة محلياً (كل لاعب يقيم إجابته بنفسه)
-    const isCorrect = isValidPlayerAnswer(searchQuery.trim(), currentPlayer.name);
-    const points = isCorrect ? 100 : 0;
-    const newAttemptsLeft = isCorrect ? attemptsLeft : attemptsLeft - 1;
+    const nextRoundNumber = currentRound + 1;
     
-    console.log('🔍 تقييم الإجابة:', isCorrect ? '✅ صحيحة' : '❌ خاطئة');
+    triggerPusherEvent('new-question', {
+      player: randomPlayer,
+      round: nextRoundNumber,
+      usedPlayers: newUsedPlayers
+    });
     
-    // 🔧 إصلاح: تحديث الحالة المحلية فوراً (بدون تحديث النقاط هنا)
-    if (isCorrect) {
-      setHasAnswered(true);
-      console.log('✅ أحسنت! ستحصل على', points, 'نقطة (ستُضاف عبر Pusher)');
+    console.log('✅ تم إرسال السؤال الجديد للجولة:', nextRoundNumber);
+  }, [isHost, usedPlayers, currentRound, triggerPusherEvent]);
+
+  // بدء سؤال جديد (المضيف فقط)
+  const startNewQuestion = useCallback(() => {
+    if (!isHost) return;
+    
+    const now = Date.now();
+    if (now - lastQuestionSentTime.current < 1000) {
+      console.log('⚠️ منع إرسال سؤال مكرر');
+      return;
+    }
+    lastQuestionSentTime.current = now;
+    
+    const availablePlayers = playerCareerData.filter(p => !usedPlayers.includes(p.id));
+    if (availablePlayers.length === 0) {
+      console.log('⚠️ لا توجد لاعبين متاحين');
+      return;
+    }
+    
+    const randomPlayer = availablePlayers[Math.floor(Math.random() * availablePlayers.length)];
+    const newUsedPlayers = [...usedPlayers, randomPlayer.id];
+    setUsedPlayers(newUsedPlayers);
+    
+    // 🔧 استخدام currentRound مباشرة بدلاً من إضافة 1
+    triggerPusherEvent('new-question', {
+      player: randomPlayer,
+      round: currentRound, // كان nextRound
+      usedPlayers: newUsedPlayers
+    });
+  }, [isHost, usedPlayers, currentRound, totalRounds, triggerPusherEvent]);
+
+  // التعامل مع البحث
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    
+    if (query.length >= 2) {
+      const results = searchPlayers(query);
+      setSuggestions(results.slice(0, 8));
+      setShowSuggestions(true);
+      setSelectedSuggestionIndex(-1);
+      
+      setIsValidAnswer(isValidPlayerName(query));
     } else {
-      setAttemptsLeft(newAttemptsLeft);
-      setSearchQuery('');
       setSuggestions([]);
       setShowSuggestions(false);
       setIsValidAnswer(false);
-      
-      if (newAttemptsLeft > 0) {
-        console.log(`❌ إجابة خاطئة! متبقي ${newAttemptsLeft} محاولات`);
-      } else {
-        setHasAnswered(true);
-        console.log('❌ انتهت محاولاتك!');
-      }
     }
-    
-    // إرسال الإجابة للجميع مع التقييم
-    fetch('/api/pusher/trigger', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        channel: `player-career-${roomId}`,
-        event: 'player-answered',
-        data: {
-          playerId: playerId,
-          playerName: playerId,
-          answer: searchQuery.trim(),
-          correctAnswer: currentPlayer.name,
-          isCorrect: isCorrect,
-          points: points,
-          attemptsLeft: newAttemptsLeft,
-          timestamp: Date.now()
-        }
-      })
-    }).then(() => {
-      console.log('📤 تم إرسال الإجابة بنجاح');
-    }).catch((error) => {
-      console.error('❌ خطأ في إرسال الإجابة:', error);
-    });
-  }, [canAnswer, hasAnswered, currentPlayer, searchQuery, isValidAnswer, playerId, roomId, attemptsLeft]);
+  };
 
-  // التعامل مع النقر خارج الاقتراحات
-  const handleInputBlur = useCallback((e) => {
-    // إخفاء الاقتراحات بعد تأخير للسماح بالنقر عليها
+  // اختيار اقتراح
+  const selectSuggestion = (suggestion) => {
+    setSearchQuery(suggestion);
+    setIsValidAnswer(true);
+    setShowSuggestions(false);
+    setSelectedSuggestionIndex(-1);
+    searchInputRef.current?.focus();
+  };
+
+  // التعامل مع الضغط على المفاتيح
+  const handleKeyPress = (e) => {
+    if (!showSuggestions || suggestions.length === 0) {
+      if (e.key === 'Enter' && isValidAnswer) {
+        submitAnswer();
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev => 
+          prev < suggestions.length - 1 ? prev + 1 : 0
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev => 
+          prev > 0 ? prev - 1 : suggestions.length - 1
+        );
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedSuggestionIndex >= 0) {
+          selectSuggestion(suggestions[selectedSuggestionIndex]);
+        } else if (isValidAnswer) {
+          submitAnswer();
+        }
+        break;
+      case 'Escape':
+        setShowSuggestions(false);
+        setSelectedSuggestionIndex(-1);
+        break;
+    }
+  };
+
+  // إرسال الإجابة
+  const submitAnswer = () => {
+    if (!searchQuery.trim() || hasAnswered || attemptsLeft <= 0 || roundWinner || hasGivenUp) return;
+
+    if (!isValidAnswer) {
+      console.log('يجب اختيار إجابة من القائمة المقترحة');
+      return;
+    }
+
+    const isCorrect = currentPlayer?.name === searchQuery.trim();
+    const points = isCorrect ? 100 : 0;
+    const newAttemptsLeft = isCorrect ? attemptsLeft : attemptsLeft - 1;
+
+    triggerPusherEvent('player-answered', {
+      playerId: playerId,
+      playerName: playerId,
+      answer: searchQuery.trim(),
+      isCorrect: isCorrect,
+      points: points,
+      attemptsLeft: newAttemptsLeft
+    });
+
+    if (isCorrect) {
+      setHasAnswered(true);
+    } else if (newAttemptsLeft <= 0) {
+      setHasAnswered(true);
+      setCanAnswer(false);
+    }
+  };
+
+  // التعامل مع النقر على الحقل
+  const handleInputClick = () => {
+    if (searchQuery.length >= 2) {
+      setShowSuggestions(true);
+    }
+  };
+
+  // التعامل مع blur
+  const handleInputBlur = () => {
     setTimeout(() => {
       setShowSuggestions(false);
       setSelectedSuggestionIndex(-1);
     }, 200);
-  }, []);
-
-  // التركيز على المربع
-  const handleInputClick = useCallback(() => {
-    if (searchInputRef.current) {
-      searchInputRef.current.focus();
-      
-      // إظهار الاقتراحات إذا كان هناك نص
-      if (searchQuery.trim().length >= 2) {
-        const foundSuggestions = searchPlayers(searchQuery.trim());
-        setSuggestions(foundSuggestions);
-        setShowSuggestions(foundSuggestions.length > 0);
-      }
-    }
-  }, [searchQuery]);
-
-  // 🔧 الجولة التالية - محسنة مع حماية من التكرار
-  const nextRound = () => {
-    if (!isHost) return;
-    
-    // 🛡️ حماية إضافية - التحقق من آخر مرة تم إرسال سؤال فيها
-    const now = Date.now();
-    if (now - lastQuestionSentTime.current < 2000) { // منع الإرسال خلال ثانيتين
-      console.log('🚫 منع إرسال سؤال مكرر - تم إرسال سؤال مؤخراً');
-      return;
-    }
-    
-    lastQuestionSentTime.current = now;
-    
-    const nextRoundNumber = currentRound + 1;
-    
-    if (nextRoundNumber <= totalRounds) {
-      // اختيار لاعب جديد
-      const availablePlayers = playerCareerData.filter(p => 
-        !usedPlayers.includes(p.id)
-      );
-      
-      let newPlayer;
-      if (availablePlayers.length > 0) {
-        const randomIndex = Math.floor(Math.random() * availablePlayers.length);
-        newPlayer = availablePlayers[randomIndex];
-      } else {
-        // إذا انتهت الأسئلة، اختر عشوائياً
-        const randomIndex = Math.floor(Math.random() * playerCareerData.length);
-        newPlayer = playerCareerData[randomIndex];
-      }
-      
-      // إضافة اللاعب للمستخدمين
-      setUsedPlayers(prev => [...prev, newPlayer.id]);
-      
-      console.log('📤 إرسال سؤال جديد:', newPlayer.name, 'الجولة:', nextRoundNumber);
-      
-      fetch('/api/pusher/trigger', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          channel: `player-career-${roomId}`,
-          event: 'new-question',
-          data: {
-            player: newPlayer,
-            round: nextRoundNumber,
-            hostId: playerId
-          }
-        })
-      }).catch(console.error);
-    } else {
-      // انتهاء اللعبة
-      const playerScore = gameScores[playerId] || 0;
-      const opponentScore = gameScores[opponentId] || 0;
-      
-      let finalWinner;
-      if (playerScore > opponentScore) {
-        finalWinner = playerId;
-      } else if (opponentScore > playerScore) {
-        finalWinner = opponentId;
-      } else {
-        finalWinner = playerId; // تعادل
-      }
-      
-      setWinner(finalWinner);
-      setGameFinished(true);
-      setGamePhase('finished');
-    }
   };
 
-  // بدء اللعبة (للمضيف فقط)
-  const startGame = () => {
-    if (!isHost) return;
-    
-    const randomIndex = Math.floor(Math.random() * playerCareerData.length);
-    const firstPlayer = playerCareerData[randomIndex];
-    
-    setUsedPlayers([firstPlayer.id]);
-    lastQuestionSentTime.current = Date.now();
-    
-    fetch('/api/pusher/trigger', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        channel: `player-career-${roomId}`,
-        event: 'new-question',
-        data: {
-          player: firstPlayer,
-          round: 1,
-          hostId: playerId
-        }
-      })
-    }).catch(console.error);
-  };
-
-  // في مرحلة الانتظار
-  if (gamePhase === 'waiting') {
-    return (
-      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
-        {/* خلفية متحركة */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        </div>
-
-        <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-8">
-          <div className="text-center">
-            <h1 className="text-5xl font-bold text-white mb-6">🔍 مسيرة اللاعبين</h1>
-            <p className="text-xl text-gray-400 mb-8">انتظار بدء اللعبة...</p>
-            
-            {isHost && (
-              <button
-                onClick={startGame}
-                className="px-8 py-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-bold rounded-2xl hover:scale-105 transition-all duration-300"
-              >
-                🚀 بدء اللعبة
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // اللعبة منتهية
-  if (gamePhase === 'finished') {
-    return (
-      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/20 rounded-full blur-3xl animate-pulse"></div>
-        </div>
-
-        <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-8">
-          <div className="text-center bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-12">
-            <h1 className="text-6xl font-bold text-white mb-8"> انتهت اللعبة!</h1>
-            
-            <div className="text-xl text-white space-y-2">
-              <div>أنت: {gameScores[playerId] || 0} نقطة</div>
-              <div>المنافس: {gameScores[opponentId] || 0} نقطة</div>
-            </div>
-            
-            <Link 
-              href="/"
-              className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all duration-300 hover:scale-105 inline-block mt-8"
-            >
-              ← العودة للرئيسية
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // الواجهة الرئيسية للعبة
   return (
     <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
       {/* خلفية متحركة */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-cyan-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
         <div className="absolute top-1/2 right-1/2 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
       </div>
 
       <div className="relative z-10 p-6 md:p-8">
-        {/* شريط النقاط - مُحسن لعرض النقاط الصحيحة */}
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div className="text-4xl md:text-5xl font-black text-white tracking-wider">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
+              مسيرة لاعب
+            </span>
+          </div>
+          <Link 
+            href="/"
+            className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all duration-300"
+          >
+            ← العودة للرئيسية
+          </Link>
+        </div>
+
+        {/* النقاط والجولة */}
         <div className="flex justify-between items-center mb-8">
           <div className="flex gap-6">
             <div className={`px-6 py-3 border-2 rounded-2xl font-bold text-xl transition-all duration-300 ${
@@ -658,7 +648,6 @@ setAttemptsLeft(3);
             <div className="text-white font-bold text-lg">
               الجولة {currentRound} / {totalRounds}
             </div>
-  
           </div>
         </div>
 
@@ -667,7 +656,11 @@ setAttemptsLeft(3);
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
             
             {/* عنوان السؤال */}
-    
+            <div className="text-center mb-8">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                من هذا اللاعب؟
+              </h2>
+            </div>
 
             {/* مسيرة اللاعب */}
             {currentPlayer && gamePhase === 'showing-career' && (
@@ -676,15 +669,13 @@ setAttemptsLeft(3);
                 <div className="text-center mb-8">
                   <div className="inline-block px-6 py-3 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border-2 border-purple-400/50 rounded-2xl">
                     <div className="text-2xl text-purple-400 font-bold">
-                      💡 {currentPlayer.hint}
+                       {currentPlayer.hint}
                     </div>
                   </div>
                 </div>
 
                 {/* المسيرة الكاملة */}
                 <div className="space-y-6">
-        
-                  
                   <div className="flex flex-wrap items-center justify-center gap-3 md:gap-6 bg-gradient-to-r from-slate-800/50 to-slate-700/50 backdrop-blur-md border border-white/10 rounded-2xl p-6">
                     {currentPlayer.career.map((club, index) => (
                       <React.Fragment key={index}>
@@ -714,7 +705,7 @@ setAttemptsLeft(3);
                   </div>
                 </div>
 
-                {/* 🆕 إظهار من فاز بالسؤال - مطابق للتلميحات التدريجية */}
+                {/* إظهار من فاز بالسؤال */}
                 {roundWinner && !showCorrectAnswer && (
                   <div className="text-center">
                     <div className="inline-block px-8 py-4 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-400/50 rounded-2xl">
@@ -734,11 +725,12 @@ setAttemptsLeft(3);
                         <span className="text-white/70">المحاولات المتبقية:</span>
                         <div className="flex gap-1">
                           {[...Array(3)].map((_, i) => (
-
                             <div
                               key={i}
                               className={`w-3 h-3 rounded-full ${
-                                i < attemptsLeft ? 'bg-green-500' : 'bg-red-500/50'
+                                i < attemptsLeft
+                                  ? 'bg-green-500'
+                                  : 'bg-red-500/50'
                               }`}
                             />
                           ))}
@@ -746,7 +738,6 @@ setAttemptsLeft(3);
                       </div>
                     </div>
 
-      
                     {/* مربع البحث مطابق للتلميحات التدريجية */}
                     <div className="relative">
                       <input
@@ -758,7 +749,7 @@ setAttemptsLeft(3);
                         onKeyDown={handleKeyPress}
                         onClick={handleInputClick}
                         onBlur={handleInputBlur}
-                        disabled={!canAnswer || hasAnswered}
+                        disabled={!canAnswer || hasAnswered || hasGivenUp}
                         className={`w-full px-6 py-4 pr-14 text-xl text-white bg-slate-800/50 border-2 rounded-2xl focus:outline-none transition-all duration-300 placeholder-gray-400 ${
                           isValidAnswer 
                             ? 'border-green-500 focus:border-green-400 shadow-lg shadow-green-500/20' 
@@ -769,11 +760,11 @@ setAttemptsLeft(3);
                       />
                       
                       {/* أيقونة البحث */}
-                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+                      {/* <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
                         <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
-                      </div>
+                      </div> */}
 
                       {/* قائمة الاقتراحات */}
                       {showSuggestions && suggestions.length > 0 && (
@@ -783,10 +774,10 @@ setAttemptsLeft(3);
                               key={index}
                               className={`px-6 py-3 cursor-pointer transition-colors border-b border-gray-700 last:border-b-0 ${
                                 index === selectedSuggestionIndex 
-                                  ? 'bg-purple-600/50 text-white' 
-                                  : 'text-gray-300 hover:bg-gray-700'
+                                  ? 'bg-purple-600/30 text-white' 
+                                  : 'text-gray-300 hover:bg-slate-700'
                               }`}
-                              onClick={() => selectSuggestion(suggestion)}
+                              onMouseDown={() => selectSuggestion(suggestion)}
                             >
                               {suggestion}
                             </div>
@@ -795,39 +786,115 @@ setAttemptsLeft(3);
                       )}
                     </div>
 
-                    {/* زر الإرسال */}
-                    <button
-                      onClick={submitAnswer}
-                      disabled={!canAnswer || hasAnswered || !isValidAnswer}
-                      className={`w-full mt-6 px-6 py-4 rounded-2xl font-bold text-xl transition-all duration-300 ${
-                        isValidAnswer && canAnswer && !hasAnswered
-                          ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white hover:scale-105 shadow-lg shadow-green-500/30'
-                          : 'bg-gray-600/50 text-gray-400 cursor-not-allowed'
-                      }`}
-                    >
-                      {hasAnswered ? '⏳ انتظار...' : ' إرسال الإجابة'}
-                    </button>
+                    {/* أزرار الإجابة والاستسلام */}
+                    <div className="flex gap-4 mt-6">
+                      <button
+                        onClick={submitAnswer}
+                        disabled={!isValidAnswer || hasAnswered || hasGivenUp}
+                        className={`flex-1 px-6 py-3 rounded-xl font-bold transition-all duration-300 ${
+                          isValidAnswer && !hasAnswered && !hasGivenUp
+                            ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg shadow-purple-500/30'
+                            : 'bg-white/5 text-white/30 cursor-not-allowed border border-white/10'
+                        }`}
+                      >
+                        إرسال الإجابة
+                      </button>
+
+                      {/* 🆕 زر "عجزت عن السؤال" - إضافة جديدة فقط */}
+                      {!hasAnswered && !hasGivenUp && !roundWinner && (
+                        <button
+                          onClick={handleGiveUp}
+                          className="flex-1 px-4 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-xl font-bold hover:from-gray-700 hover:to-gray-800 transition-all duration-300"
+                        >
+                           عجزت عن السؤال
+                        </button>
+                      )}
+                    </div>
+
+                    {/* 🆕 إشعار الاستسلام - إضافة جديدة فقط */}
+                    {hasGivenUp && (
+                      <div className="mt-4 p-3 bg-gray-600/20 border border-gray-500/50 rounded-xl text-center">
+                        <p className="text-gray-300">لقد استسلمت - في انتظار المنافس</p>
+                        <p className="text-sm text-gray-400 mt-1">
+                          استسلم {playersGiveUp.length} من أصل 2 لاعبين
+                        </p>
+                      </div>
+                    )}
+
+                    {/* نصائح للمستخدم */}
+                    {/* {!isValidAnswer && searchQuery.length > 0 && !hasGivenUp && (
+                      <div className="mt-4 text-center">
+                        <p className="text-yellow-400 text-sm">
+                          💡 ابدأ بكتابة جزء من اسم اللاعب واختر من الاقتراحات
+                        </p>
+                      </div>
+                    )} */}
                   </div>
                 )}
 
-                {/* عرض الإجابة الصحيحة */}
+                {/* الإجابة الصحيحة */}
                 {showCorrectAnswer && (
-                  <div className="text-center mt-8">
-                    <div className="inline-block px-8 py-6 bg-gradient-to-r from-emerald-500/20 to-green-500/20 border-2 border-emerald-400/50 rounded-2xl">
-                      <h4 className="text-2xl text-emerald-400 font-bold mb-2">
-                        ✅ الإجابة الصحيحة:
-                      </h4>
-                      <p className="text-3xl font-bold text-white">
-                        {currentPlayer.name}
-                      </p>
-                      {!roundWinner && (
-                        <p className="text-xl text-gray-400 mt-2">
-                          لم يجب أي لاعب إجابة صحيحة
-                        </p>
-                      )}
+                  <div className="text-center">
+                    <div className="p-6 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-400/50 rounded-2xl">
+                      <h3 className="text-2xl font-bold text-white mb-2"> الإجابة الصحيحة:</h3>
+                      <p className="text-3xl font-bold text-green-400">{currentPlayer?.name}</p>
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* شاشة الانتظار */}
+            {gamePhase === 'waiting' && (
+              <div className="text-center">
+                <div className="text-2xl text-white mb-4">في انتظار المضيف لبدء اللعبة...</div>
+                {isHost && (
+                  <button
+                    onClick={startNewQuestion}
+                    className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-2xl font-bold text-xl hover:from-cyan-600 hover:to-blue-600 transition-all duration-300"
+                  >
+                    بدء اللعبة
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* شاشة انتهاء اللعبة */}
+            {gamePhase === 'finished' && (
+              <div className="text-center">
+                <h2 className="text-4xl font-bold text-white mb-8"> انتهت اللعبة!</h2>
+                
+                <div className="space-y-4 mb-8">
+                  <div className="text-2xl">
+                    <span className="text-white">النتيجة النهائية:</span>
+                  </div>
+                  <div className="flex justify-center gap-8">
+                    <div className={`text-xl font-bold ${gameScores[playerId] > gameScores[opponentId] ? 'text-green-400' : 'text-red-400'}`}>
+                      أنت: {gameScores[playerId]} نقطة
+                    </div>
+                    <div className={`text-xl font-bold ${gameScores[opponentId] > gameScores[playerId] ? 'text-green-400' : 'text-red-400'}`}>
+                      المنافس: {gameScores[opponentId]} نقطة
+                    </div>
+                  </div>
+                  
+                  <div className="text-3xl font-bold text-yellow-400">
+                    {gameScores[playerId] > gameScores[opponentId] 
+                      ? ' أنت الفائز!' 
+                      : gameScores[playerId] < gameScores[opponentId]
+                        ? ' فاز المنافس!'
+                        : ' تعادل!'
+                    }
+                  </div>
+                </div>
+
+                <div className="flex gap-4 justify-center">
+                  <Link 
+                    href="/"
+                    className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-2xl font-bold hover:from-cyan-600 hover:to-blue-600 transition-all duration-300"
+                  >
+                    العودة للرئيسية
+                  </Link>
+                </div>
               </div>
             )}
           </div>
