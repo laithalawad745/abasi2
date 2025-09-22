@@ -535,19 +535,19 @@ export default function PlayerCareerLocalGame() {
                         onClick={handleGiveUp}
                         className="flex-1 px-4 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-xl font-bold hover:from-gray-700 hover:to-gray-800 transition-all duration-300"
                       >
-                        🏳️ عجزت عن السؤال
+                         عجزت عن السؤال
                       </button>
                     )}
                   </div>
 
                   {/* نصائح للمستخدم */}
-                  {!isValidAnswer && searchQuery.length > 0 && (
+                  {/* {!isValidAnswer && searchQuery.length > 0 && (
                     <div className="mt-4 text-center">
                       <p className="text-yellow-400 text-sm">
                         💡 ابدأ بكتابة جزء من اسم اللاعب واختر من الاقتراحات
                       </p>
                     </div>
-                  )}
+                  )} */}
                 </div>
               )}
 
@@ -555,7 +555,7 @@ export default function PlayerCareerLocalGame() {
               {showCorrectAnswer && (
                 <div className="text-center">
                   <div className="p-6 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-400/50 rounded-2xl">
-                    <h3 className="text-2xl font-bold text-white mb-2">✅ الإجابة الصحيحة:</h3>
+                    <h3 className="text-2xl font-bold text-white mb-2"> الإجابة الصحيحة:</h3>
                     <p className="text-3xl font-bold text-green-400">{currentPlayer?.name}</p>
                   </div>
                 </div>
@@ -568,7 +568,7 @@ export default function PlayerCareerLocalGame() {
         {gamePhase === 'finished' && (
           <div className="max-w-4xl mx-auto text-center">
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
-              <h2 className="text-4xl font-bold text-white mb-8">🏁 انتهت اللعبة!</h2>
+              <h2 className="text-4xl font-bold text-white mb-8"> انتهت اللعبة!</h2>
               
               <div className="space-y-4 mb-8">
                 <div className="text-2xl">
@@ -612,26 +612,26 @@ export default function PlayerCareerLocalGame() {
                 <div className="text-3xl font-bold text-yellow-400 mt-6">
                   {(() => {
                     const winner = getWinner();
-                    if (!winner) return '🤝 تعادل!';
-                    return `🎉 ${winner.name} هو الفائز!`;
+                    if (!winner) return ' تعادل!';
+                    return ` ${winner.name} هو الفائز!`;
                   })()}
                 </div>
               </div>
 
               <div className="flex gap-4 justify-center">
-                <button
+                {/* <button
                   onClick={() => window.location.reload()}
                   className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-2xl font-bold hover:from-green-600 hover:to-emerald-600 transition-all duration-300"
                 >
-                  🔄 لعب مرة أخرى
-                </button>
+                   لعب مرة أخرى
+                </button> */}
                 
-                <Link 
-                  href="/player-career"
-                  className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-2xl font-bold hover:from-cyan-600 hover:to-blue-600 transition-all duration-300"
-                >
-                  ← العودة للخيارات
-                </Link>
+              <Link 
+                             href="/"
+                             className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-2xl font-bold hover:from-cyan-600 hover:to-blue-600 transition-all duration-300"
+                           >
+                             العودة للرئيسية
+                           </Link>
               </div>
             </div>
           </div>

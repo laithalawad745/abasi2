@@ -189,19 +189,19 @@ export const playerCareerData = [
   },
 
   // مدربين
-  {
-    id: 'guardiola',
-    name: 'بيب جوارديولا',
-    hint: 'مدرب حالي',
-    career: [
-      { club: 'barcelona', name: 'برشلونة' }, // كلاعب
-      { club: 'brescia', name: 'بريشيا' },
-      { club: 'roma', name: 'روما' },
-      { club: 'brescia', name: 'بريشيا' },
-      { club: 'al-ahli-doha', name: 'الأهلي الدوحة' }
-    ],
-    difficulty: 'hard'
-  },
+  // {
+  //   id: 'guardiola',
+  //   name: 'بيب جوارديولا',
+  //   hint: 'مدرب حالي',
+  //   career: [
+  //     { club: 'barcelona', name: 'برشلونة' }, 
+  //     { club: 'brescia', name: 'بريشيا' },
+  //     { club: 'roma', name: 'روما' },
+  //     { club: 'brescia', name: 'بريشيا' },
+  //     { club: 'al-ahli-doha', name: 'الأهلي الدوحة' }
+  //   ],
+  //   difficulty: 'hard'
+  // },
   {
   id: 'kaka',
   name: 'كاكا',
