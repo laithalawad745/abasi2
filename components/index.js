@@ -1,4 +1,4 @@
-// components/index.js - تحديث الملف ليشمل لعبة أوجد الدولة
+// components/index.js - تحديث الملف لإضافة لعبة الرهان
 export { default as QuizGame } from './QuizGame';
 export { default as GameSetup } from './GameSetup';
 export { default as TeamScores } from './TeamScores';
@@ -51,11 +51,12 @@ export { default as QROnlyGame } from './QROnlyGame';
 export { default as FindCountryGame } from './FindCountryGame';
 export { default as FindCountryWorldMap } from './FindCountryWorldMap';
 
-// إضافة هذه الأسطر لملف components/index.js:
-
 // 🆕 لعبة مسيرة اللاعبين
 export { default as PlayerCareerGame } from './PlayerCareerGame';
 export { default as PlayerCareerGameRouter } from './PlayerCareerGameRouter';
 export { default as PlayerCareerSetup } from './PlayerCareerSetup';
 
 export { default as QuestionAnswerGame } from './QuestionAnswerGame';
+
+// 🆕 لعبة الرهان
+export { default as BettingGame } from './BettingGame';
