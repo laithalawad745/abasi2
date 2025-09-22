@@ -779,7 +779,7 @@ export default function QuestionAnswerGame() {
       showInfoToast(`تم إلغاء اختيار ${questionTypes.find(t => t.id === typeId).name}`);
     } else if (selectedTypes.length < 6) {
       setSelectedTypes([...selectedTypes, typeId]);
-      showSuccessToast(`تم اختيار ${questionTypes.find(t => t.id === typeId).name}`);
+      // showSuccessToast(`تم اختيار ${questionTypes.find(t => t.id === typeId).name}`);
     } else {
       showErrorToast('يمكنك اختيار 6 أنواع أسئلة فقط!');
     }
