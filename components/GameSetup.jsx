@@ -324,7 +324,36 @@ export default function GameSetup() {
                 </div>
               </div>
             </Link>
-
+<Link href="/question-answer" className="group">
+  <div className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl hover:bg-white/10 transition-all duration-500 hover:scale-105 hover:border-purple-500/50">
+    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+    
+    <div className="relative z-10">
+      <div className="w-20 h-20 bg-gradient-to-br from-purple-400 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+        <span className="text-3xl">🎯</span>
+      </div>
+      
+      <h3 className="text-2xl font-bold text-white mb-3 text-center">سؤال و جواب</h3>
+      <p className="text-gray-400 text-center text-sm leading-relaxed">
+        اختر 6 أنواع أسئلة من أصل 8 واستمتع بالتحدي المعرفي مع الأصدقاء
+      </p>
+      
+      <div className="mt-4 text-center">
+        <span className="inline-block px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs font-medium">
+          📊 6 فئات × 6 أسئلة
+        </span>
+      </div>
+    </div>
+    
+    <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+      <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
+        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</Link>
           </div>
         </div>
 

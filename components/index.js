@@ -57,3 +57,5 @@ export { default as FindCountryWorldMap } from './FindCountryWorldMap';
 export { default as PlayerCareerGame } from './PlayerCareerGame';
 export { default as PlayerCareerGameRouter } from './PlayerCareerGameRouter';
 export { default as PlayerCareerSetup } from './PlayerCareerSetup';
+
+export { default as QuestionAnswerGame } from './QuestionAnswerGame';
