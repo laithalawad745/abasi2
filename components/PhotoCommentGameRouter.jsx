@@ -1,174 +1,109 @@
-// components/PhotoCommentGameRouter.jsx - النسخة الكاملة مع إصلاح الانتقال بين المراحل
+// components/PhotoCommentGameRouter.jsx - محدث مع إصلاح انتقال الجولات
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Pusher from 'pusher-js';
-import { ToastContainer, toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast, showInfoToast, showWarningToast } from './ToastNotification';
+import { ToastContainer } from 'react-toastify';
 
-const showSuccessToast = (message) => toast.success(message, { rtl: true });
-const showErrorToast = (message) => toast.error(message, { rtl: true });
-const showInfoToast = (message) => toast.info(message, { rtl: true });
-
-export default function PhotoCommentGameRouter({ roomIdFromUrl = null }) {
-  const [currentView, setCurrentView] = useState('home');
+export default function PhotoCommentGameRouter() {
+  const [gameMode, setGameMode] = useState('setup');
   const [roomId, setRoomId] = useState('');
   const [playerName, setPlayerName] = useState('');
   const [isHost, setIsHost] = useState(false);
+  const [createError, setCreateError] = useState('');
+  const [joinError, setJoinError] = useState('');
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (roomIdFromUrl) {
-      setRoomId(roomIdFromUrl);
-      setCurrentView('join');
+    const urlRoomId = searchParams.get('room');
+    if (urlRoomId) {
+      setRoomId(urlRoomId);
+      setGameMode('join');
     }
-  }, [roomIdFromUrl]);
+  }, [searchParams]);
+
+  const generateRoomId = () => {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  };
 
   const createRoom = () => {
     if (!playerName.trim()) {
-      showErrorToast('يرجى إدخال اسمك أولاً');
+      setCreateError('يرجى إدخال اسم اللاعب');
       return;
     }
-    const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+    
+    const newRoomId = generateRoomId();
     setRoomId(newRoomId);
     setIsHost(true);
-    setCurrentView('game');
-    showSuccessToast(`تم إنشاء الغرفة: ${newRoomId}`);
+    setGameMode('game');
+    setCreateError('');
   };
 
   const joinRoom = () => {
     if (!playerName.trim() || !roomId.trim()) {
-      showErrorToast('يرجى إدخال البيانات المطلوبة');
+      setJoinError('يرجى إدخال اسم اللاعب ورمز الغرفة');
       return;
     }
+    
     setIsHost(false);
-    setCurrentView('game');
-    showSuccessToast(`انضممت للغرفة: ${roomId}`);
+    setGameMode('game');
+    setJoinError('');
   };
 
   const goHome = () => {
-    setCurrentView('home');
-    setRoomId('');
-    setPlayerName('');
-    setIsHost(false);
+    router.push('/');
   };
 
-  // صفحات UI
-  if (currentView === 'home') {
+  if (gameMode === 'setup') {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center p-4">
-        <div className="text-center space-y-8">
-          <h1 className="text-6xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
-            صورة وتعليق
-          </h1>
-          <div className="flex gap-4 max-w-md mx-auto">
-            <button
-              onClick={() => setCurrentView('create')}
-              className="flex-1 px-8 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-2xl font-bold hover:from-orange-600 hover:to-red-600 transition-all"
-            >
-              🏠 إنشاء غرفة
-            </button>
-            <button
-              onClick={() => setCurrentView('join')}
-              className="flex-1 px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl font-bold hover:from-purple-600 hover:to-pink-600 transition-all"
-            >
-              🚪 انضمام
-            </button>
-          </div>
-        </div>
+      <>
+        <PhotoCommentSetup
+          onCreateRoom={() => setGameMode('create')}
+          onJoinRoom={() => setGameMode('join')}
+          onGoHome={goHome}
+        />
         <ToastContainer />
-      </div>
+      </>
     );
   }
 
-  if (currentView === 'create') {
+  if (gameMode === 'create') {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center p-4">
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 w-full max-w-md">
-          <h2 className="text-3xl font-bold text-white mb-6 text-center">إنشاء غرفة جديدة</h2>
-          <div className="space-y-6">
-            <div>
-              <label className="block text-white mb-2 font-medium">اسمك</label>
-              <input
-                type="text"
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-orange-400"
-                placeholder="أدخل اسمك..."
-                maxLength={20}
-              />
-            </div>
-            <div className="flex gap-4">
-              <button
-                onClick={() => setCurrentView('home')}
-                className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20"
-              >
-                ← رجوع
-              </button>
-              <button
-                onClick={createRoom}
-                disabled={!playerName.trim()}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-bold disabled:opacity-50"
-              >
-                إنشاء الغرفة
-              </button>
-            </div>
-          </div>
-        </div>
+      <>
+        <PhotoCommentCreate
+          playerName={playerName}
+          setPlayerName={setPlayerName}
+          createRoom={createRoom}
+          createError={createError}
+          onGoBack={() => setGameMode('setup')}
+        />
         <ToastContainer />
-      </div>
+      </>
     );
   }
 
-  if (currentView === 'join') {
+  if (gameMode === 'join') {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center p-4">
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 w-full max-w-md">
-          <h2 className="text-3xl font-bold text-white mb-6 text-center">انضمام لغرفة</h2>
-          <div className="space-y-6">
-            <div>
-              <label className="block text-white mb-2 font-medium">اسمك</label>
-              <input
-                type="text"
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-purple-400"
-                placeholder="أدخل اسمك..."
-                maxLength={20}
-              />
-            </div>
-            <div>
-              <label className="block text-white mb-2 font-medium">رمز الغرفة</label>
-              <input
-                type="text"
-                value={roomId}
-                onChange={(e) => setRoomId(e.target.value.toUpperCase())}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-purple-400 text-center font-mono text-lg"
-                placeholder="ABC123"
-                maxLength={6}
-              />
-            </div>
-            <div className="flex gap-4">
-              <button
-                onClick={() => setCurrentView('home')}
-                className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20"
-              >
-                ← رجوع
-              </button>
-              <button
-                onClick={joinRoom}
-                disabled={!playerName.trim() || !roomId.trim()}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold disabled:opacity-50"
-              >
-                انضمام للغرفة
-              </button>
-            </div>
-          </div>
-        </div>
+      <>
+        <PhotoCommentJoin
+          playerName={playerName}
+          setPlayerName={setPlayerName}
+          roomId={roomId}
+          setRoomId={setRoomId}
+          joinRoom={joinRoom}
+          joinError={joinError}
+          onGoBack={() => setGameMode('setup')}
+        />
         <ToastContainer />
-      </div>
+      </>
     );
   }
 
-  if (currentView === 'game') {
+  if (gameMode === 'game') {
     return (
       <>
         <PhotoCommentGame
@@ -235,7 +170,7 @@ function PhotoCommentGame({ roomId, playerName, isHost, onExit }) {
           ctx.drawImage(img, 0, 0, width, height);
           
           const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-          console.log(`📦 حجم الصورة بعد الضغط: ${(compressedDataUrl.length / 1024).toFixed(2)}KB`);
+          console.log(`🗜️ تم ضغط الصورة: ${Math.round(compressedDataUrl.length / 1024)}KB`);
           resolve(compressedDataUrl);
         } catch (error) {
           reject(error);
@@ -247,113 +182,139 @@ function PhotoCommentGame({ roomId, playerName, isHost, onExit }) {
     });
   };
 
-  // إرسال حدث عبر Pusher
-  const triggerPusherEvent = useCallback(async (event, data) => {
+  // دالة إرسال أحداث Pusher
+  const triggerPusherEvent = useCallback(async (eventName, data) => {
     try {
-      console.log(`📤 إرسال: ${event}`, data);
+      console.log(`📤 إرسال حدث: ${eventName}`, data);
       
       const response = await fetch('/api/pusher/trigger', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           channel: `photo-comment-${roomId}`,
-          event: event,
-          data: { ...data, timestamp: Date.now() }
+          event: eventName,
+          data: data
         })
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
-      console.log(`✅ تم إرسال: ${event}`);
-      return result;
+      console.log(`✅ تم إرسال ${eventName} بنجاح:`, result);
     } catch (error) {
-      console.error(`❌ خطأ في إرسال ${event}:`, error);
-      showErrorToast(`فشل في إرسال ${event}`);
-      throw error;
+      console.error(`❌ خطأ في إرسال ${eventName}:`, error);
+      showErrorToast(`خطأ في إرسال البيانات: ${eventName}`);
     }
   }, [roomId]);
 
-  // رفع صورة محسن
-  const handlePhotoUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      showErrorToast('يرجى اختيار ملف صورة صالح');
-      return;
-    }
-
-    if (file.size > 20 * 1024 * 1024) {
-      showErrorToast('حجم الصورة كبير جداً (أكثر من 20MB)');
-      return;
-    }
-
-    setUploading(true);
+  // 🔥 الجديد - فحص اكتمال التخمينات وحساب النقاط والانتقال للجولة التالية
+  useEffect(() => {
+    // إجمالي التخمينات المطلوبة = عدد اللاعبين × عدد التعليقات (الجميع يصوت لكل تعليق)
+    const totalGuessesNeeded = players.length * comments.length;
+    const currentGuessesCount = Object.keys(guessResults).length;
     
-    try {
-      showInfoToast('جاري معالجة الصورة...');
+    console.log(`🔍 فحص التخمينات: ${currentGuessesCount}/${totalGuessesNeeded}, المرحلة: ${gamePhase}, المضيف: ${isHost}`);
+    
+    if (gamePhase === 'guessing' && currentGuessesCount >= totalGuessesNeeded && totalGuessesNeeded > 0 && isHost) {
+      console.log('🎯 جميع التخمينات مكتملة، حساب النقاط والانتقال...');
       
-      let compressedImage;
-      let quality = 0.8;
-      let maxWidth = 800;
-      
-      do {
-        compressedImage = await compressImage(file, maxWidth, quality);
+      setTimeout(() => {
+        // حساب النقاط
+        const newScores = { ...playerScores };
         
-        if (compressedImage.length > 400 * 1024) {
-          quality -= 0.1;
-          maxWidth = Math.max(400, maxWidth - 100);
-        }
+        // +10 نقاط لكل تخمين صحيح (بما في ذلك التصويت لنفسه)
+        Object.entries(guessResults).forEach(([key, guess]) => {
+          if (guess.correct) {
+            newScores[guess.guesserName] = (newScores[guess.guesserName] || 0) + 10;
+          }
+        });
         
-      } while (compressedImage.length > 400 * 1024 && quality > 0.3);
+        // +20 نقطة لكل تعليق لم يخمنه أحد من الآخرين (نتجاهل تصويت صاحب التعليق لنفسه)
+        comments.forEach((comment, index) => {
+          const correctGuessesFromOthers = Object.entries(guessResults).filter(
+            ([key, guess]) => {
+              return guess.commentIndex === index && 
+                     guess.correct && 
+                     guess.guesserName !== comment.playerName; // فقط التخمينات من الآخرين
+            }
+          );
+          
+          if (correctGuessesFromOthers.length === 0) {
+            // لم يخمنه أحد من الآخرين، صاحبه يحصل على 20 نقطة إضافية
+            newScores[comment.playerName] = (newScores[comment.playerName] || 0) + 20;
+            console.log(`💰 ${comment.playerName} يحصل على 20 نقطة لأن تعليقه لم ينكشف!`);
+          }
+        });
+        
+        // تحديد فائز الجولة
+        const roundWinner = Object.entries(newScores)
+          .sort(([,a], [,b]) => b - a)[0][0];
+        
+        console.log('💰 النقاط الجديدة:', newScores);
+        console.log('🏆 فائز الجولة:', roundWinner);
+        
+        // إرسال نتائج الجولة
+        triggerPusherEvent('round-finished', {
+          scores: newScores,
+          roundWinner: roundWinner,
+          round: currentRound,
+          totalRounds: totalRounds,
+          isLastRound: currentRound >= totalRounds
+        });
+        
+      }, 2000); // تأخير لرؤية نتائج التخمينات
+    }
+  }, [gamePhase, guessResults, players.length, comments.length, isHost, playerScores, currentRound, totalRounds, triggerPusherEvent, comments]);
+
+  // 🔥 الجديد - دالة الانتقال للجولة التالية
+  const nextRound = useCallback(() => {
+    if (!isHost) return;
+    
+    if (currentRound < totalRounds) {
+      const nextRoundNumber = currentRound + 1;
+      const nextPlayerIndex = nextRoundNumber - 1;
+      const nextPlayer = players[nextPlayerIndex];
       
-      if (compressedImage.length > 500 * 1024) {
-        showErrorToast('لا يمكن ضغط الصورة بما فيه الكفاية. جرب صورة أصغر.');
-        return;
-      }
+      console.log(`🔄 الانتقال للجولة ${nextRoundNumber}, دور ${nextPlayer?.playerName}`);
       
-      console.log(`📸 تم ضغط الصورة بنجاح`);
-      showSuccessToast('تم معالجة الصورة بنجاح!');
+      // إعادة تعيين حالة الجولة الجديدة
+      setCurrentRound(nextRoundNumber);
+      setCurrentPhotoPlayer(nextPlayer?.playerName);
+      setCurrentPhoto(null);
+      setComments([]);
+      setMyComment('');
+      setHasCommented(false);
+      setGuessResults({});
+      setGamePhase('photo-submission');
       
-      await triggerPusherEvent('photo-submitted', {
-        playerName: playerName,
-        photoUrl: compressedImage,
-        round: currentRound
+      // إخبار اللاعبين الآخرين
+      triggerPusherEvent('next-round-started', {
+        round: nextRoundNumber,
+        currentPlayer: nextPlayer?.playerName,
+        totalRounds: totalRounds
       });
       
-    } catch (error) {
-      console.error('❌ خطأ في معالجة الصورة:', error);
-      showErrorToast('فشل في معالجة الصورة. جرب صورة أخرى.');
-    } finally {
-      setUploading(false);
+      showSuccessToast(`🔄 الجولة ${nextRoundNumber} - دور ${nextPlayer?.playerName}`);
+      
+    } else {
+      // انتهاء اللعبة
+      const gameWinner = Object.entries(playerScores)
+        .sort(([,a], [,b]) => b - a)[0][0];
+      
+      console.log(' انتهاء اللعبة، الفائز:', gameWinner);
+      
+      setGamePhase('finished');
+      
+      triggerPusherEvent('game-finished', {
+        gameWinner: gameWinner,
+        finalScores: playerScores
+      });
+      
+      showSuccessToast(` انتهت اللعبة! الفائز: ${gameWinner}`);
     }
-  };
-
-  // بدء مرحلة التخمين (دالة يدوية للمضيف)
-  const startGuessingPhase = useCallback(() => {
-    if (!isHost) {
-      showErrorToast('فقط المضيف يمكنه بدء مرحلة التخمين');
-      return;
-    }
-    
-    if (comments.length < players.length) {
-      showErrorToast(`في انتظار ${players.length - comments.length} تعليق إضافي`);
-      return;
-    }
-    
-    const shuffledComments = [...comments].sort(() => Math.random() - 0.5);
-    console.log('🔀 بدء مرحلة التخمين بواسطة المضيف');
-    
-    triggerPusherEvent('guessing-phase-started', {
-      shuffledComments: shuffledComments,
-      round: currentRound,
-      message: 'بدأت مرحلة التخمين!'
-    });
-  }, [isHost, comments, players.length, triggerPusherEvent, currentRound]);
+  }, [isHost, currentRound, totalRounds, players, playerScores, triggerPusherEvent]);
 
   // إعداد Pusher
   useEffect(() => {
@@ -440,7 +401,6 @@ function PhotoCommentGame({ roomId, playerName, isHost, onExit }) {
       }
     });
 
-    // 🔥 استقبال بدء مرحلة التخمين
     channel.bind('guessing-phase-started', (data) => {
       console.log('🤔 بدء مرحلة التخمين:', data);
       setGamePhase('guessing');
@@ -456,11 +416,32 @@ function PhotoCommentGame({ roomId, playerName, isHost, onExit }) {
       }));
     });
 
+    // 🔥 الجديد - استقبال الأحداث الجديدة
     channel.bind('round-finished', (data) => {
       console.log('🏆 نتائج الجولة:', data);
       setPlayerScores(data.scores);
       setGamePhase('results');
-      showSuccessToast(`انتهت الجولة!`);
+      showSuccessToast(`انتهت الجولة ${data.round}!`);
+    });
+
+    channel.bind('next-round-started', (data) => {
+      console.log('🔄 الجولة التالية:', data);
+      setCurrentRound(data.round);
+      setCurrentPhotoPlayer(data.currentPlayer);
+      setCurrentPhoto(null);
+      setComments([]);
+      setMyComment('');
+      setHasCommented(false);
+      setGuessResults({});
+      setGamePhase('photo-submission');
+      showInfoToast(`الجولة ${data.round} - دور ${data.currentPlayer}`);
+    });
+
+    channel.bind('game-finished', (data) => {
+      console.log(' انتهاء اللعبة:', data);
+      setPlayerScores(data.finalScores);
+      setGamePhase('finished');
+      showSuccessToast(` فاز ${data.gameWinner}!`);
     });
 
     return () => {
@@ -475,7 +456,7 @@ function PhotoCommentGame({ roomId, playerName, isHost, onExit }) {
     };
   }, [roomId, playerName, isHost, triggerPusherEvent]);
 
-  // 🔥 فحص اكتمال التعليقات والانتقال التلقائي لمرحلة التخمين
+  // فحص اكتمال التعليقات والانتقال التلقائي لمرحلة التخمين
   useEffect(() => {
     console.log(`🔍 فحص التعليقات: ${comments.length}/${players.length}, المرحلة: ${gamePhase}, المضيف: ${isHost}`);
     
@@ -484,9 +465,9 @@ function PhotoCommentGame({ roomId, playerName, isHost, onExit }) {
       
       setTimeout(() => {
         startGuessingPhase();
-      }, 3000); // تأخير 3 ثواني لرؤية التعليقات
+      }, 3000);
     }
-  }, [gamePhase, comments.length, players.length, isHost, startGuessingPhase]);
+  }, [gamePhase, comments.length, players.length, isHost]);
 
   // دالة بدء اللعبة
   const startGame = useCallback(() => {
@@ -500,6 +481,66 @@ function PhotoCommentGame({ roomId, playerName, isHost, onExit }) {
 
     triggerPusherEvent('game-started', gameData);
   }, [isHost, players, triggerPusherEvent]);
+
+  // رفع صورة
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || currentPhotoPlayer !== playerName) return;
+
+    setUploading(true);
+    
+    try {
+      if (file.size > 10 * 1024 * 1024) {
+        showErrorToast('الصورة كبيرة جداً! يجب أن تكون أقل من 10MB');
+        setUploading(false);
+        return;
+      }
+      
+      const compressedImage = await compressImage(file);
+      
+      if (compressedImage.length > 2 * 1024 * 1024) {
+        showWarningToast('الصورة لا تزال كبيرة نسبياً. جرب صورة أصغر.');
+        return;
+      }
+      
+      console.log(`📸 تم ضغط الصورة بنجاح`);
+      showSuccessToast('تم معالجة الصورة بنجاح!');
+      
+      await triggerPusherEvent('photo-submitted', {
+        playerName: playerName,
+        photoUrl: compressedImage,
+        round: currentRound
+      });
+      
+    } catch (error) {
+      console.error('❌ خطأ في معالجة الصورة:', error);
+      showErrorToast('فشل في معالجة الصورة. جرب صورة أخرى.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // بدء مرحلة التخمين
+  const startGuessingPhase = useCallback(() => {
+    if (!isHost) {
+      showErrorToast('فقط المضيف يمكنه بدء مرحلة التخمين');
+      return;
+    }
+    
+    if (comments.length < players.length) {
+      showErrorToast(`في انتظار ${players.length - comments.length} تعليق إضافي`);
+      return;
+    }
+    
+    const shuffledComments = [...comments].sort(() => Math.random() - 0.5);
+    console.log('🔀 بدء مرحلة التخمين بواسطة المضيف');
+    
+    triggerPusherEvent('guessing-phase-started', {
+      shuffledComments: shuffledComments,
+      round: currentRound,
+      message: 'بدأت مرحلة التخمين!'
+    });
+  }, [isHost, comments, players.length, triggerPusherEvent, currentRound]);
 
   // إرسال تعليق
   const submitComment = () => {
@@ -554,7 +595,7 @@ function PhotoCommentGame({ roomId, playerName, isHost, onExit }) {
             <div className={`mt-4 px-4 py-2 rounded-lg inline-block ${
               isConnected ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
             }`}>
-              {isConnected ? '✅ متصل بـ Pusher' : '❌ غير متصل'}
+              {isConnected ? ' متصل ' : ' غير متصل'}
             </div>
           </div>
 
@@ -572,7 +613,7 @@ function PhotoCommentGame({ roomId, playerName, isHost, onExit }) {
                       <span className="text-white font-medium">{player.playerName}</span>
                     </div>
                     {player.isHost && (
-                      <span className="text-orange-400 text-sm">👑 مضيف</span>
+                      <span className="text-orange-400 text-sm"> مضيف</span>
                     )}
                   </div>
                 ))}
@@ -581,29 +622,33 @@ function PhotoCommentGame({ roomId, playerName, isHost, onExit }) {
               {isHost && players.length >= 2 && (
                 <button
                   onClick={startGame}
-                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 hover:scale-105"
+                  className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-300 hover:scale-105"
                 >
-                  🎮 بدء اللعبة ({players.length} لاعبين)
+                  🚀 بدء اللعبة ({players.length} لاعبين)
                 </button>
               )}
 
               {isHost && players.length < 2 && (
-                <p className="text-yellow-400 text-center">⏳ في انتظار لاعب آخر على الأقل...</p>
+                <p className="text-yellow-400 text-center">
+                  ⏳ في انتظار المزيد من اللاعبين (الحد الأدنى 2)
+                </p>
               )}
 
               {!isHost && (
-                <p className="text-blue-400 text-center">⏳ في انتظار المضيف لبدء اللعبة...</p>
+                <p className="text-blue-400 text-center">
+                  ⏳ في انتظار المضيف لبدء اللعبة...
+                </p>
               )}
-            </div>
-          </div>
 
-          <div className="text-center mt-8">
-            <button
-              onClick={onExit}
-              className="px-6 py-3 bg-white/10 border border-white/20 text-white rounded-xl hover:bg-white/20 transition-all duration-300"
-            >
-              ← خروج
-            </button>
+              <div className="mt-6 pt-6 border-t border-white/10">
+                <button
+                  onClick={onExit}
+                  className="w-full bg-gradient-to-r from-red-500 to-pink-500 text-white px-6 py-3 rounded-xl font-bold hover:from-red-600 hover:to-pink-600 transition-all duration-300"
+                >
+                   العودة للقائمة
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -618,13 +663,12 @@ function PhotoCommentGame({ roomId, playerName, isHost, onExit }) {
         
         <div className="relative z-10 p-6 flex flex-col min-h-screen">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">🎮 اللعبة بدأت!</h1>
-            <h2 className="text-2xl text-white/80 mb-2">جولة {currentRound} من {totalRounds}</h2>
-            <p className="text-xl text-orange-400">دور {currentPhotoPlayer} لرفع صورة</p>
+            <h1 className="text-3xl font-bold text-white mb-2">📷 رفع الصورة</h1>
+            <p className="text-xl text-white/80">الجولة {currentRound} من {totalRounds}</p>
           </div>
 
           <div className="flex-1 flex items-center justify-center">
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-w-lg w-full text-center">
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-w-md w-full text-center">
               {currentPhotoPlayer === playerName ? (
                 <div className="space-y-6">
                   <div className="text-6xl mb-4">📸</div>
@@ -644,7 +688,7 @@ function PhotoCommentGame({ roomId, playerName, isHost, onExit }) {
                         htmlFor="photo-upload"
                         className="block w-full bg-gradient-to-r from-orange-500 to-red-500 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 hover:scale-105 cursor-pointer"
                       >
-                        📷 اختر صورة من الجهاز
+                         اختر صورة من الجهاز
                       </label>
                       <p className="text-white/50 text-sm mt-2">سيتم ضغط الصورة تلقائياً</p>
                     </>
@@ -669,7 +713,7 @@ function PhotoCommentGame({ roomId, playerName, isHost, onExit }) {
     );
   }
 
-  // مرحلة التعليق مع زر الانتقال اليدوي
+  // مرحلة التعليق
   if (gamePhase === 'commenting') {
     return (
       <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
@@ -723,16 +767,15 @@ function PhotoCommentGame({ roomId, playerName, isHost, onExit }) {
                   <p className="text-white/70 text-sm text-center mb-4">
                     التعليقات: {comments.length} / {players.length}
                   </p>
-                  
-                  <div className="mt-2 space-y-1 mb-4">
+         
+                  {/* <div className="mt-2 space-y-1 mb-4">
                     {comments.map((comment, index) => (
                       <div key={index} className="text-xs text-white/50 text-center p-2 bg-white/5 rounded-lg">
                         ✅ {comment.playerName}: "{comment.comment}"
                       </div>
                     ))}
-                  </div>
+                  </div> */}
                   
-                  {/* زر يدوي للمضيف لبدء التخمين */}
                   {isHost && comments.length >= players.length && (
                     <button
                       onClick={startGuessingPhase}
@@ -770,12 +813,12 @@ function PhotoCommentGame({ roomId, playerName, isHost, onExit }) {
         
         <div className="relative z-10 p-6">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">🤔 من كتب هذا التعليق؟</h1>
-            <p className="text-white/70">جولة {currentRound} من {totalRounds}</p>
+            <h1 className="text-3xl font-bold text-white mb-2">🤔 مرحلة التخمين!</h1>
+            <p className="text-xl text-white/80">من كتب كل تعليق؟</p>
           </div>
 
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6">
                 <img 
                   src={currentPhoto} 
@@ -784,57 +827,51 @@ function PhotoCommentGame({ roomId, playerName, isHost, onExit }) {
                 />
               </div>
 
-              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6">
-                <h3 className="text-xl font-bold text-white mb-4">النقاط الحالية</h3>
-                <div className="space-y-2">
-                  {Object.entries(playerScores)
-                    .sort(([,a], [,b]) => b - a)
-                    .map(([player, score]) => (
-                    <div key={player} className="flex justify-between items-center p-2 bg-white/10 rounded-lg">
-                      <span className="text-white">{player}</span>
-                      <span className="text-orange-400 font-bold">{score}</span>
+              <div className="space-y-4">
+                {comments.map((comment, commentIndex) => {
+                  const hasGuessed = guessResults[`${playerName}-${commentIndex}`];
+                  
+                  return (
+                    <div key={commentIndex} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4">
+                      <p className="text-white font-medium mb-3">"{comment.comment}"</p>
+                      
+                      {!hasGuessed ? (
+                        <div className="grid grid-cols-2 gap-2">
+                          {players.map(player => (
+                            <button
+                              key={player.playerName}
+                              onClick={() => makeGuess(commentIndex, player.playerName)}
+                              className="px-3 py-2 bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/50 rounded-lg text-white text-sm transition-all duration-300"
+                            >
+                              {player.playerName}
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className={`text-center py-2 px-3 rounded-lg ${
+                          hasGuessed.correct 
+                            ? 'bg-green-500/20 border border-green-500/50 text-green-400' 
+                            : 'bg-red-500/20 border border-red-500/50 text-red-400'
+                        }`}>
+                          {hasGuessed.correct ? '✅ صحيح!' : '❌ خطأ!'} - اخترت: {hasGuessed.guessedPlayer}
+                        </div>
+                      )}
                     </div>
-                  ))}
+                  );
+                })}
+
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 text-center">
+                  <p className="text-white/70 text-sm">
+                    التخمينات: {Object.keys(guessResults).length} / {players.length * comments.length}
+                  </p>
+                  <div className="w-full bg-white/20 rounded-full h-2 mt-2">
+                    <div 
+                      className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${(Object.keys(guessResults).length / (players.length * comments.length)) * 100}%` }}
+                    ></div>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {comments.map((comment, index) => (
-                <div key={index} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6">
-                  <div className="mb-4">
-                    <div className="text-lg font-medium text-white mb-3 p-3 bg-white/10 rounded-xl">
-                      "{comment.comment}"
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <p className="text-white/70 text-sm mb-2">من كتب هذا؟</p>
-                    {players.map(player => (
-                      <button
-                        key={player.playerName}
-                        onClick={() => makeGuess(index, player.playerName)}
-                        disabled={guessResults[`${playerName}-${index}`]}
-                        className="w-full px-3 py-2 bg-white/10 border border-white/20 text-white rounded-lg hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-                      >
-                        {player.playerName}
-                      </button>
-                    ))}
-                  </div>
-
-                  {guessResults[`${playerName}-${index}`] && (
-                    <div className="mt-3 text-center">
-                      <div className={`text-sm p-2 rounded-lg ${
-                        guessResults[`${playerName}-${index}`].correct 
-                          ? 'text-green-400 bg-green-500/20' 
-                          : 'text-red-400 bg-red-500/20'
-                      }`}>
-                        {guessResults[`${playerName}-${index}`].correct ? '✅ صحيح! +10' : '❌ خطأ!'}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
             </div>
           </div>
         </div>
@@ -842,17 +879,312 @@ function PhotoCommentGame({ roomId, playerName, isHost, onExit }) {
     );
   }
 
-  // المراحل الأخرى
+  // 🔥 الجديد - مرحلة النتائج
+  if (gamePhase === 'results') {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]"></div>
+        
+        <div className="relative z-10 p-6 flex flex-col min-h-screen">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-white mb-4">🏆 نتائج الجولة {currentRound}</h1>
+          </div>
+
+          <div className="flex-1">
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-w-2xl mx-auto">
+              <h2 className="text-2xl font-bold text-white mb-6 text-center">النقاط الحالية</h2>
+              
+              <div className="space-y-4 mb-8">
+                {Object.entries(playerScores)
+                  .sort(([,a], [,b]) => b - a)
+                  .map(([player, score], index) => (
+                  <div key={player} className={`flex items-center justify-between p-4 rounded-xl ${
+                    index === 0 
+                      ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-400/50' 
+                      : 'bg-white/5'
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
+                        #{index + 1}
+                      </div>
+                      <span className="text-white font-medium">{player}</span>
+                    </div>
+                    <span className="text-orange-400 font-bold text-xl">{score}</span>
+                  </div>
+                ))}
+              </div>
+
+              {isHost && (
+                <div className="space-y-4">
+                  {currentRound < totalRounds ? (
+                    <button
+                      onClick={nextRound}
+                      className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-300 hover:scale-105"
+                    >
+                      ➡️ الجولة التالية ({currentRound + 1}/{totalRounds})
+                    </button>
+                  ) : (
+                    <button
+                      onClick={nextRound}
+                      className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 hover:scale-105"
+                    >
+                       عرض النتائج النهائية
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {!isHost && (
+                <p className="text-blue-400 text-center">⏳ في انتظار المضيف...</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 🔥 الجديد - مرحلة انتهاء اللعبة
+  if (gamePhase === 'finished') {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-green-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+        
+        <div className="relative z-10 p-6 flex flex-col min-h-screen">
+          <div className="text-center mb-8">
+            <h1 className="text-5xl font-bold text-white mb-4"> انتهت اللعبة!</h1>
+            <p className="text-white/70 text-lg">
+              تم لعب {totalRounds} جولات مع {players.length} لاعبين
+            </p>
+          </div>
+
+          <div className="flex-1">
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-w-2xl mx-auto">
+              <h2 className="text-2xl font-bold text-white mb-6 text-center"> النتائج النهائية</h2>
+              
+              <div className="space-y-4 mb-8">
+                {Object.entries(playerScores)
+                  .sort(([,a], [,b]) => b - a)
+                  .map(([player, score], index) => (
+                  <div key={player} className={`flex items-center justify-between p-4 rounded-xl ${
+                    index === 0 
+                      ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-400/50' 
+                      : index === 1
+                      ? 'bg-gradient-to-r from-gray-500/20 to-gray-600/20 border-2 border-gray-400/50'
+                      : index === 2
+                      ? 'bg-gradient-to-r from-orange-800/20 to-yellow-800/20 border-2 border-orange-600/50'
+                      : 'bg-white/5'
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold ${
+                        index === 0 ? 'bg-gradient-to-r from-yellow-500 to-orange-500' :
+                        index === 1 ? 'bg-gradient-to-r from-gray-500 to-gray-600' :
+                        index === 2 ? 'bg-gradient-to-r from-orange-800 to-yellow-800' :
+                        'bg-gradient-to-r from-blue-500 to-purple-500'
+                      }`}>
+                        {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                      </div>
+                      <span className="text-white font-medium text-lg">{player}</span>
+                    </div>
+                    <span className="text-orange-400 font-bold text-2xl">{score}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-4">
+                <button
+                  onClick={onExit}
+                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 hover:scale-105"
+                >
+                   العودة للقائمة الرئيسية
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+// مكونات الإعداد (لم تتغير)
+function PhotoCommentSetup({ onCreateRoom, onJoinRoom, onGoHome }) {
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">
-      <div className="text-center">
-        <p className="text-2xl">مرحلة: {gamePhase}</p>
-        <button
-          onClick={() => setGamePhase('waiting')}
-          className="mt-4 px-6 py-3 bg-blue-500 text-white rounded-xl"
-        >
-          العودة للانتظار
-        </button>
+    <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
+      <div className="relative z-10 p-6 md:p-8">
+        <div className="flex justify-between items-center mb-12">
+          <div className="text-4xl md:text-5xl font-black text-white tracking-wider">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-orange-400 to-pink-500">
+               صورة وتعليق
+            </span>
+          </div>
+          <button
+            onClick={onGoHome}
+            className="px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all duration-300"
+          >
+            ← العودة للرئيسية
+          </button>
+        </div>
+
+        <div className="flex-1 flex items-center justify-center">
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-w-md w-full text-center">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-white mb-4">  صورة وتعليق</h2>
+              <p className="text-xl text-gray-300">شارك صورتك وخمن من كتب كل تعليق!</p>
+            </div>
+            
+            <div className="space-y-6">
+              <button
+                onClick={onCreateRoom}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white py-4 rounded-2xl font-bold text-xl transition-all duration-300 hover:scale-105"
+              >
+                 إنشاء غرفة جديدة
+              </button>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-white/20"></div>
+                </div>
+                <div className="relative flex justify-center text-lg">
+                  <span className="bg-[#0a0a0f] px-4 text-white/60">أو</span>
+                </div>
+              </div>
+
+              <button
+                onClick={onJoinRoom}
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white py-4 rounded-2xl font-bold text-xl transition-all duration-300 hover:scale-105"
+              >
+                 انضم لغرفة موجودة
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PhotoCommentCreate({ playerName, setPlayerName, createRoom, createError, onGoBack }) {
+  return (
+    <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]"></div>
+      
+      <div className="relative z-10 p-6 flex flex-col min-h-screen">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-white">إنشاء غرفة جديدة</h1>
+          <button
+            onClick={onGoBack}
+            className="px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white hover:bg-white/20 transition-all duration-300"
+          >
+            ← رجوع
+          </button>
+        </div>
+
+        <div className="flex-1 flex items-center justify-center">
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-w-md w-full">
+            
+            {createError && (
+              <div className="bg-red-500/20 border border-red-500/30 rounded-2xl p-4 mb-6">
+                <p className="text-red-300">{createError}</p>
+              </div>
+            )}
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-white font-medium mb-2">اسم اللاعب</label>
+                <input
+                  type="text"
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  placeholder="ادخل اسمك..."
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-green-400 focus:bg-white/20 transition-all duration-300"
+                  maxLength={20}
+                />
+              </div>
+
+              <button
+                onClick={createRoom}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105"
+              >
+                 إنشاء الغرفة
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PhotoCommentJoin({ playerName, setPlayerName, roomId, setRoomId, joinRoom, joinError, onGoBack }) {
+  return (
+    <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#0f0f1e] to-[#0a0a0f]"></div>
+      
+      <div className="relative z-10 p-6 flex flex-col min-h-screen">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-white">الانضمام للغرفة</h1>
+          <button
+            onClick={onGoBack}
+            className="px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white hover:bg-white/20 transition-all duration-300"
+          >
+            ← رجوع
+          </button>
+        </div>
+
+        <div className="flex-1 flex items-center justify-center">
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-w-md w-full">
+            
+            {joinError && (
+              <div className="bg-red-500/20 border border-red-500/30 rounded-2xl p-4 mb-6">
+                <p className="text-red-300">{joinError}</p>
+              </div>
+            )}
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-white font-medium mb-2">اسم اللاعب</label>
+                <input
+                  type="text"
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  placeholder="ادخل اسمك..."
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-blue-400 focus:bg-white/20 transition-all duration-300"
+                  maxLength={20}
+                />
+              </div>
+
+              <div>
+                <label className="block text-white font-medium mb-2">رمز الغرفة</label>
+                <input
+                  type="text"
+                  value={roomId}
+                  onChange={(e) => setRoomId(e.target.value.toUpperCase())}
+                  placeholder="ادخل رمز الغرفة..."
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-blue-400 focus:bg-white/20 transition-all duration-300 font-mono text-center text-lg"
+                  maxLength={6}
+                />
+              </div>
+
+              <button
+                onClick={joinRoom}
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105"
+              >
+                دخول الغرفة
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
