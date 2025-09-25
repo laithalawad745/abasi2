@@ -170,7 +170,7 @@ function PhotoCommentGame({ roomId, playerName, isHost, onExit }) {
           ctx.drawImage(img, 0, 0, width, height);
           
           const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-          console.log(`🗜️ تم ضغط الصورة: ${Math.round(compressedDataUrl.length / 1024)}KB`);
+          console.log(` تم ضغط الصورة: ${Math.round(compressedDataUrl.length / 1024)}KB`);
           resolve(compressedDataUrl);
         } catch (error) {
           reject(error);
@@ -402,7 +402,7 @@ function PhotoCommentGame({ roomId, playerName, isHost, onExit }) {
     });
 
     channel.bind('guessing-phase-started', (data) => {
-      console.log('🤔 بدء مرحلة التخمين:', data);
+      console.log(' بدء مرحلة التخمين:', data);
       setGamePhase('guessing');
       setComments(data.shuffledComments || comments);
       showSuccessToast(data.message || 'ابدأ التخمين! من كتب كل تعليق؟');
@@ -781,7 +781,7 @@ function PhotoCommentGame({ roomId, playerName, isHost, onExit }) {
                       onClick={startGuessingPhase}
                       className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-xl font-bold hover:from-blue-600 hover:to-purple-600 transition-all duration-300"
                     >
-                      🤔 بدء مرحلة التخمين الآن
+                       بدء مرحلة التخمين الآن
                     </button>
                   )}
                   
@@ -813,7 +813,7 @@ function PhotoCommentGame({ roomId, playerName, isHost, onExit }) {
         
         <div className="relative z-10 p-6">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">🤔 مرحلة التخمين!</h1>
+            <h1 className="text-3xl font-bold text-white mb-2"> مرحلة التخمين!</h1>
             <p className="text-xl text-white/80">من كتب كل تعليق؟</p>
           </div>
 
@@ -921,7 +921,7 @@ function PhotoCommentGame({ roomId, playerName, isHost, onExit }) {
                       onClick={nextRound}
                       className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-300 hover:scale-105"
                     >
-                      ➡️ الجولة التالية ({currentRound + 1}/{totalRounds})
+                       الجولة التالية ({currentRound + 1}/{totalRounds})
                     </button>
                   ) : (
                     <button

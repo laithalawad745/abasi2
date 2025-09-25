@@ -283,6 +283,7 @@ export default function GameSetup() {
   </div>
 </Link>
 
+
             {/* لعبة الهيمنة (Risk) */}
             <Link href="/risk" className="group">
               <div className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl hover:bg-white/10 transition-all duration-500 hover:scale-105 hover:border-green-500/50">
