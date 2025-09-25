@@ -60,3 +60,6 @@ export { default as QuestionAnswerGame } from './QuestionAnswerGame';
 
 // 🆕 لعبة الرهان
 export { default as BettingGame } from './BettingGame';
+
+
+export { default as PhotoCommentGameRouter } from './PhotoCommentGameRouter';

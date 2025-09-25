@@ -262,6 +262,27 @@ export default function GameSetup() {
                 </div>
               </div>
             </Link>
+
+
+            <Link href="/photo-comment" className="group">
+  <div className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl hover:bg-white/10 transition-all duration-500 hover:scale-105 hover:border-orange-500/50">
+    <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-pink-500/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+    <div className="relative z-10">
+      <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-pink-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+        <span className="text-2xl">📸</span>
+      </div>
+      <h3 className="text-2xl font-bold text-white mb-3">صورة وتعليق</h3>
+      <p className="text-gray-400 mb-4">ضع تعليقك وخمن من كتب كل تعليق!</p>
+      <div className="flex items-center text-orange-400 font-semibold">
+        <span>ابدأ الآن</span>
+        <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</Link>
+
             {/* لعبة الهيمنة (Risk) */}
             <Link href="/risk" className="group">
               <div className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl hover:bg-white/10 transition-all duration-500 hover:scale-105 hover:border-green-500/50">
