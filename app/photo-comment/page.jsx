@@ -1,4 +1,4 @@
-// app/photo-comment/page.jsx
+import { Suspense } from 'react';
 import PhotoCommentGameRouter from '../../components/PhotoCommentGameRouter';
 
 export const metadata = {
@@ -7,5 +7,9 @@ export const metadata = {
 };
 
 export default function PhotoCommentPage() {
-  return <PhotoCommentGameRouter />;
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center text-white">جار التحميل...</div>}>
+      <PhotoCommentGameRouter />
+    </Suspense>
+  );
 }
