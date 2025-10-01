@@ -333,7 +333,7 @@ export default function FootballGridGame({
             <div className="grid grid-cols-[120px_1fr_1fr_1fr] gap-4 mb-4">
               <div></div>
               {columnCriteria.map((criterion, index) => (
-                <div key={index} className="flex flex-col items-center justify-center bg-gradient-to-br from-green-600 to-green-700 rounded-2xl p-4 min-h-[100px]">
+                <div key={index} className="flex flex-col items-center justify-center  rounded-2xl p-4 min-h-[100px]">
                   <div className="w-full h-full flex items-center justify-center">
                     <img 
                       src={criterion.imageUrl} 
@@ -353,7 +353,7 @@ export default function FootballGridGame({
             {/* الصفوف */}
             {[0, 1, 2].map(rowIndex => (
               <div key={rowIndex} className="grid grid-cols-[120px_1fr_1fr_1fr] gap-4 mb-4">
-                <div className="flex flex-col items-center justify-center bg-slate-700/30 backdrop-blur-sm border-2 border-slate-600 rounded-2xl p-4 min-h-[120px]">
+                <div className="flex flex-col items-center justify-center   rounded-2xl p-4 min-h-[120px]">
                   <div className="w-full h-full flex items-center justify-center">
                     <img 
                       src={rowCriteria[rowIndex].imageUrl} 
