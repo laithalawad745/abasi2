@@ -1,4 +1,4 @@
-// components/index.js - تحديث الملف لإضافة لعبة الرهان
+// components/index.js - إضافة Football Grid
 export { default as QuizGame } from './QuizGame';
 export { default as GameSetup } from './GameSetup';
 export { default as TeamScores } from './TeamScores';
@@ -42,24 +42,28 @@ export { default as GuessWrongGame } from './GuessWrongGame';
 export { default as CluesGame } from './CluesGame';
 export { default as CluesGameRouter } from './CluesGameRouter';
 
-// 🆕 الصفحات المنفصلة الجديدة
+// الصفحات المنفصلة الجديدة
 export { default as AbsiLivesGame } from './AbsiLivesGame';
 export { default as ChoicesOnlyGame } from './ChoicesOnlyGame';
 export { default as QROnlyGame } from './QROnlyGame';
 
-// 🆕 لعبة أوجد الدولة
+// لعبة أوجد الدولة
 export { default as FindCountryGame } from './FindCountryGame';
 export { default as FindCountryWorldMap } from './FindCountryWorldMap';
 
-// 🆕 لعبة مسيرة اللاعبين
+// لعبة مسيرة اللاعبين
 export { default as PlayerCareerGame } from './PlayerCareerGame';
 export { default as PlayerCareerGameRouter } from './PlayerCareerGameRouter';
 export { default as PlayerCareerSetup } from './PlayerCareerSetup';
 
 export { default as QuestionAnswerGame } from './QuestionAnswerGame';
 
-// 🆕 لعبة الرهان
+// لعبة الرهان
 export { default as BettingGame } from './BettingGame';
 
-
 export { default as PhotoCommentGameRouter } from './PhotoCommentGameRouter';
+
+// 🆕 لعبة Football Grid
+export { default as FootballGridGame } from './FootballGridGame';
+export { default as FootballGridGameRouter } from './FootballGridGameRouter';
+export { default as FootballGridSetup } from './FootballGridSetup';
