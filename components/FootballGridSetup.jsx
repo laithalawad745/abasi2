@@ -146,9 +146,9 @@ export default function FootballGridSetup({ pusher, playerId, onStartGame, roomI
           <div className="text-center mb-12">
             <div className="text-8xl mb-6 animate-bounce">⚽</div>
             <h1 className="text-5xl md:text-6xl font-black text-white mb-4">
-              Football <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">Grid</span>
+              X  -<span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">O</span>
             </h1>
-            <p className="text-xl text-gray-400">لعبة Tic-Tac-Toe مع لاعبي كرة القدم</p>
+            {/* <p className="text-xl text-gray-400">X - O     </p> */}
           </div>
 
           <div className="flex flex-col gap-6 w-full max-w-md">
@@ -158,7 +158,7 @@ export default function FootballGridSetup({ pusher, playerId, onStartGame, roomI
             >
               <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
               <div className="relative px-8 py-6 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-2xl font-bold text-xl transition-all duration-300 hover:scale-105">
-                🎮 إنشاء غرفة جديدة
+                 إنشاء غرفة جديدة
               </div>
             </button>
 
@@ -168,13 +168,13 @@ export default function FootballGridSetup({ pusher, playerId, onStartGame, roomI
             >
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
               <div className="relative px-8 py-6 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-2xl font-bold text-xl transition-all duration-300 hover:scale-105">
-                🔗 الانضمام لغرفة
+                 الانضمام لغرفة
               </div>
             </button>
           </div>
 
           <div className="mt-16 text-center">
-            <p className="text-white/60 mb-4">📊 كيف تلعب</p>
+            {/* <p className="text-white/60 mb-4">📊 كيف تلعب</p> */}
             <div className="flex flex-wrap justify-center gap-6 text-white/80 max-w-3xl">
               <div className="text-center min-w-[200px]">
                 <div className="text-3xl mb-2">🎯</div>

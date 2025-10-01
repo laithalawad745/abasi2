@@ -1,13 +1,27 @@
-// app/data/footballGridData.js
+// app/data/footballGridData.js - نسخة مع معايير متغيرة
 
-// معايير الصفوف
-export const rowCriteria = [
+// 🎯 جميع معايير الصفوف المتاحة
+export const allRowCriteria = [
   {
     id: 'ucl_titles',
-    name: '2+ UCL TITLES',
-    nameAr: 'بطل دوري أبطال أوروبا مرتين+',
+    name: '1+ UCL',
+    nameAr: 'بطل دوري الأبطال',
     imageUrl: '/football-grid/ucl-trophy.png',
-    check: (player) => player.uclTitles >= 2
+    check: (player) => player.uclTitles >= 1
+  },
+  {
+    id: 'world_cup',
+    name: 'WC WINNER',
+    nameAr: 'بطل كأس العالم',
+    imageUrl: '/football-grid/world-cup-trophy.png',
+    check: (player) => player.worldCupWinner === true
+  },
+  {
+    id: 'euros_winner',
+    name: 'EUROS',
+    nameAr: 'بطل يورو',
+    imageUrl: '/football-grid/euros-trophy.png',
+    check: (player) => player.eurosWinner === true
   },
   {
     id: 'psg',
@@ -17,16 +31,51 @@ export const rowCriteria = [
     check: (player) => player.clubs.includes('PSG')
   },
   {
-    id: 'euros_winner',
-    name: 'EUROS WINNER',
-    nameAr: 'بطل يورو',
-    imageUrl: '/football-grid/euros-trophy.png',
-    check: (player) => player.eurosWinner === true
+    id: 'real_madrid',
+    name: 'RMA',
+    nameAr: 'ريال مدريد',
+    imageUrl: '/football-grid/real-madrid.png',
+    check: (player) => player.clubs.includes('Real Madrid')
+  },
+  {
+    id: 'barcelona',
+    name: 'BAR',
+    nameAr: 'برشلونة',
+    imageUrl: '/football-grid/barcelona.png',
+    check: (player) => player.clubs.includes('Barcelona')
+  },
+  {
+    id: 'manchester_united',
+    name: 'MUN',
+    nameAr: 'مانشستر يونايتد',
+    imageUrl: '/football-grid/manchester-united.png',
+    check: (player) => player.clubs.includes('Manchester United')
+  },
+  {
+    id: 'chelsea',
+    name: 'CHE',
+    nameAr: 'تشيلسي',
+    imageUrl: '/football-grid/chelsea.png',
+    check: (player) => player.clubs.includes('Chelsea')
+  },
+  {
+    id: 'juventus',
+    name: 'JUV',
+    nameAr: 'يوفنتوس',
+    imageUrl: '/football-grid/juventus.png',
+    check: (player) => player.clubs.includes('Juventus')
+  },
+  {
+    id: 'bayern',
+    name: 'BAY',
+    nameAr: 'بايرن ميونيخ',
+    imageUrl: '/football-grid/bayern.png',
+    check: (player) => player.clubs.includes('Bayern Munich')
   }
 ];
 
-// معايير الأعمدة
-export const columnCriteria = [
+// 🎯 جميع معايير الأعمدة المتاحة
+export const allColumnCriteria = [
   {
     id: 'portugal',
     name: 'POR',
@@ -42,17 +91,96 @@ export const columnCriteria = [
     check: (player) => player.nationality === 'Italy'
   },
   {
+    id: 'spain',
+    name: 'ESP',
+    nameAr: 'إسبانيا',
+    imageUrl: '/football-grid/spain.png',
+    check: (player) => player.nationality === 'Spain'
+  },
+  {
+    id: 'france',
+    name: 'FRA',
+    nameAr: 'فرنسا',
+    imageUrl: '/football-grid/france.png',
+    check: (player) => player.nationality === 'France'
+  },
+  {
+    id: 'brazil',
+    name: 'BRA',
+    nameAr: 'البرازيل',
+    imageUrl: '/football-grid/brazil.png',
+    check: (player) => player.nationality === 'Brazil'
+  },
+  {
+    id: 'argentina',
+    name: 'ARG',
+    nameAr: 'الأرجنتين',
+    imageUrl: '/football-grid/argentina.png',
+    check: (player) => player.nationality === 'Argentina'
+  },
+  {
+    id: 'germany',
+    name: 'GER',
+    nameAr: 'ألمانيا',
+    imageUrl: '/football-grid/germany.png',
+    check: (player) => player.nationality === 'Germany'
+  },
+  {
+    id: 'england',
+    name: 'ENG',
+    nameAr: 'إنجلترا',
+    imageUrl: '/football-grid/england.png',
+    check: (player) => player.nationality === 'England'
+  },
+  {
+    id: 'netherlands',
+    name: 'NED',
+    nameAr: 'هولندا',
+    imageUrl: '/football-grid/netherlands.png',
+    check: (player) => player.nationality === 'Netherlands'
+  },
+  {
     id: 'milan',
     name: 'MIL',
     nameAr: 'ميلان',
     imageUrl: '/football-grid/milan.png',
     check: (player) => player.clubs.includes('AC Milan')
+  },
+  {
+    id: 'inter',
+    name: 'INT',
+    nameAr: 'إنتر ميلان',
+    imageUrl: '/football-grid/inter.png',
+    check: (player) => player.clubs.includes('Inter Milan')
+  },
+  {
+    id: 'liverpool',
+    name: 'LIV',
+    nameAr: 'ليفربول',
+    imageUrl: '/football-grid/liverpool.png',
+    check: (player) => player.clubs.includes('Liverpool')
   }
 ];
 
-// قاعدة بيانات اللاعبين
+// 🎲 دالة لاختيار 3 معايير عشوائية
+export const getRandomCriteria = (criteriaList, count = 3) => {
+  const shuffled = [...criteriaList].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+};
+
+// 🎮 دالة لإنشاء شبكة جديدة بمعايير عشوائية
+export const generateNewGame = () => {
+  return {
+    rowCriteria: getRandomCriteria(allRowCriteria, 3),
+    columnCriteria: getRandomCriteria(allColumnCriteria, 3)
+  };
+};
+
+// قاعدة بيانات اللاعبين - محدثة مع بيانات كأس العالم
 export const playersDatabase = [
-  // لاعبون برتغاليون
+  // ============================================
+  // 🇵🇹 لاعبون برتغاليون
+  // ============================================
   {
     name: 'Cristiano Ronaldo',
     nameAr: 'كريستيانو رونالدو',
@@ -60,25 +188,128 @@ export const playersDatabase = [
     clubs: ['Sporting', 'Manchester United', 'Real Madrid', 'Juventus', 'Al Nassr'],
     uclTitles: 5,
     eurosWinner: true,
+    worldCupWinner: false,
     searchTerms: ['ronaldo', 'cristiano', 'cr7', 'رونالدو', 'كريستيانو']
   },
+{
+  name: 'Trent Alexander-Arnold',
+  nameAr: 'ترينت ألكسندر أرنولد',
+  nationality: 'England',
+  clubs: ['Liverpool', 'Real Madrid'],  // ✅ أضفنا ريال مدريد
+  uclTitles: 1,
+  eurosWinner: false,
+  worldCupWinner: false,
+  searchTerms: ['arnold', 'trent', 'alexander', 'أرنولد', 'ترينت']
+},
   {
-    name: 'Bruno Fernandes',
-    nameAr: 'برونو فيرنانديز',
-    nationality: 'Portugal',
-    clubs: ['Sporting', 'Manchester United'],
-    uclTitles: 0,
+    name: 'Mohamed Salah',
+    nameAr: 'محمد صلاح',
+    nationality: 'Egypt',
+    clubs: ['Basel', 'Chelsea', 'Fiorentina', 'Roma', 'Liverpool'],
+    uclTitles: 1,
     eurosWinner: false,
-    searchTerms: ['bruno', 'fernandes', 'برونو', 'فيرنانديز']
+    worldCupWinner: false,
+    searchTerms: ['salah', 'mohamed', 'صلاح', 'محمد', 'مو']
   },
   {
-    name: 'Joao Felix',
-    nameAr: 'جواو فيليكس',
-    nationality: 'Portugal',
-    clubs: ['Benfica', 'Atletico Madrid', 'Chelsea', 'Barcelona'],
-    uclTitles: 0,
+    name: 'Sadio Mane',
+    nameAr: 'ساديو ماني',
+    nationality: 'Senegal',
+    clubs: ['Metz', 'Red Bull Salzburg', 'Southampton', 'Liverpool', 'Bayern Munich', 'Al Nassr'],
+    uclTitles: 1,
     eurosWinner: false,
-    searchTerms: ['joao', 'felix', 'جواو', 'فيليكس']
+    worldCupWinner: false,
+    searchTerms: ['mane', 'sadio', 'ماني', 'ساديو']
+  },
+  {
+    name: 'Virgil van Dijk',
+    nameAr: 'فيرجيل فان دايك',
+    nationality: 'Netherlands',
+    clubs: ['Groningen', 'Celtic', 'Southampton', 'Liverpool'],
+    uclTitles: 1,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['van dijk', 'virgil', 'فان دايك', 'فيرجيل']
+  },
+  {
+    name: 'Alisson Becker',
+    nameAr: 'أليسون بيكر',
+    nationality: 'Brazil',
+    clubs: ['Internacional', 'Roma', 'Liverpool'],
+    uclTitles: 1,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['alisson', 'becker', 'أليسون', 'بيكر']
+  },
+  {
+    name: 'Roberto Firmino',
+    nameAr: 'روبيرتو فيرمينو',
+    nationality: 'Brazil',
+    clubs: ['Figueirense', 'Hoffenheim', 'Liverpool', 'Al Ahli'],
+    uclTitles: 1,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['firmino', 'roberto', 'فيرمينو', 'روبيرتو']
+  },
+  {
+    name: 'Andrew Robertson',
+    nameAr: 'أندرو روبرتسون',
+    nationality: 'Scotland',
+    clubs: ['Queen\'s Park', 'Dundee United', 'Hull City', 'Liverpool'],
+    uclTitles: 1,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['robertson', 'andrew', 'andy', 'روبرتسون', 'أندرو']
+  },
+  {
+    name: 'Jordan Henderson',
+    nameAr: 'جوردان هندرسون',
+    nationality: 'England',
+    clubs: ['Sunderland', 'Liverpool', 'Al Ettifaq', 'Ajax'],
+    uclTitles: 1,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['henderson', 'jordan', 'hendo', 'هندرسون', 'جوردان']
+  },
+  {
+    name: 'Fabinho',
+    nameAr: 'فابينيو',
+    nationality: 'Brazil',
+    clubs: ['Fluminense', 'Real Madrid Castilla', 'Monaco', 'Liverpool', 'Al Ittihad'],
+    uclTitles: 1,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['fabinho', 'فابينيو']
+  },
+  {
+    name: 'Thiago Alcantara',
+    nameAr: 'تياغو ألكانتارا',
+    nationality: 'Spain',
+    clubs: ['Barcelona', 'Bayern Munich', 'Liverpool'],
+    uclTitles: 2,
+    eurosWinner: true,
+    worldCupWinner: true,
+    searchTerms: ['thiago', 'alcantara', 'تياغو', 'ألكانتارا']
+  },
+  {
+    name: 'Luis Figo',
+    nameAr: 'لويس فيغو',
+    nationality: 'Portugal',
+    clubs: ['Sporting', 'Barcelona', 'Real Madrid', 'Inter Milan'],
+    uclTitles: 2,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['figo', 'luis', 'فيغو', 'لويس']
+  },
+  {
+    name: 'Ricardo Carvalho',
+    nameAr: 'ريكاردو كارفالو',
+    nationality: 'Portugal',
+    clubs: ['Porto', 'Chelsea', 'Real Madrid', 'Monaco'],
+    uclTitles: 3,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['carvalho', 'ricardo', 'كارفالو', 'ريكاردو']
   },
   {
     name: 'Pepe',
@@ -87,7 +318,48 @@ export const playersDatabase = [
     clubs: ['Porto', 'Real Madrid'],
     uclTitles: 3,
     eurosWinner: true,
+    worldCupWinner: false,
     searchTerms: ['pepe', 'بيبي']
+  },
+  {
+    name: 'Deco',
+    nameAr: 'ديكو',
+    nationality: 'Portugal',
+    clubs: ['Benfica', 'Porto', 'Barcelona', 'Chelsea'],
+    uclTitles: 1,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['deco', 'ديكو']
+  },
+  {
+    name: 'Rui Costa',
+    nameAr: 'روي كوستا',
+    nationality: 'Portugal',
+    clubs: ['Benfica', 'Fiorentina', 'AC Milan'],
+    uclTitles: 1,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['rui costa', 'costa', 'روي', 'كوستا']
+  },
+  {
+    name: 'Nani',
+    nameAr: 'ناني',
+    nationality: 'Portugal',
+    clubs: ['Sporting', 'Manchester United', 'Fenerbahce', 'Valencia'],
+    uclTitles: 1,
+    eurosWinner: true,
+    worldCupWinner: false,
+    searchTerms: ['nani', 'ناني']
+  },
+  {
+    name: 'Bruno Fernandes',
+    nameAr: 'برونو فيرنانديز',
+    nationality: 'Portugal',
+    clubs: ['Sporting', 'Manchester United'],
+    uclTitles: 0,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['bruno', 'fernandes', 'برونو', 'فيرنانديز']
   },
   {
     name: 'Bernardo Silva',
@@ -96,6 +368,7 @@ export const playersDatabase = [
     clubs: ['Monaco', 'Manchester City'],
     uclTitles: 1,
     eurosWinner: false,
+    worldCupWinner: false,
     searchTerms: ['bernardo', 'silva', 'برناردو', 'سيلفا']
   },
   {
@@ -105,64 +378,137 @@ export const playersDatabase = [
     clubs: ['Benfica', 'Bayern Munich', 'Lille', 'PSG'],
     uclTitles: 0,
     eurosWinner: true,
+    worldCupWinner: false,
     searchTerms: ['renato', 'sanches', 'ريناتو', 'سانشيز']
   },
   {
-    name: 'Nuno Mendes',
-    nameAr: 'نونو مينديز',
+    name: 'Joao Moutinho',
+    nameAr: 'جواو موتينهو',
     nationality: 'Portugal',
-    clubs: ['Sporting', 'PSG'],
+    clubs: ['Sporting', 'Porto', 'Monaco', 'Wolves'],
     uclTitles: 0,
-    eurosWinner: false,
-    searchTerms: ['nuno', 'mendes', 'نونو', 'مينديز']
-  },
-  {
-    name: 'Vitinha',
-    nameAr: 'فيتينيا',
-    nationality: 'Portugal',
-    clubs: ['Porto', 'PSG'],
-    uclTitles: 0,
-    eurosWinner: false,
-    searchTerms: ['vitinha', 'فيتينيا']
+    eurosWinner: true,
+    worldCupWinner: false,
+    searchTerms: ['moutinho', 'joao', 'موتينهو', 'جواو']
   },
 
-  // لاعبون إسبان (إضافة المزيد)
+  // ============================================
+  // 🇮🇹 لاعبون إيطاليون
+  // ============================================
   {
-    name: 'Andres Iniesta',
-    nameAr: 'أندريس إنييستا',
-    nationality: 'Spain',
-    clubs: ['Barcelona', 'Vissel Kobe'],
-    uclTitles: 4,
-    eurosWinner: true,
-    searchTerms: ['iniesta', 'andres', 'إنييستا', 'أندريس']
+    name: 'Paolo Maldini',
+    nameAr: 'باولو مالديني',
+    nationality: 'Italy',
+    clubs: ['AC Milan'],
+    uclTitles: 5,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['maldini', 'paolo', 'مالديني', 'باولو']
   },
   {
-    name: 'Xavi Hernandez',
-    nameAr: 'تشافي هيرنانديز',
-    nationality: 'Spain',
-    clubs: ['Barcelona', 'Al Sadd'],
-    uclTitles: 4,
-    eurosWinner: true,
-    searchTerms: ['xavi', 'hernandez', 'تشافي', 'هيرنانديز']
+    name: 'Alessandro Nesta',
+    nameAr: 'أليساندرو نيستا',
+    nationality: 'Italy',
+    clubs: ['Lazio', 'AC Milan'],
+    uclTitles: 2,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['nesta', 'alessandro', 'نيستا', 'أليساندرو']
   },
   {
-    name: 'David Villa',
-    nameAr: 'ديفيد فيا',
-    nationality: 'Spain',
-    clubs: ['Valencia', 'Barcelona', 'Atletico Madrid', 'New York City'],
-    uclTitles: 1,
-    eurosWinner: true,
-    searchTerms: ['villa', 'david', 'فيا', 'ديفيد']
+    name: 'Andrea Pirlo',
+    nameAr: 'أندريا بيرلو',
+    nationality: 'Italy',
+    clubs: ['Brescia', 'Inter Milan', 'AC Milan', 'Juventus'],
+    uclTitles: 2,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['pirlo', 'andrea', 'بيرلو', 'أندريا']
   },
   {
-    name: 'Fernando Torres',
-    nameAr: 'فرناندو توريس',
-    nationality: 'Spain',
-    clubs: ['Atletico Madrid', 'Liverpool', 'Chelsea', 'AC Milan'],
-    uclTitles: 1,
-    eurosWinner: true,
-    searchTerms: ['torres', 'fernando', 'توريس', 'فرناندو']
+    name: 'Fabio Cannavaro',
+    nameAr: 'فابيو كانافارو',
+    nationality: 'Italy',
+    clubs: ['Napoli', 'Parma', 'Inter Milan', 'Juventus', 'Real Madrid'],
+    uclTitles: 0,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['cannavaro', 'fabio', 'كانافارو', 'فابيو']
   },
+  {
+    name: 'Gennaro Gattuso',
+    nameAr: 'جينارو غاتوزو',
+    nationality: 'Italy',
+    clubs: ['Rangers', 'AC Milan'],
+    uclTitles: 2,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['gattuso', 'gennaro', 'غاتوزو', 'جينارو']
+  },
+  {
+    name: 'Filippo Inzaghi',
+    nameAr: 'فيليبو إنزاجي',
+    nationality: 'Italy',
+    clubs: ['Parma', 'Atalanta', 'Juventus', 'AC Milan'],
+    uclTitles: 2,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['inzaghi', 'filippo', 'إنزاجي', 'فيليبو']
+  },
+  {
+    name: 'Giorgio Chiellini',
+    nameAr: 'جورجيو كيليني',
+    nationality: 'Italy',
+    clubs: ['Juventus', 'Roma', 'LAFC'],
+    uclTitles: 0,
+    eurosWinner: true,
+    worldCupWinner: false,
+    searchTerms: ['chiellini', 'giorgio', 'كيليني', 'جورجيو']
+  },
+  {
+    name: 'Leonardo Bonucci',
+    nameAr: 'ليوناردو بونوتشي',
+    nationality: 'Italy',
+    clubs: ['Bari', 'Juventus', 'AC Milan'],
+    uclTitles: 0,
+    eurosWinner: true,
+    worldCupWinner: false,
+    searchTerms: ['bonucci', 'leonardo', 'بونوتشي', 'ليوناردو']
+  },
+  {
+    name: 'Marco Verratti',
+    nameAr: 'ماركو فيراتي',
+    nationality: 'Italy',
+    clubs: ['Pescara', 'PSG'],
+    uclTitles: 0,
+    eurosWinner: true,
+    worldCupWinner: false,
+    searchTerms: ['verratti', 'marco', 'فيراتي', 'ماركو']
+  },
+  {
+    name: 'Francesco Totti',
+    nameAr: 'فرانشيسكو توتي',
+    nationality: 'Italy',
+    clubs: ['Roma'],
+    uclTitles: 0,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['totti', 'francesco', 'توتي', 'فرانشيسكو']
+  },
+  {
+    name: 'Gianluigi Buffon',
+    nameAr: 'جيانلويجي بوفون',
+    nationality: 'Italy',
+    clubs: ['Parma', 'Juventus', 'PSG'],
+    uclTitles: 0,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['buffon', 'gianluigi', 'بوفون', 'جيانلويجي']
+  },
+
+  // ============================================
+  // 🇪🇸 لاعبون إسبان
+  // ============================================
   {
     name: 'Iker Casillas',
     nameAr: 'إيكر كاسياس',
@@ -170,7 +516,48 @@ export const playersDatabase = [
     clubs: ['Real Madrid', 'Porto'],
     uclTitles: 3,
     eurosWinner: true,
+    worldCupWinner: true,
     searchTerms: ['casillas', 'iker', 'كاسياس', 'إيكر']
+  },
+  {
+    name: 'Xavi Hernandez',
+    nameAr: 'تشافي هيرنانديز',
+    nationality: 'Spain',
+    clubs: ['Barcelona'],
+    uclTitles: 4,
+    eurosWinner: true,
+    worldCupWinner: true,
+    searchTerms: ['xavi', 'hernandez', 'تشافي', 'هيرنانديز']
+  },
+  {
+    name: 'Andres Iniesta',
+    nameAr: 'أندريس إنييستا',
+    nationality: 'Spain',
+    clubs: ['Barcelona'],
+    uclTitles: 4,
+    eurosWinner: true,
+    worldCupWinner: true,
+    searchTerms: ['iniesta', 'andres', 'إنييستا', 'أندريس']
+  },
+  {
+    name: 'Sergio Ramos',
+    nameAr: 'سيرجيو راموس',
+    nationality: 'Spain',
+    clubs: ['Sevilla', 'Real Madrid', 'PSG'],
+    uclTitles: 4,
+    eurosWinner: true,
+    worldCupWinner: true,
+    searchTerms: ['ramos', 'sergio', 'راموس', 'سيرجيو']
+  },
+  {
+    name: 'Gerard Pique',
+    nameAr: 'جيرارد بيكيه',
+    nationality: 'Spain',
+    clubs: ['Manchester United', 'Barcelona'],
+    uclTitles: 4,
+    eurosWinner: true,
+    worldCupWinner: true,
+    searchTerms: ['pique', 'gerard', 'بيكيه', 'جيرارد']
   },
   {
     name: 'Xabi Alonso',
@@ -179,6 +566,7 @@ export const playersDatabase = [
     clubs: ['Real Sociedad', 'Liverpool', 'Real Madrid', 'Bayern Munich'],
     uclTitles: 2,
     eurosWinner: true,
+    worldCupWinner: true,
     searchTerms: ['xabi', 'alonso', 'تشابي', 'ألونسو']
   },
   {
@@ -188,55 +576,33 @@ export const playersDatabase = [
     clubs: ['Barcelona'],
     uclTitles: 3,
     eurosWinner: true,
+    worldCupWinner: true,
     searchTerms: ['puyol', 'carles', 'بويول', 'كارليس']
   },
-
-  // لاعبون فرنسيون (إضافة المزيد)
   {
-    name: 'Karim Benzema',
-    nameAr: 'كريم بنزيما',
-    nationality: 'France',
-    clubs: ['Lyon', 'Real Madrid', 'Al Ittihad'],
-    uclTitles: 5,
-    eurosWinner: false,
-    searchTerms: ['benzema', 'karim', 'بنزيما', 'كريم']
-  },
-  {
-    name: 'Antoine Griezmann',
-    nameAr: 'أنطوان جريزمان',
-    nationality: 'France',
-    clubs: ['Real Sociedad', 'Atletico Madrid', 'Barcelona'],
-    uclTitles: 0,
-    eurosWinner: false,
-    searchTerms: ['griezmann', 'antoine', 'جريزمان', 'أنطوان']
-  },
-  {
-    name: 'N\'Golo Kante',
-    nameAr: 'نجولو كانتي',
-    nationality: 'France',
-    clubs: ['Leicester', 'Chelsea', 'Al Ittihad'],
+    name: 'David Villa',
+    nameAr: 'ديفيد فيا',
+    nationality: 'Spain',
+    clubs: ['Valencia', 'Barcelona', 'Atletico Madrid'],
     uclTitles: 1,
-    eurosWinner: false,
-    searchTerms: ['kante', 'ngolo', 'كانتي', 'نجولو']
+    eurosWinner: true,
+    worldCupWinner: true,
+    searchTerms: ['villa', 'david', 'فيا', 'ديفيد']
   },
   {
-    name: 'Paul Pogba',
-    nameAr: 'بول بوجبا',
-    nationality: 'France',
-    clubs: ['Manchester United', 'Juventus'],
-    uclTitles: 0,
-    eurosWinner: false,
-    searchTerms: ['pogba', 'paul', 'بوجبا', 'بول']
+    name: 'Fernando Torres',
+    nameAr: 'فرناندو توريس',
+    nationality: 'Spain',
+    clubs: ['Atletico Madrid', 'Liverpool', 'Chelsea', 'AC Milan'],
+    uclTitles: 1,
+    eurosWinner: true,
+    worldCupWinner: true,
+    searchTerms: ['torres', 'fernando', 'توريس', 'فرناندو']
   },
-  {
-    name: 'Raphael Varane',
-    nameAr: 'رافائيل فاران',
-    nationality: 'France',
-    clubs: ['Lens', 'Real Madrid', 'Manchester United'],
-    uclTitles: 4,
-    eurosWinner: false,
-    searchTerms: ['varane', 'raphael', 'فاران', 'رافائيل']
-  },
+
+  // ============================================
+  // 🇫🇷 لاعبون فرنسيون
+  // ============================================
   {
     name: 'Zinedine Zidane',
     nameAr: 'زين الدين زيدان',
@@ -244,6 +610,7 @@ export const playersDatabase = [
     clubs: ['Bordeaux', 'Juventus', 'Real Madrid'],
     uclTitles: 1,
     eurosWinner: true,
+    worldCupWinner: true,
     searchTerms: ['zidane', 'zinedine', 'زيدان', 'زين الدين']
   },
   {
@@ -253,6 +620,7 @@ export const playersDatabase = [
     clubs: ['Monaco', 'Juventus', 'Arsenal', 'Barcelona'],
     uclTitles: 1,
     eurosWinner: true,
+    worldCupWinner: true,
     searchTerms: ['henry', 'thierry', 'هنري', 'تييري']
   },
   {
@@ -262,10 +630,251 @@ export const playersDatabase = [
     clubs: ['Monaco', 'Arsenal', 'Juventus', 'Inter Milan'],
     uclTitles: 0,
     eurosWinner: true,
+    worldCupWinner: true,
     searchTerms: ['vieira', 'patrick', 'فييرا', 'باتريك']
   },
+  {
+    name: 'Karim Benzema',
+    nameAr: 'كريم بنزيما',
+    nationality: 'France',
+    clubs: ['Lyon', 'Real Madrid', 'Al Ittihad'],
+    uclTitles: 5,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['benzema', 'karim', 'بنزيما', 'كريم']
+  },
+  {
+    name: 'Kylian Mbappe',
+    nameAr: 'كيليان مبابي',
+    nationality: 'France',
+    clubs: ['Monaco', 'PSG', 'Real Madrid'],
+    uclTitles: 0,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['mbappe', 'kylian', 'مبابي', 'كيليان']
+  },
+  {
+    name: 'Paul Pogba',
+    nameAr: 'بول بوجبا',
+    nationality: 'France',
+    clubs: ['Manchester United', 'Juventus'],
+    uclTitles: 0,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['pogba', 'paul', 'بوجبا', 'بول']
+  },
+  {
+    name: 'Antoine Griezmann',
+    nameAr: 'أنطوان جريزمان',
+    nationality: 'France',
+    clubs: ['Real Sociedad', 'Atletico Madrid', 'Barcelona'],
+    uclTitles: 0,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['griezmann', 'antoine', 'جريزمان', 'أنطوان']
+  },
+  {
+    name: 'Raphael Varane',
+    nameAr: 'رافائيل فاران',
+    nationality: 'France',
+    clubs: ['Real Madrid', 'Manchester United'],
+    uclTitles: 4,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['varane', 'raphael', 'فاران', 'رافائيل']
+  },
+  {
+    name: 'N\'Golo Kante',
+    nameAr: 'نجولو كانتي',
+    nationality: 'France',
+    clubs: ['Leicester', 'Chelsea'],
+    uclTitles: 1,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['kante', 'ngolo', 'كانتي', 'نجولو']
+  },
 
-  // لاعبون ألمان (إضافة المزيد)
+  // ============================================
+  // 🇧🇷 لاعبون برازيليون
+  // ============================================
+  {
+    name: 'Ronaldo',
+    nameAr: 'رونالدو',
+    nationality: 'Brazil',
+    clubs: ['PSV', 'Barcelona', 'Inter Milan', 'Real Madrid', 'AC Milan'],
+    uclTitles: 0,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['ronaldo', 'r9', 'رونالدو', 'الظاهرة']
+  },
+  {
+    name: 'Ronaldinho',
+    nameAr: 'رونالدينهو',
+    nationality: 'Brazil',
+    clubs: ['Gremio', 'PSG', 'Barcelona', 'AC Milan'],
+    uclTitles: 1,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['ronaldinho', 'رونالدينهو']
+  },
+  {
+    name: 'Rivaldo',
+    nameAr: 'ريفالدو',
+    nationality: 'Brazil',
+    clubs: ['Deportivo', 'Barcelona', 'AC Milan', 'Olympiacos'],
+    uclTitles: 1,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['rivaldo', 'ريفالدو']
+  },
+  {
+    name: 'Kaka',
+    nameAr: 'كاكا',
+    nationality: 'Brazil',
+    clubs: ['Sao Paulo', 'AC Milan', 'Real Madrid'],
+    uclTitles: 1,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['kaka', 'كاكا']
+  },
+  {
+    name: 'Roberto Carlos',
+    nameAr: 'روبيرتو كارلوس',
+    nationality: 'Brazil',
+    clubs: ['Inter Milan', 'Real Madrid'],
+    uclTitles: 3,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['roberto carlos', 'carlos', 'كارلوس', 'روبيرتو']
+  },
+  {
+    name: 'Cafu',
+    nameAr: 'كافو',
+    nationality: 'Brazil',
+    clubs: ['Sao Paulo', 'Roma', 'AC Milan'],
+    uclTitles: 1,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['cafu', 'كافو']
+  },
+  {
+    name: 'Neymar',
+    nameAr: 'نيمار',
+    nationality: 'Brazil',
+    clubs: ['Santos', 'Barcelona', 'PSG', 'Al Hilal'],
+    uclTitles: 1,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['neymar', 'نيمار']
+  },
+  {
+    name: 'Thiago Silva',
+    nameAr: 'تياغو سيلفا',
+    nationality: 'Brazil',
+    clubs: ['AC Milan', 'PSG', 'Chelsea'],
+    uclTitles: 1,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['thiago silva', 'silva', 'تياغو', 'سيلفا']
+  },
+  {
+    name: 'Casemiro',
+    nameAr: 'كاسيميرو',
+    nationality: 'Brazil',
+    clubs: ['Real Madrid', 'Manchester United'],
+    uclTitles: 5,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['casemiro', 'كاسيميرو']
+  },
+  {
+    name: 'Marcelo',
+    nameAr: 'مارسيلو',
+    nationality: 'Brazil',
+    clubs: ['Fluminense', 'Real Madrid'],
+    uclTitles: 5,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['marcelo', 'مارسيلو']
+  },
+
+  // ============================================
+  // 🇦🇷 لاعبون أرجنتينيون
+  // ============================================
+  {
+    name: 'Lionel Messi',
+    nameAr: 'ليونيل ميسي',
+    nationality: 'Argentina',
+    clubs: ['Barcelona', 'PSG', 'Inter Miami'],
+    uclTitles: 4,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['messi', 'lionel', 'ميسي', 'ليونيل']
+  },
+  {
+    name: 'Diego Maradona',
+    nameAr: 'دييغو مارادونا',
+    nationality: 'Argentina',
+    clubs: ['Argentinos Juniors', 'Boca Juniors', 'Barcelona', 'Napoli'],
+    uclTitles: 0,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['maradona', 'diego', 'مارادونا', 'دييغو']
+  },
+  {
+    name: 'Angel Di Maria',
+    nameAr: 'أنخيل دي ماريا',
+    nationality: 'Argentina',
+    clubs: ['Benfica', 'Real Madrid', 'Manchester United', 'PSG', 'Juventus'],
+    uclTitles: 1,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['di maria', 'angel', 'دي ماريا', 'أنخيل']
+  },
+  {
+    name: 'Sergio Aguero',
+    nameAr: 'سيرجيو أغويرو',
+    nationality: 'Argentina',
+    clubs: ['Independiente', 'Atletico Madrid', 'Manchester City', 'Barcelona'],
+    uclTitles: 0,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['aguero', 'sergio', 'أغويرو', 'سيرجيو']
+  },
+  {
+    name: 'Javier Mascherano',
+    nameAr: 'خافيير ماسكيرانو',
+    nationality: 'Argentina',
+    clubs: ['River Plate', 'West Ham', 'Liverpool', 'Barcelona'],
+    uclTitles: 2,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['mascherano', 'javier', 'ماسكيرانو', 'خافيير']
+  },
+
+  // ============================================
+  // 🇩🇪 لاعبون ألمان
+  // ============================================
+  {
+    name: 'Philipp Lahm',
+    nameAr: 'فيليب لم',
+    nationality: 'Germany',
+    clubs: ['Bayern Munich'],
+    uclTitles: 1,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['lahm', 'philipp', 'لم', 'فيليب']
+  },
+  {
+    name: 'Bastian Schweinsteiger',
+    nameAr: 'باستيان شفاينشتايجر',
+    nationality: 'Germany',
+    clubs: ['Bayern Munich', 'Manchester United'],
+    uclTitles: 1,
+    eurosWinner: false,
+    worldCupWinner: true,
+    searchTerms: ['schweinsteiger', 'bastian', 'شفاينشتايجر', 'باستيان']
+  },
   {
     name: 'Toni Kroos',
     nameAr: 'توني كروس',
@@ -273,6 +882,7 @@ export const playersDatabase = [
     clubs: ['Bayern Munich', 'Real Madrid'],
     uclTitles: 5,
     eurosWinner: false,
+    worldCupWinner: true,
     searchTerms: ['kroos', 'toni', 'كروس', 'توني']
   },
   {
@@ -282,25 +892,8 @@ export const playersDatabase = [
     clubs: ['Bayern Munich'],
     uclTitles: 2,
     eurosWinner: false,
+    worldCupWinner: true,
     searchTerms: ['muller', 'thomas', 'مولر', 'توماس']
-  },
-  {
-    name: 'Bastian Schweinsteiger',
-    nameAr: 'باستيان شفاينشتايجر',
-    nationality: 'Germany',
-    clubs: ['Bayern Munich', 'Manchester United'],
-    uclTitles: 1,
-    eurosWinner: false,
-    searchTerms: ['schweinsteiger', 'bastian', 'شفاينشتايجر', 'باستيان']
-  },
-  {
-    name: 'Philipp Lahm',
-    nameAr: 'فيليب لام',
-    nationality: 'Germany',
-    clubs: ['Bayern Munich'],
-    uclTitles: 1,
-    eurosWinner: false,
-    searchTerms: ['lahm', 'philipp', 'لم', 'فيليب']
   },
   {
     name: 'Manuel Neuer',
@@ -309,6 +902,7 @@ export const playersDatabase = [
     clubs: ['Schalke', 'Bayern Munich'],
     uclTitles: 2,
     eurosWinner: false,
+    worldCupWinner: true,
     searchTerms: ['neuer', 'manuel', 'نوير', 'مانويل']
   },
   {
@@ -318,17 +912,31 @@ export const playersDatabase = [
     clubs: ['Schalke', 'Werder Bremen', 'Real Madrid', 'Arsenal'],
     uclTitles: 0,
     eurosWinner: false,
+    worldCupWinner: true,
     searchTerms: ['ozil', 'mesut', 'أوزيل', 'مسعود']
   },
 
-  // لاعبون إنجليز (جدد)
+  // ============================================
+  // 🏴󠁧󠁢󠁥󠁮󠁧󠁿 لاعبون إنجليز
+  // ============================================
+  {
+    name: 'David Beckham',
+    nameAr: 'ديفيد بيكهام',
+    nationality: 'England',
+    clubs: ['Manchester United', 'Real Madrid', 'LA Galaxy', 'AC Milan', 'PSG'],
+    uclTitles: 1,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['beckham', 'david', 'بيكهام', 'ديفيد']
+  },
   {
     name: 'Steven Gerrard',
     nameAr: 'ستيفن جيرارد',
     nationality: 'England',
-    clubs: ['Liverpool', 'LA Galaxy'],
+    clubs: ['Liverpool'],
     uclTitles: 1,
     eurosWinner: false,
+    worldCupWinner: false,
     searchTerms: ['gerrard', 'steven', 'جيرارد', 'ستيفن']
   },
   {
@@ -338,7 +946,18 @@ export const playersDatabase = [
     clubs: ['West Ham', 'Chelsea', 'Manchester City'],
     uclTitles: 1,
     eurosWinner: false,
+    worldCupWinner: false,
     searchTerms: ['lampard', 'frank', 'لامبارد', 'فرانك']
+  },
+  {
+    name: 'Wayne Rooney',
+    nameAr: 'واين روني',
+    nationality: 'England',
+    clubs: ['Everton', 'Manchester United'],
+    uclTitles: 1,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['rooney', 'wayne', 'روني', 'واين']
   },
   {
     name: 'John Terry',
@@ -347,25 +966,8 @@ export const playersDatabase = [
     clubs: ['Chelsea'],
     uclTitles: 1,
     eurosWinner: false,
+    worldCupWinner: false,
     searchTerms: ['terry', 'john', 'تيري', 'جون']
-  },
-  {
-    name: 'Wayne Rooney',
-    nameAr: 'واين روني',
-    nationality: 'England',
-    clubs: ['Everton', 'Manchester United', 'DC United'],
-    uclTitles: 1,
-    eurosWinner: false,
-    searchTerms: ['rooney', 'wayne', 'روني', 'واين']
-  },
-  {
-    name: 'David Beckham',
-    nameAr: 'ديفيد بيكهام',
-    nationality: 'England',
-    clubs: ['Manchester United', 'Real Madrid', 'LA Galaxy', 'AC Milan', 'PSG'],
-    uclTitles: 1,
-    eurosWinner: false,
-    searchTerms: ['beckham', 'david', 'بيكهام', 'ديفيد']
   },
   {
     name: 'Rio Ferdinand',
@@ -374,19 +976,63 @@ export const playersDatabase = [
     clubs: ['West Ham', 'Leeds', 'Manchester United'],
     uclTitles: 1,
     eurosWinner: false,
+    worldCupWinner: false,
     searchTerms: ['ferdinand', 'rio', 'فيرديناند', 'ريو']
   },
   {
     name: 'Ashley Cole',
     nameAr: 'آشلي كول',
     nationality: 'England',
-    clubs: ['Arsenal', 'Chelsea', 'Roma'],
+    clubs: ['Arsenal', 'Chelsea'],
     uclTitles: 1,
     eurosWinner: false,
+    worldCupWinner: false,
     searchTerms: ['cole', 'ashley', 'كول', 'آشلي']
   },
 
-  // لاعبون هولنديون (جدد)
+  // ============================================
+  // 🇳🇱 لاعبون هولنديون
+  // ============================================
+  {
+    name: 'Marco van Basten',
+    nameAr: 'ماركو فان باستن',
+    nationality: 'Netherlands',
+    clubs: ['Ajax', 'AC Milan'],
+    uclTitles: 2,
+    eurosWinner: true,
+    worldCupWinner: false,
+    searchTerms: ['van basten', 'marco', 'فان باستن', 'ماركو']
+  },
+  {
+    name: 'Ruud Gullit',
+    nameAr: 'رود خوليت',
+    nationality: 'Netherlands',
+    clubs: ['Feyenoord', 'PSV', 'AC Milan', 'Chelsea'],
+    uclTitles: 2,
+    eurosWinner: true,
+    worldCupWinner: false,
+    searchTerms: ['gullit', 'ruud', 'خوليت', 'رود']
+  },
+  {
+    name: 'Frank Rijkaard',
+    nameAr: 'فرانك رايكارد',
+    nationality: 'Netherlands',
+    clubs: ['Ajax', 'AC Milan'],
+    uclTitles: 2,
+    eurosWinner: true,
+    worldCupWinner: false,
+    searchTerms: ['rijkaard', 'frank', 'رايكارد', 'فرانك']
+  },
+  {
+    name: 'Clarence Seedorf',
+    nameAr: 'كلارنس سيدورف',
+    nationality: 'Netherlands',
+    clubs: ['Ajax', 'Real Madrid', 'Inter Milan', 'AC Milan'],
+    uclTitles: 4,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['seedorf', 'clarence', 'سيدورف', 'كلارنس']
+  },
   {
     name: 'Arjen Robben',
     nameAr: 'أرين روبن',
@@ -394,25 +1040,18 @@ export const playersDatabase = [
     clubs: ['PSV', 'Chelsea', 'Real Madrid', 'Bayern Munich'],
     uclTitles: 1,
     eurosWinner: false,
+    worldCupWinner: false,
     searchTerms: ['robben', 'arjen', 'روبن', 'أرين']
   },
   {
     name: 'Wesley Sneijder',
     nameAr: 'ويسلي سنايدر',
     nationality: 'Netherlands',
-    clubs: ['Ajax', 'Real Madrid', 'Inter Milan', 'Galatasaray'],
+    clubs: ['Ajax', 'Real Madrid', 'Inter Milan'],
     uclTitles: 1,
     eurosWinner: false,
+    worldCupWinner: false,
     searchTerms: ['sneijder', 'wesley', 'سنايدر', 'ويسلي']
-  },
-  {
-    name: 'Robin van Persie',
-    nameAr: 'روبن فان بيرسي',
-    nationality: 'Netherlands',
-    clubs: ['Feyenoord', 'Arsenal', 'Manchester United'],
-    uclTitles: 0,
-    eurosWinner: false,
-    searchTerms: ['van persie', 'robin', 'فان بيرسي', 'روبن']
   },
   {
     name: 'Virgil van Dijk',
@@ -421,16 +1060,70 @@ export const playersDatabase = [
     clubs: ['Celtic', 'Southampton', 'Liverpool'],
     uclTitles: 1,
     eurosWinner: false,
+    worldCupWinner: false,
     searchTerms: ['van dijk', 'virgil', 'فان دايك', 'فيرجيل']
   },
+
+  // لاعبون إضافيون بدون تصنيف محدد
   {
-    name: 'Edwin van der Sar',
-    nameAr: 'إدوين فان در سار',
-    nationality: 'Netherlands',
-    clubs: ['Ajax', 'Juventus', 'Fulham', 'Manchester United'],
-    uclTitles: 2,
+    name: 'Luka Modric',
+    nameAr: 'لوكا مودريتش',
+    nationality: 'Croatia',
+    clubs: ['Dinamo Zagreb', 'Tottenham', 'Real Madrid'],
+    uclTitles: 5,
     eurosWinner: false,
-    searchTerms: ['van der sar', 'edwin', 'فان در سار', 'إدوين']
+    worldCupWinner: false,
+    searchTerms: ['modric', 'luka', 'مودريتش', 'لوكا']
+  },
+  {
+    name: 'Gareth Bale',
+    nameAr: 'غاريث بيل',
+    nationality: 'Wales',
+    clubs: ['Southampton', 'Tottenham', 'Real Madrid'],
+    uclTitles: 5,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['bale', 'gareth', 'بيل', 'غاريث']
+  },
+  {
+    name: 'Zlatan Ibrahimovic',
+    nameAr: 'زلاتان إبراهيموفيتش',
+    nationality: 'Sweden',
+    clubs: ['Ajax', 'Juventus', 'Inter Milan', 'Barcelona', 'AC Milan', 'PSG', 'Manchester United'],
+    uclTitles: 0,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['ibrahimovic', 'zlatan', 'إبراهيموفيتش', 'زلاتان', 'ابرا']
+  },
+  {
+    name: 'Edinson Cavani',
+    nameAr: 'إدينسون كافاني',
+    nationality: 'Uruguay',
+    clubs: ['Palermo', 'Napoli', 'PSG', 'Manchester United'],
+    uclTitles: 0,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['cavani', 'edinson', 'كافاني', 'إدينسون']
+  },
+  {
+    name: 'Samuel Eto\'o',
+    nameAr: 'صامويل إيتو',
+    nationality: 'Cameroon',
+    clubs: ['Real Madrid', 'Barcelona', 'Inter Milan', 'Chelsea'],
+    uclTitles: 3,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['etoo', 'samuel', 'إيتو', 'صامويل']
+  },
+  {
+    name: 'Dani Alves',
+    nameAr: 'داني ألفيش',
+    nationality: 'Brazil',
+    clubs: ['Sevilla', 'Barcelona', 'Juventus', 'PSG'],
+    uclTitles: 3,
+    eurosWinner: false,
+    worldCupWinner: false,
+    searchTerms: ['alves', 'dani', 'ألفيش', 'داني']
   }
 ];
 
@@ -444,11 +1137,11 @@ export const searchPlayer = (query) => {
     player.searchTerms.some(term => term.toLowerCase().includes(searchTerm)) ||
     player.name.toLowerCase().includes(searchTerm) ||
     player.nameAr.includes(searchTerm)
-  ).slice(0, 5); // أول 5 نتائج
+  ).slice(0, 8);
 };
 
 // دالة للتحقق من صحة اللاعب للمربع
-export const validatePlayerForCell = (playerName, rowIndex, colIndex) => {
+export const validatePlayerForCell = (playerName, rowIndex, colIndex, currentRowCriteria, currentColumnCriteria) => {
   const player = playersDatabase.find(p => 
     p.name.toLowerCase() === playerName.toLowerCase() ||
     p.nameAr === playerName
@@ -456,8 +1149,8 @@ export const validatePlayerForCell = (playerName, rowIndex, colIndex) => {
   
   if (!player) return { valid: false, message: 'لاعب غير موجود في قاعدة البيانات' };
   
-  const rowCriterion = rowCriteria[rowIndex];
-  const colCriterion = columnCriteria[colIndex];
+  const rowCriterion = currentRowCriteria[rowIndex];
+  const colCriterion = currentColumnCriteria[colIndex];
   
   const matchesRow = rowCriterion.check(player);
   const matchesCol = colCriterion.check(player);
@@ -488,31 +1181,26 @@ export const validatePlayerForCell = (playerName, rowIndex, colIndex) => {
 
 // دالة للتحقق من الفوز
 export const checkWinner = (grid) => {
-  // التحقق من الصفوف
   for (let i = 0; i < 3; i++) {
     if (grid[i][0] && grid[i][0] === grid[i][1] && grid[i][1] === grid[i][2]) {
       return { winner: grid[i][0], line: `row-${i}` };
     }
   }
   
-  // التحقق من الأعمدة
   for (let i = 0; i < 3; i++) {
     if (grid[0][i] && grid[0][i] === grid[1][i] && grid[1][i] === grid[2][i]) {
       return { winner: grid[0][i], line: `col-${i}` };
     }
   }
   
-  // التحقق من القطر الأول
   if (grid[0][0] && grid[0][0] === grid[1][1] && grid[1][1] === grid[2][2]) {
     return { winner: grid[0][0], line: 'diag-1' };
   }
   
-  // التحقق من القطر الثاني
   if (grid[0][2] && grid[0][2] === grid[1][1] && grid[1][1] === grid[2][0]) {
     return { winner: grid[0][2], line: 'diag-2' };
   }
   
-  // التحقق من التعادل
   let isFull = true;
   for (let i = 0; i < 3; i++) {
     for (let j = 0; j < 3; j++) {

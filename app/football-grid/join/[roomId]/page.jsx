@@ -2,8 +2,8 @@
 import FootballGridGameRouter from '../../../../components/FootballGridGameRouter';
 
 export const metadata = {
-  title: 'الانضمام للعبة Football Grid - Absi',
-  description: 'انضم للعبة Football Grid عن بُعد!',
+  title: 'الانضمام للعبة  X - 0 - Absi',
+  description: 'انضم للعبة X - O  عن بُعد!',
 };
 
 export default function JoinFootballGridPage({ params }) {

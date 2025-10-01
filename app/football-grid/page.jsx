@@ -2,8 +2,8 @@
 import FootballGridGameRouter from '../../components/FootballGridGameRouter';
 
 export const metadata = {
-  title: 'Football Grid - Absi',
-  description: 'لعبة Tic-Tac-Toe مع لاعبي كرة القدم - العب مع أصدقائك!',
+  title: 'X - O - Absi',
+  description: 'X - O',
 };
 
 export default function FootballGridPage() {
