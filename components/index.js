@@ -1,4 +1,4 @@
-// components/index.js - إضافة Football Grid
+// components/index.js - إضافة Battle Royale
 export { default as QuizGame } from './QuizGame';
 export { default as GameSetup } from './GameSetup';
 export { default as TeamScores } from './TeamScores';
@@ -63,7 +63,12 @@ export { default as BettingGame } from './BettingGame';
 
 export { default as PhotoCommentGameRouter } from './PhotoCommentGameRouter';
 
-// 🆕 لعبة Football Grid
+// لعبة Football Grid
 export { default as FootballGridGame } from './FootballGridGame';
 export { default as FootballGridGameRouter } from './FootballGridGameRouter';
 export { default as FootballGridSetup } from './FootballGridSetup';
+
+// 🆕 لعبة Battle Royale
+export { default as BattleRoyaleRouter } from './BattleRoyaleRouter';
+export { default as BattleRoyaleSetup } from './BattleRoyaleSetup';
+export { default as BattleRoyaleGame } from './BattleRoyaleGame';
